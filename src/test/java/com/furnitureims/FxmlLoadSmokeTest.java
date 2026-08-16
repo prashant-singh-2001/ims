@@ -3,12 +3,18 @@ package com.furnitureims;
 import com.furnitureims.config.AppPaths;
 import com.furnitureims.config.TestAppPathsFactory;
 import com.furnitureims.domain.Piece;
+import com.furnitureims.domain.ShopProfile;
+import com.furnitureims.domain.Supplier;
 import com.furnitureims.money.Money;
+import com.furnitureims.repository.ShopProfileRepository;
 import com.furnitureims.service.CategoryService;
 import com.furnitureims.service.ItemModelService;
 import com.furnitureims.service.PieceService;
+import com.furnitureims.service.PurchaseBillService;
 import com.furnitureims.service.StorageLocationService;
+import com.furnitureims.service.SupplierService;
 import com.furnitureims.ui.catalogue.PieceDetailController;
+import com.furnitureims.ui.purchase.PurchaseReturnController;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -20,6 +26,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -76,6 +83,11 @@ class FxmlLoadSmokeTest {
     @Autowired private ItemModelService itemModelService;
     @Autowired private PieceService pieceService;
     @Autowired private PieceDetailController pieceDetailController;
+    @Autowired private ShopProfileRepository shopProfileRepository;
+    @Autowired private SupplierService supplierService;
+    @Autowired private PurchaseBillService purchaseBillService;
+    @Autowired private PurchaseReturnController purchaseReturnController;
+    @Autowired private JdbcTemplate jdbc;
 
     /** Screens with no prerequisite state - loadable straight from a fresh database. */
     @Test
@@ -88,7 +100,11 @@ class FxmlLoadSmokeTest {
                 "/fxml/catalogue/item-model-list.fxml",
                 "/fxml/catalogue/item-model-editor.fxml",
                 "/fxml/catalogue/piece-register.fxml",
-                "/fxml/catalogue/opening-stock-entry.fxml"
+                "/fxml/catalogue/opening-stock-entry.fxml",
+                "/fxml/purchase/supplier-list.fxml",
+                "/fxml/purchase/supplier-editor.fxml",
+                "/fxml/purchase/purchase-bill-list.fxml",
+                "/fxml/purchase/purchase-bill-entry.fxml"
         );
         for (String screen : screens) {
             loadOnFxThread(screen);
@@ -113,6 +129,36 @@ class FxmlLoadSmokeTest {
 
         pieceDetailController.openFor(piece.id());
         loadOnFxThread("/fxml/catalogue/piece-detail.fxml");
+    }
+
+    /** Purchase return requires a real RECEIVED bill's id to be set via openFor() first,
+     *  exactly as PurchaseBillListController does before navigating to it. */
+    @Test
+    void purchaseReturnScreenLoadsWithoutError() throws Exception {
+        ensureFxToolkitStarted();
+
+        shopProfileRepository.save(new ShopProfile("Smoke Test Shop", null, null, null, null,
+                "Maharashtra", "27", "27AAAAA0000A1Z5", ShopProfile.RegistrationType.REGULAR,
+                "9999999999", null, null, null, null));
+        jdbc.update("DELETE FROM app_user");
+        jdbc.update("INSERT INTO app_user (username, password_hash, role) VALUES ('owner', 'x', 'OWNER')");
+
+        long categoryId = categoryService.listActive().stream()
+                .filter(c -> c.name().equals("Chair")).findFirst().orElseThrow().id();
+        long modelId = itemModelService.create(new com.furnitureims.domain.ItemModel(
+                0, "SMOKEPB", "Smoke Test Chair", categoryId, "9403", new BigDecimal("18"),
+                null, null, null, null, null, null, null, true, null));
+        long supplierId = supplierService.create(new Supplier(0, "Smoke Test Supplier", null, null, null,
+                null, null, "Maharashtra", "27", null, null, null, Money.ZERO, true, null));
+
+        long billId = purchaseBillService.saveDraft(null, supplierId, "SMOKE-BILL-1", LocalDate.now(),
+                LocalDate.now(), Money.ZERO, Money.ZERO, Money.ZERO, null, List.of(
+                        new PurchaseBillService.LineInput(modelId, 1, Money.ofRupees("500.00"), Money.ZERO,
+                                new BigDecimal("18"))));
+        purchaseBillService.confirmReceipt(billId);
+
+        purchaseReturnController.openFor(billId);
+        loadOnFxThread("/fxml/purchase/purchase-return.fxml");
     }
 
     private void loadOnFxThread(String classpathFxml) throws InterruptedException {

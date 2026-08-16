@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.purchase.SupplierListController"
+            styleClass="app-root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <Label text="Suppliers" styleClass="wizard-header-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="New Supplier" onAction="#onNewClicked" styleClass="primary-button"/>
+            <Button text="Back" onAction="#onBackClicked"/>
+        </HBox>
+    </top>
+
+    <center>
+        <TableView fx:id="table">
+            <columns>
+                <TableColumn fx:id="nameColumn" text="Name" prefWidth="200"/>
+                <TableColumn fx:id="gstinColumn" text="GSTIN" prefWidth="150"/>
+                <TableColumn fx:id="stateColumn" text="State" prefWidth="130"/>
+                <TableColumn fx:id="phoneColumn" text="Phone" prefWidth="110"/>
+                <TableColumn fx:id="duesColumn" text="Dues" prefWidth="110"/>
+                <TableColumn fx:id="statusColumn" text="Status" prefWidth="80"/>
+                <TableColumn fx:id="actionsColumn" text="" prefWidth="170"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

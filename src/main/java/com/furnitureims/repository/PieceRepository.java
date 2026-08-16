@@ -102,6 +102,21 @@ public class PieceRepository {
                 "updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','localtime') WHERE id = ?", newTag, id);
     }
 
+    /** Ordered by id (= creation order): callers apportioning a purchase line's taxable
+     *  value/tax across its pieces (e.g. for a partial purchase return) rely on this order
+     *  matching the order {@code PurchaseBillService.confirmReceipt} originally assigned
+     *  per-piece costs in. */
+    public List<Piece> findByPurchaseLineId(long purchaseLineId) {
+        return jdbc.query("SELECT * FROM piece WHERE purchase_line_id = ? ORDER BY id", MAPPER, purchaseLineId);
+    }
+
+    /** Only ever legitimate for pieces created moments ago by a purchase receipt that is
+     *  itself being reversed (FR-PUR-08) - see PieceService.deletePiecesCreatedByPurchaseLine
+     *  for why this narrow case is an intentional exception to "nothing is hard-deleted". */
+    public void delete(long id) {
+        jdbc.update("DELETE FROM piece WHERE id = ?", id);
+    }
+
     public long countInStock(long itemModelId) {
         Long count = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM piece WHERE item_model_id = ? AND state = 'IN_STOCK'",

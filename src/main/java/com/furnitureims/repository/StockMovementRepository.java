@@ -51,4 +51,10 @@ public class StockMovementRepository {
         return jdbc.query("SELECT * FROM stock_movement WHERE piece_id = ? ORDER BY moved_at, id",
                 MAPPER, pieceId);
     }
+
+    /** Paired with {@link PieceRepository#delete} for the one narrow hard-delete case in
+     *  the system - see the comment there. */
+    public void deleteByPieceId(long pieceId) {
+        jdbc.update("DELETE FROM stock_movement WHERE piece_id = ?", pieceId);
+    }
 }

@@ -27,9 +27,10 @@ import java.util.Set;
  * the piece register screen - IN_STOCK to/from DAMAGED, and either to WRITTEN_OFF. The
  * remaining transitions in docs/02-data-model.md's diagram (IN_STOCK to SOLD,
  * IN_STOCK to RETURNED_TO_SUPPLIER, SOLD back to IN_STOCK) happen through the sales and
- * purchase modules instead, once they exist (milestones M3/M4) - those need a
- * ref_type/ref_id pointing at the invoice or bill that caused them, which a generic
- * "change state" call from this screen has no way to supply correctly.
+ * purchase modules instead - those need a ref_type/ref_id pointing at the invoice or bill
+ * that caused them, which a generic "change state" call from this screen has no way to
+ * supply correctly. {@link #createFromPurchase} and the purchase-return transition used by
+ * {@code PurchaseReturnService} are the M3 half of that; sales is M4.
  */
 @Service
 public class PieceService {
@@ -67,6 +68,13 @@ public class PieceService {
         return stockMovementRepository.findByPieceId(pieceId);
     }
 
+    /** All pieces created from one purchase line, in creation order - used by
+     *  {@code PurchaseReturnService} to apportion that line's taxable value/tax across
+     *  its pieces the same way {@link #createFromPurchase} apportioned their cost. */
+    public List<Piece> findByPurchaseLineId(long purchaseLineId) {
+        return pieceRepository.findByPurchaseLineId(purchaseLineId);
+    }
+
     /** FR-PIECE-09: creates {@code quantity} individually tagged, individually costed
      *  pieces with no supplier bill behind them. */
     @Transactional
@@ -83,15 +91,76 @@ public class PieceService {
 
         List<Piece> created = new ArrayList<>();
         for (int i = 0; i < quantity; i++) {
-            String tag = generateTag(model.modelCode());
-            Piece toInsert = new Piece(0, tag, itemModelId, Piece.SourceType.OPENING_STOCK, null, unitCost,
-                    locationId, Piece.State.IN_STOCK, null, acquiredOn, null, null);
-            long id = pieceRepository.create(toInsert);
-            stockMovementRepository.record(id, StockMovement.Type.OPENING, null, Piece.State.IN_STOCK,
-                    null, locationId, "OPENING_STOCK", null, "Opening stock entry");
-            created.add(pieceRepository.findById(id).orElseThrow());
+            created.add(createPiece(itemModelId, model.modelCode(), Piece.SourceType.OPENING_STOCK, null,
+                    unitCost, locationId, acquiredOn, StockMovement.Type.OPENING, "OPENING_STOCK", null,
+                    "Opening stock entry"));
         }
         return created;
+    }
+
+    /** FR-PUR-05: one piece per unit of quantity on a purchase line, each with the
+     *  landed cost {@code PurchaseBillService} apportioned to it (FR-PUR-06) - a different
+     *  cost per piece, unlike opening stock's single uniform cost. No location is set;
+     *  the owner assigns one later from the piece register (FR-PIECE-06). */
+    @Transactional
+    public List<Piece> createFromPurchase(long itemModelId, long purchaseLineId, List<Money> perPieceCosts,
+                                           LocalDate acquiredOn) {
+        ItemModel model = itemModelRepository.findById(itemModelId)
+                .orElseThrow(() -> new IllegalArgumentException("Item model not found."));
+
+        List<Piece> created = new ArrayList<>();
+        for (Money cost : perPieceCosts) {
+            created.add(createPiece(itemModelId, model.modelCode(), Piece.SourceType.PURCHASE, purchaseLineId,
+                    cost, null, acquiredOn, StockMovement.Type.RECEIPT, "PURCHASE_LINE", purchaseLineId,
+                    "Received on purchase bill"));
+        }
+        return created;
+    }
+
+    private Piece createPiece(long itemModelId, String modelCode, Piece.SourceType sourceType, Long purchaseLineId,
+                               Money cost, Long locationId, LocalDate acquiredOn, StockMovement.Type movementType,
+                               String refType, Long refId, String note) {
+        String tag = generateTag(modelCode);
+        Piece toInsert = new Piece(0, tag, itemModelId, sourceType, purchaseLineId, cost, locationId,
+                Piece.State.IN_STOCK, null, acquiredOn, null, null);
+        long id = pieceRepository.create(toInsert);
+        stockMovementRepository.record(id, movementType, null, Piece.State.IN_STOCK, null, locationId,
+                refType, refId, note);
+        return pieceRepository.findById(id).orElseThrow();
+    }
+
+    /** FR-PUR-08: undoes the piece-creation half of confirming a receipt that is itself
+     *  being reversed. Deliberately a hard delete - the one intentional exception to
+     *  "nothing is hard-deleted" in this system - because the caller (PurchaseBillService)
+     *  has already verified every such piece is still IN_STOCK with zero other activity:
+     *  these rows have no business history beyond the receipt now being undone, so
+     *  reversing it really is "this never happened" rather than erasing a real event. */
+    @Transactional
+    public void deletePiecesCreatedByPurchaseLine(long purchaseLineId) {
+        for (Piece piece : pieceRepository.findByPurchaseLineId(purchaseLineId)) {
+            if (piece.state() != Piece.State.IN_STOCK) {
+                throw new IllegalStateException("Piece " + piece.tag() + " is " + piece.state()
+                        + " and cannot be removed by reversing the receipt.");
+            }
+            stockMovementRepository.deleteByPieceId(piece.id());
+            pieceRepository.delete(piece.id());
+        }
+    }
+
+    /** IN_STOCK -> RETURNED_TO_SUPPLIER (FR-PUR-07), invoked by {@code PurchaseReturnService}
+     *  with the debit note it belongs to - not reachable from the piece register's own
+     *  manual actions, see the class Javadoc. */
+    @Transactional
+    public void markReturnedToSupplier(long pieceId, long purchaseReturnId) {
+        Piece piece = pieceRepository.findById(pieceId)
+                .orElseThrow(() -> new IllegalArgumentException("Piece not found."));
+        if (piece.state() != Piece.State.IN_STOCK) {
+            throw new IllegalStateException(
+                    "Piece " + piece.tag() + " is " + piece.state() + " and cannot be returned to the supplier.");
+        }
+        pieceRepository.updateState(pieceId, Piece.State.RETURNED_TO_SUPPLIER, null);
+        stockMovementRepository.record(pieceId, StockMovement.Type.PURCHASE_RETURN, piece.state(),
+                Piece.State.RETURNED_TO_SUPPLIER, null, null, "PURCHASE_RETURN", purchaseReturnId, null);
     }
 
     /** FR-PIECE-02: {@code <model code>-<zero-padded sequence>}, guaranteed unique. */

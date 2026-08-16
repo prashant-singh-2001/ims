@@ -23,3 +23,7 @@ Thumbs.db
 # Secrets - real OAuth client credentials must never be committed
 application-local.yml
 *.env
+
+
+/docs/
+/logs/

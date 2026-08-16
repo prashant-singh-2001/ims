@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.purchase.PurchaseBillEntryController"
+            styleClass="app-root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <Label fx:id="titleLabel" styleClass="wizard-header-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Back to List" onAction="#onBackClicked"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true">
+            <VBox spacing="16">
+                <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+                <GridPane hgap="12" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="130"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                        <ColumnConstraints minWidth="110"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="150"/>
+                    </columnConstraints>
+                    <Label text="Supplier *" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="supplierCombo" GridPane.rowIndex="0" GridPane.columnIndex="1" maxWidth="Infinity"/>
+                    <Label text="Supplier bill # *" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                    <TextField fx:id="billNoField" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                    <Label text="Bill date *" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <DatePicker fx:id="billDatePicker" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    <Label text="Received date *" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                    <DatePicker fx:id="receivedDatePicker" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+                </GridPane>
+
+                <Label text="Line items" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label text="Model, quantity, rate per unit, discount, GST %. One row creates one entry; each unit becomes its own tagged piece on receipt."
+                       wrapText="true" styleClass="wizard-step-subtitle"/>
+                <VBox fx:id="rowsBox" spacing="8"/>
+                <Button text="+ Add Line" onAction="#onAddRowClicked"/>
+
+                <Label text="Charges" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <GridPane hgap="12" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="130"/>
+                        <ColumnConstraints minWidth="150"/>
+                        <ColumnConstraints minWidth="130"/>
+                        <ColumnConstraints minWidth="150"/>
+                        <ColumnConstraints minWidth="130"/>
+                        <ColumnConstraints minWidth="150"/>
+                    </columnConstraints>
+                    <Label text="Freight" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <TextField fx:id="freightField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                    <Label text="Loading" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                    <TextField fx:id="loadingChargesField" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+                    <Label text="Other" GridPane.rowIndex="0" GridPane.columnIndex="4"/>
+                    <TextField fx:id="otherChargesField" GridPane.rowIndex="0" GridPane.columnIndex="5"/>
+                </GridPane>
+
+                <Label text="Notes" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <TextArea fx:id="notesArea" prefRowCount="2"/>
+
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Button text="Recalculate Totals" onAction="#onRecalculateClicked"/>
+                </HBox>
+
+                <GridPane hgap="20" vgap="6" styleClass="wizard-callout">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120"/>
+                        <ColumnConstraints minWidth="110"/>
+                        <ColumnConstraints minWidth="120"/>
+                        <ColumnConstraints minWidth="110"/>
+                    </columnConstraints>
+                    <Label text="Taxable value" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <Label fx:id="taxableValueLabel" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                    <Label text="Charges" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                    <Label fx:id="chargesLabel" text="-" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                    <Label text="CGST" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <Label fx:id="cgstLabel" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    <Label text="SGST" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                    <Label fx:id="sgstLabel" text="-" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                    <Label text="IGST" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <Label fx:id="igstLabel" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                    <Label text="Grand Total" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+                    <Label fx:id="grandTotalLabel" text="-" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+                </GridPane>
+
+                <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
+
+                <HBox spacing="10">
+                    <Button text="Save as Draft" onAction="#onSaveDraftClicked"/>
+                    <Button text="Confirm Receipt" onAction="#onConfirmReceiptClicked" styleClass="primary-button"/>
+                </HBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>
