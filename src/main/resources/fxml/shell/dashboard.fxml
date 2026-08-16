@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.shell.DashboardController"
+            styleClass="app-root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <Label fx:id="welcomeLabel" styleClass="wizard-header-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Lock Now" onAction="#onLockNowClicked"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true">
+            <VBox spacing="20">
+                <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+
+                <Label text="Today" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <HBox spacing="12">
+                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onTodaySalesTileClicked">
+                        <Label text="Today's Sales" style="-fx-font-weight: bold;"/>
+                        <Label fx:id="todaySalesLabel"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onMonthSalesTileClicked">
+                        <Label text="This Month's Sales" style="-fx-font-weight: bold;"/>
+                        <Label fx:id="monthSalesLabel"/>
+                    </VBox>
+                </HBox>
+
+                <Label text="Stock and Money" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <HBox spacing="12">
+                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onStockValueTileClicked">
+                        <Label text="Stock Value" style="-fx-font-weight: bold;"/>
+                        <Label fx:id="stockValueLabel"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onStockValueTileClicked">
+                        <Label text="Pieces in Stock" style="-fx-font-weight: bold;"/>
+                        <Label fx:id="piecesInStockLabel"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onReceivableTileClicked">
+                        <Label text="Receivable" style="-fx-font-weight: bold;"/>
+                        <Label fx:id="receivableLabel"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onPayableTileClicked">
+                        <Label text="Payable" style="-fx-font-weight: bold;"/>
+                        <Label fx:id="payableLabel"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="wizard-callout">
+                        <Label text="Backup Status" style="-fx-font-weight: bold;"/>
+                        <Label fx:id="backupStatusLabel" styleClass="wizard-step-subtitle"/>
+                    </VBox>
+                </HBox>
+
+                <Label text="Quick Actions" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <HBox spacing="12">
+                    <Button text="New Sale" onAction="#onNewSaleClicked" styleClass="primary-button"/>
+                    <Button text="New Purchase Bill" onAction="#onNewPurchaseBillClicked" styleClass="primary-button"/>
+                    <Button text="Payments" onAction="#onPaymentsClicked" styleClass="primary-button"/>
+                </HBox>
+
+                <Label text="Reports" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <HBox spacing="12">
+                    <Button text="Stock Report" onAction="#onStockReportClicked"/>
+                    <Button text="Sales and Profit Report" onAction="#onSalesProfitReportClicked"/>
+                    <Button text="Dues and Aging Report" onAction="#onDuesReportClicked"/>
+                </HBox>
+
+                <Label text="Browse" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <HBox spacing="12">
+                    <Button text="Item Models" onAction="#onItemModelsClicked"/>
+                    <Button text="Piece Register" onAction="#onPieceRegisterClicked"/>
+                    <Button text="Categories &amp; Locations" onAction="#onCategoriesLocationsClicked"/>
+                </HBox>
+                <HBox spacing="12">
+                    <Button text="Suppliers" onAction="#onSuppliersClicked"/>
+                    <Button text="Purchase Bills" onAction="#onPurchaseBillsClicked"/>
+                    <Button text="Invoices" onAction="#onInvoicesClicked"/>
+                    <Button text="Settings" onAction="#onSettingsClicked"/>
+                </HBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

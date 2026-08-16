@@ -168,6 +168,6 @@ public class CategoriesLocationsController {
 
     @FXML
     private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard-placeholder.fxml");
+        sceneRouter.show("/fxml/shell/dashboard.fxml");
     }
 }

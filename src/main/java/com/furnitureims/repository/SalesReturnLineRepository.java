@@ -39,6 +39,14 @@ public class SalesReturnLineRepository {
                 MAPPER, salesReturnId);
     }
 
+    /** FR-RPT-03: a returned sales_line must not still count as "sold" in a period profit
+     *  report, even though the row itself is never deleted. */
+    public boolean existsBySalesLineId(long salesLineId) {
+        Integer count = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM sales_return_line WHERE sales_line_id = ?", Integer.class, salesLineId);
+        return count != null && count > 0;
+    }
+
     public long create(SalesReturnLine l) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {

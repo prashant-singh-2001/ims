@@ -68,6 +68,17 @@ public class PieceRegisterController {
         this.sceneRouter = sceneRouter;
     }
 
+    private Long pendingCategoryId;
+    private String pendingModelSearch;
+
+    /** Drill-through from the stock report (FR-RPT-01): pre-sets the category filter and,
+     *  for model-level precision, reuses the free-text search field (it already matches
+     *  model name/code via LIKE) rather than adding a dedicated model combo just for this. */
+    public void openWithFilters(Long categoryId, String modelSearchText) {
+        this.pendingCategoryId = categoryId;
+        this.pendingModelSearch = modelSearchText;
+    }
+
     @FXML
     private void initialize() {
         tagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
@@ -120,6 +131,17 @@ public class PieceRegisterController {
                 return null;
             }
         });
+
+        if (pendingCategoryId != null) {
+            categoryFilterCombo.getItems().stream()
+                    .filter(c -> c != null && c.id() == pendingCategoryId).findFirst()
+                    .ifPresent(categoryFilterCombo::setValue);
+            pendingCategoryId = null;
+        }
+        if (pendingModelSearch != null) {
+            searchField.setText(pendingModelSearch);
+            pendingModelSearch = null;
+        }
 
         errorLabel.setText("");
         reload();
@@ -249,6 +271,6 @@ public class PieceRegisterController {
 
     @FXML
     private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard-placeholder.fxml");
+        sceneRouter.show("/fxml/shell/dashboard.fxml");
     }
 }

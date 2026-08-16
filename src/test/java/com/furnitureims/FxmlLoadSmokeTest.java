@@ -104,7 +104,7 @@ class FxmlLoadSmokeTest {
         ensureFxToolkitStarted();
 
         List<String> screens = List.of(
-                "/fxml/shell/dashboard-placeholder.fxml",
+                "/fxml/shell/dashboard.fxml",
                 "/fxml/catalogue/categories-locations.fxml",
                 "/fxml/catalogue/item-model-list.fxml",
                 "/fxml/catalogue/item-model-editor.fxml",
@@ -119,7 +119,10 @@ class FxmlLoadSmokeTest {
                 "/fxml/payment/customer-receipt.fxml",
                 "/fxml/payment/supplier-payment.fxml",
                 "/fxml/payment/payment-list.fxml",
-                "/fxml/settings/settings.fxml"
+                "/fxml/settings/settings.fxml",
+                "/fxml/reports/stock-report.fxml",
+                "/fxml/reports/sales-profit-report.fxml",
+                "/fxml/reports/dues-report.fxml"
         );
         for (String screen : screens) {
             loadOnFxThread(screen);

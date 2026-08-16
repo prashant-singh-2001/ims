@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.reports.StockReportController"
+            styleClass="app-root">
+
+    <top>
+        <VBox styleClass="wizard-header">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <padding><Insets top="14" right="24" bottom="6" left="24"/></padding>
+                <Label text="Stock on Hand and Valuation" styleClass="wizard-header-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Export CSV" onAction="#onExportCsvClicked"/>
+                <Button text="Back" onAction="#onBackClicked"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <padding><Insets top="0" right="24" bottom="14" left="24"/></padding>
+                <ComboBox fx:id="categoryFilterCombo"/>
+                <ComboBox fx:id="locationFilterCombo"/>
+                <ComboBox fx:id="agingBucketFilterCombo"/>
+                <Button text="Search" onAction="#onSearchClicked"/>
+                <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="16">
+            <padding><Insets top="16" right="24" bottom="16" left="24"/></padding>
+
+            <Label text="Aging" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+            <HBox spacing="16">
+                <VBox spacing="4" styleClass="wizard-callout">
+                    <Label text="0-30 days" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="age0To30Label"/>
+                </VBox>
+                <VBox spacing="4" styleClass="wizard-callout">
+                    <Label text="31-60 days" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="age31To60Label"/>
+                </VBox>
+                <VBox spacing="4" styleClass="wizard-callout">
+                    <Label text="61-90 days" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="age61To90Label"/>
+                </VBox>
+                <VBox spacing="4" styleClass="wizard-callout" style="-fx-background-color: #fde2e1; -fx-border-color: #b3261e;">
+                    <Label text="90+ days (dead stock)" style="-fx-font-weight: bold; -fx-text-fill: #b3261e;"/>
+                    <Label fx:id="age90PlusLabel"/>
+                </VBox>
+            </HBox>
+
+            <HBox spacing="30" alignment="CENTER_LEFT">
+                <Label text="Grand total value:" style="-fx-font-weight: bold;"/>
+                <Label fx:id="grandTotalLabel"/>
+                <Label text="Total pieces:" style="-fx-font-weight: bold;"/>
+                <Label fx:id="totalPieceCountLabel"/>
+            </HBox>
+
+            <TableView fx:id="table" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="categoryColumn" text="Category" prefWidth="130"/>
+                    <TableColumn fx:id="modelColumn" text="Model" prefWidth="200"/>
+                    <TableColumn fx:id="modelCodeColumn" text="Code" prefWidth="90"/>
+                    <TableColumn fx:id="pieceCountColumn" text="Pieces" prefWidth="70"/>
+                    <TableColumn fx:id="totalValueColumn" text="Total Value" prefWidth="110"/>
+                    <TableColumn fx:id="oldestAgeColumn" text="Oldest (days)" prefWidth="100"/>
+                    <TableColumn fx:id="actionsColumn" text="" prefWidth="110"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

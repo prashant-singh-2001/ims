@@ -86,7 +86,7 @@ public class LoginController {
             sceneRouter.hideLockOverlay();
             idleLockManager.notifyUnlocked();
         } else {
-            sceneRouter.show("/fxml/shell/dashboard-placeholder.fxml");
+            sceneRouter.show("/fxml/shell/dashboard.fxml");
             idleLockManager.start();
         }
     }
