@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.catalogue.PieceRegisterController"
+            styleClass="app-root">
+
+    <top>
+        <VBox styleClass="wizard-header">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <padding><Insets top="14" right="24" bottom="6" left="24"/></padding>
+                <Label text="Piece Register" styleClass="wizard-header-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Opening Stock Entry" onAction="#onOpeningStockClicked" styleClass="primary-button"/>
+                <Button text="Back" onAction="#onBackClicked"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <padding><Insets top="6" right="24" bottom="6" left="24"/></padding>
+                <TextField fx:id="searchField" promptText="Tag or model" prefWidth="180"/>
+                <ComboBox fx:id="stateFilterCombo" promptText="All states"/>
+                <ComboBox fx:id="categoryFilterCombo" promptText="All categories"/>
+                <ComboBox fx:id="locationFilterCombo" promptText="All locations"/>
+                <Label text="Acquired" textFill="WHITE"/>
+                <DatePicker fx:id="acquiredFromPicker" prefWidth="140"/>
+                <Label text="to" textFill="WHITE"/>
+                <DatePicker fx:id="acquiredToPicker" prefWidth="140"/>
+                <Button text="Search" onAction="#onSearchClicked"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <padding><Insets top="0" right="24" bottom="14" left="24"/></padding>
+                <Button text="Change Location for Selected" onAction="#onBulkChangeLocationClicked"/>
+                <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="table">
+            <columns>
+                <TableColumn fx:id="tagColumn" text="Tag" prefWidth="90"/>
+                <TableColumn fx:id="modelColumn" text="Model" prefWidth="190"/>
+                <TableColumn fx:id="categoryColumn" text="Category" prefWidth="90"/>
+                <TableColumn fx:id="stateColumn" text="State" prefWidth="90"/>
+                <TableColumn fx:id="locationColumn" text="Location" prefWidth="110"/>
+                <TableColumn fx:id="costColumn" text="Landed Cost" prefWidth="100"/>
+                <TableColumn fx:id="daysColumn" text="Days" prefWidth="60"/>
+                <TableColumn fx:id="sourceColumn" text="Source" prefWidth="90"/>
+                <TableColumn fx:id="actionsColumn" text="" prefWidth="360"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.catalogue.ItemModelEditorController"
+            styleClass="app-root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <Label fx:id="titleLabel" styleClass="wizard-header-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Back to List" onAction="#onBackClicked"/>
+        </HBox>
+    </top>
+
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+            <Tab text="Details">
+                <VBox spacing="10">
+                    <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+                    <GridPane hgap="12" vgap="10">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="140"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+                        <Label text="Model code *" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="modelCodeField" GridPane.rowIndex="0" GridPane.columnIndex="1"
+                                   promptText="e.g. SOF"/>
+
+                        <Label text="Model name *" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="modelNameField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                        <Label text="Category *" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="categoryCombo" GridPane.rowIndex="2" GridPane.columnIndex="1" maxWidth="Infinity"/>
+
+                        <Label text="HSN code *" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="hsnCodeField" GridPane.rowIndex="3" GridPane.columnIndex="1"
+                                   promptText="e.g. 9403"/>
+
+                        <Label text="GST rate % *" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <TextField fx:id="gstRateField" GridPane.rowIndex="4" GridPane.columnIndex="1"
+                                   promptText="e.g. 18"/>
+
+                        <Label text="Default sale price" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                        <TextField fx:id="defaultPriceField" GridPane.rowIndex="5" GridPane.columnIndex="1"
+                                   promptText="Rupees, pre-fills billing"/>
+
+                        <Label text="Active" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                        <CheckBox fx:id="activeCheck" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+                        <Label text="Notes" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+                        <TextArea fx:id="notesArea" GridPane.rowIndex="7" GridPane.columnIndex="1" prefRowCount="3"/>
+                    </GridPane>
+                </VBox>
+            </Tab>
+
+            <Tab text="Specification">
+                <VBox spacing="10">
+                    <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+                    <GridPane hgap="12" vgap="10">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="140"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+                        <Label text="Length (cm)" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="lengthField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                        <Label text="Width (cm)" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="widthField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                        <Label text="Height (cm)" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextField fx:id="heightField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                        <Label text="Material" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="materialField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                        <Label text="Finish" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <TextField fx:id="finishField" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                        <Label text="Colour" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                        <TextField fx:id="colourField" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                    </GridPane>
+                </VBox>
+            </Tab>
+
+            <Tab fx:id="photosTab" text="Photos">
+                <VBox spacing="12">
+                    <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Button text="Add Photo" onAction="#onAddPhotoClicked"/>
+                        <Label text="Up to 5 photos. Large images are downscaled automatically." styleClass="wizard-step-subtitle"/>
+                    </HBox>
+                    <FlowPane fx:id="photoFlowPane" hgap="12" vgap="12"/>
+                </VBox>
+            </Tab>
+        </TabPane>
+    </center>
+
+    <bottom>
+        <VBox spacing="8">
+            <padding><Insets top="8" right="24" bottom="16" left="24"/></padding>
+            <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
+            <Button text="Save" onAction="#onSaveClicked" styleClass="primary-button"/>
+        </VBox>
+    </bottom>
+</BorderPane>

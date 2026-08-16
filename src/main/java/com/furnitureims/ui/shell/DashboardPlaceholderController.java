@@ -3,6 +3,7 @@ package com.furnitureims.ui.shell;
 import com.furnitureims.domain.AppUser;
 import com.furnitureims.repository.ShopProfileRepository;
 import com.furnitureims.service.AppSession;
+import com.furnitureims.ui.SceneRouter;
 import com.furnitureims.ui.login.IdleLockManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -21,15 +22,18 @@ public class DashboardPlaceholderController {
     private final AppSession appSession;
     private final ShopProfileRepository shopProfileRepository;
     private final IdleLockManager idleLockManager;
+    private final SceneRouter sceneRouter;
 
     @FXML private Label welcomeLabel;
 
     public DashboardPlaceholderController(AppSession appSession,
                                            ShopProfileRepository shopProfileRepository,
-                                           IdleLockManager idleLockManager) {
+                                           IdleLockManager idleLockManager,
+                                           SceneRouter sceneRouter) {
         this.appSession = appSession;
         this.shopProfileRepository = shopProfileRepository;
         this.idleLockManager = idleLockManager;
+        this.sceneRouter = sceneRouter;
     }
 
     @FXML
@@ -43,5 +47,20 @@ public class DashboardPlaceholderController {
     @FXML
     private void onLockNowClicked() {
         idleLockManager.lockNow();
+    }
+
+    @FXML
+    private void onItemModelsClicked() {
+        sceneRouter.show("/fxml/catalogue/item-model-list.fxml");
+    }
+
+    @FXML
+    private void onPieceRegisterClicked() {
+        sceneRouter.show("/fxml/catalogue/piece-register.fxml");
+    }
+
+    @FXML
+    private void onCategoriesLocationsClicked() {
+        sceneRouter.show("/fxml/catalogue/categories-locations.fxml");
     }
 }

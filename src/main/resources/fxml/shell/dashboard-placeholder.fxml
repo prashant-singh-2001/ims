@@ -23,11 +23,16 @@
     </top>
 
     <center>
-        <VBox spacing="10" alignment="CENTER">
+        <VBox spacing="16" alignment="CENTER">
             <padding><Insets top="40" right="40" bottom="40" left="40"/></padding>
-            <Label text="Foundation build" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
-            <Label text="Login, the setup wizard, the database and the idle lock are working. The real dashboard - stock value, sales totals, receivables and backup status - lands in milestone M7, once purchases, sales and reports exist to fill it in."
+            <Label text="Foundation and catalogue" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <Label text="The real dashboard - stock value, sales totals, receivables and backup status - lands in milestone M7, once purchases, sales and reports exist to fill it in. For now:"
                    wrapText="true" maxWidth="480" styleClass="wizard-step-subtitle"/>
+            <HBox spacing="12" alignment="CENTER">
+                <Button text="Item Models" onAction="#onItemModelsClicked" styleClass="primary-button"/>
+                <Button text="Piece Register" onAction="#onPieceRegisterClicked" styleClass="primary-button"/>
+                <Button text="Categories &amp; Locations" onAction="#onCategoriesLocationsClicked"/>
+            </HBox>
         </VBox>
     </center>
 </BorderPane>
