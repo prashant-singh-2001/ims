@@ -3,6 +3,7 @@ package com.furnitureims.ui.sales;
 import com.furnitureims.domain.Customer;
 import com.furnitureims.domain.IndianState;
 import com.furnitureims.domain.ItemModel;
+import com.furnitureims.domain.Payment;
 import com.furnitureims.domain.Piece;
 import com.furnitureims.domain.SalesInvoice;
 import com.furnitureims.money.Money;
@@ -45,9 +46,9 @@ import java.util.Optional;
  * {@link SalesInvoiceService#preview}, the same computation {@link #onSaveClicked}
  * ultimately persists, so Recalculate never lies about what Save will do.
  * <p>
- * Deliberately absent: a payment/advance panel (FR-PAY-01 is milestone M5 - the payment
- * table doesn't exist yet) and PDF/print/WhatsApp/email actions after saving (milestone
- * M6). Saving here only records the sale and confirms the invoice number and total.
+ * The advance panel (FR-PAY-01) is optional - a blank amount records the sale with no
+ * payment, same as before milestone M5. PDF/print/WhatsApp/email actions after saving are
+ * still milestone M6 and intentionally absent.
  */
 @Component
 public class NewSaleController {
@@ -96,6 +97,11 @@ public class NewSaleController {
     @FXML private Label grandTotalLabel;
     @FXML private Label warningLabel;
     @FXML private Label errorLabel;
+
+    @FXML private TextField advanceAmountField;
+    @FXML private ComboBox<Payment.Mode> advanceModeCombo;
+    @FXML private TextField advanceReferenceField;
+    @FXML private TextField advanceNoteField;
 
     private final List<BillLineControls> rows = new ArrayList<>();
     private Long existingCustomerId;
@@ -148,6 +154,8 @@ public class NewSaleController {
                 placeOfSupplyCombo.setValue(state);
             }
         });
+
+        advanceModeCombo.setItems(FXCollections.observableArrayList(Payment.Mode.values()));
 
         pieceTagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
         pieceModelColumn.setCellValueFactory(new PropertyValueFactory<>("modelName"));
@@ -347,14 +355,28 @@ public class NewSaleController {
             Money billDiscount = parseOptionalMoney(billDiscountField.getText(), "Bill discount");
             long customerId = resolveCustomerId();
 
+            Money advanceAmount = parseOptionalMoney(advanceAmountField.getText(), "Advance amount");
+            Payment.Mode advanceMode = advanceAmount.isPositive() ? advanceModeCombo.getValue() : null;
+            if (advanceAmount.isPositive() && advanceMode == null) {
+                errorLabel.setText("Select a mode for the advance payment.");
+                return;
+            }
+
             long invoiceId = salesInvoiceService.createInvoice(customerId, placeOfSupply.gstCode(),
-                    priceInclusiveCheck.isSelected(), inputs, billDiscount, LocalDate.now());
+                    priceInclusiveCheck.isSelected(), inputs, billDiscount, LocalDate.now(),
+                    advanceAmount, advanceMode, nullIfBlank(advanceReferenceField.getText()),
+                    nullIfBlank(advanceNoteField.getText()));
             SalesInvoice invoice = salesInvoiceService.findById(invoiceId).orElseThrow();
 
             Alert info = new Alert(Alert.AlertType.INFORMATION);
             info.setTitle("Sale Recorded");
             info.setHeaderText("Invoice " + invoice.invoiceNo());
-            info.setContentText("Grand total: " + invoice.grandTotal().toDisplayString());
+            String content = "Grand total: " + invoice.grandTotal().toDisplayString();
+            if (advanceAmount.isPositive()) {
+                content += "\nAdvance received: " + advanceAmount.toDisplayString()
+                        + "\nBalance due: " + salesInvoiceService.balance(invoice).toDisplayString();
+            }
+            info.setContentText(content);
             info.showAndWait();
 
             resetForNewSale();
@@ -410,6 +432,11 @@ public class NewSaleController {
         rowsBox.getChildren().clear();
         priceInclusiveCheck.setSelected(false);
         billDiscountField.clear();
+
+        advanceAmountField.clear();
+        advanceModeCombo.setValue(null);
+        advanceReferenceField.clear();
+        advanceNoteField.clear();
 
         grossValueLabel.setText("-");
         lineDiscountLabel.setText("-");

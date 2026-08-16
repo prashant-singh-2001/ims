@@ -115,7 +115,10 @@ class FxmlLoadSmokeTest {
                 "/fxml/purchase/purchase-bill-list.fxml",
                 "/fxml/purchase/purchase-bill-entry.fxml",
                 "/fxml/sales/new-sale.fxml",
-                "/fxml/sales/invoice-list.fxml"
+                "/fxml/sales/invoice-list.fxml",
+                "/fxml/payment/customer-receipt.fxml",
+                "/fxml/payment/supplier-payment.fxml",
+                "/fxml/payment/payment-list.fxml"
         );
         for (String screen : screens) {
             loadOnFxThread(screen);

@@ -140,6 +140,25 @@
                 <Label fx:id="warningLabel" styleClass="wizard-warning-text" wrapText="true"/>
                 <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
 
+                <Label text="Advance (optional)" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <GridPane hgap="12" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+                        <ColumnConstraints minWidth="110"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="160"/>
+                    </columnConstraints>
+                    <Label text="Amount" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <TextField fx:id="advanceAmountField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                    <Label text="Mode" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                    <ComboBox fx:id="advanceModeCombo" GridPane.rowIndex="0" GridPane.columnIndex="3" maxWidth="Infinity"/>
+
+                    <Label text="Reference" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <TextField fx:id="advanceReferenceField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    <Label text="Note" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                    <TextField fx:id="advanceNoteField" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+                </GridPane>
+
                 <Button text="Save Sale" onAction="#onSaveClicked" styleClass="primary-button"/>
             </VBox>
         </ScrollPane>

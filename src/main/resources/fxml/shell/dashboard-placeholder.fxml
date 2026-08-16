@@ -25,7 +25,7 @@
     <center>
         <VBox spacing="16" alignment="CENTER">
             <padding><Insets top="40" right="40" bottom="40" left="40"/></padding>
-            <Label text="Foundation, catalogue, purchases and sales" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <Label text="Foundation, catalogue, purchases, sales and payments" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
             <Label text="The real dashboard - stock value, sales totals, receivables and backup status - lands in milestone M7, once reports exist to fill it in. For now:"
                    wrapText="true" maxWidth="480" styleClass="wizard-step-subtitle"/>
             <HBox spacing="12" alignment="CENTER">
@@ -40,6 +40,9 @@
             <HBox spacing="12" alignment="CENTER">
                 <Button text="New Sale" onAction="#onNewSaleClicked" styleClass="primary-button"/>
                 <Button text="Invoices" onAction="#onInvoicesClicked"/>
+            </HBox>
+            <HBox spacing="12" alignment="CENTER">
+                <Button text="Payments" onAction="#onPaymentsClicked" styleClass="primary-button"/>
             </HBox>
         </VBox>
     </center>

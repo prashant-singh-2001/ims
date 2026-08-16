@@ -83,4 +83,9 @@ public class DashboardPlaceholderController {
     private void onInvoicesClicked() {
         sceneRouter.show("/fxml/sales/invoice-list.fxml");
     }
+
+    @FXML
+    private void onPaymentsClicked() {
+        sceneRouter.show("/fxml/payment/payment-list.fxml");
+    }
 }

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.payment.SupplierPaymentController"
+            styleClass="app-root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <Label text="Supplier Payment" styleClass="wizard-header-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Payment List" onAction="#onPaymentListClicked"/>
+            <Button text="Back" onAction="#onBackClicked"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true">
+            <VBox spacing="16">
+                <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+                <Label text="Supplier" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <ComboBox fx:id="supplierCombo" maxWidth="Infinity" promptText="Select a supplier"/>
+                <Label fx:id="supplierDuesLabel" styleClass="wizard-step-subtitle"/>
+
+                <Label text="Unpaid bills" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <VBox fx:id="billsBox" spacing="6"/>
+
+                <Label text="Payment" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <GridPane hgap="12" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+                        <ColumnConstraints minWidth="110"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="160"/>
+                    </columnConstraints>
+                    <Label text="Amount *" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <TextField fx:id="amountField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                    <Label text="Date *" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                    <DatePicker fx:id="paymentDatePicker" GridPane.rowIndex="0" GridPane.columnIndex="3" maxWidth="Infinity"/>
+
+                    <Label text="Mode *" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="modeCombo" GridPane.rowIndex="1" GridPane.columnIndex="1" maxWidth="Infinity"/>
+                    <Label text="Reference" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                    <TextField fx:id="referenceField" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                    <Label text="Note" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <TextField fx:id="noteField" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+                </GridPane>
+
+                <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
+
+                <Button text="Record Payment" onAction="#onSaveClicked" styleClass="primary-button"/>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

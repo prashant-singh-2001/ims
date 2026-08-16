@@ -49,17 +49,19 @@ public class PurchaseBillService {
     private final SupplierRepository supplierRepository;
     private final ShopProfileRepository shopProfileRepository;
     private final PieceService pieceService;
+    private final PaymentService paymentService;
 
     public PurchaseBillService(PurchaseBillRepository purchaseBillRepository,
                                 PurchaseLineRepository purchaseLineRepository,
                                 SupplierRepository supplierRepository,
                                 ShopProfileRepository shopProfileRepository,
-                                PieceService pieceService) {
+                                PieceService pieceService, PaymentService paymentService) {
         this.purchaseBillRepository = purchaseBillRepository;
         this.purchaseLineRepository = purchaseLineRepository;
         this.supplierRepository = supplierRepository;
         this.shopProfileRepository = shopProfileRepository;
         this.pieceService = pieceService;
+        this.paymentService = paymentService;
     }
 
     public Optional<PurchaseBill> findById(long id) {
@@ -74,11 +76,11 @@ public class PurchaseBillService {
         return purchaseBillRepository.search(criteria);
     }
 
-    /** "Paid" is always zero until milestone M5's payment table exists, so a bill's
-     *  balance is its full grand total once RECEIVED, and nothing before or after that
-     *  (a DRAFT owes nothing yet; a REVERSED bill is back to owing nothing). */
+    /** grand_total minus debit notes minus allocated payments (FR-PAY-03), via
+     *  {@link PaymentService} - the single source of truth for every balance in the
+     *  system. Zero unless the bill is RECEIVED. */
     public Money balance(PurchaseBill bill) {
-        return bill.status() == PurchaseBill.Status.RECEIVED ? bill.grandTotal() : Money.ZERO;
+        return paymentService.purchaseBillBalance(bill.id());
     }
 
     /** Computes totals without persisting anything, for the bill entry screen's live

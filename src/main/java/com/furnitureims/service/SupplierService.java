@@ -18,9 +18,11 @@ import java.util.Optional;
 public class SupplierService {
 
     private final SupplierRepository repository;
+    private final PaymentService paymentService;
 
-    public SupplierService(SupplierRepository repository) {
+    public SupplierService(SupplierRepository repository, PaymentService paymentService) {
         this.repository = repository;
+        this.paymentService = paymentService;
     }
 
     public List<Supplier> listActive() {
@@ -58,14 +60,9 @@ public class SupplierService {
         repository.setActive(id, active);
     }
 
-    /** Opening balance + received bills - returns - paid. "Paid" is always zero until the
-     *  payment table exists (milestone M5) - see docs/02-data-model.md section 4.6 for the
-     *  full formula this is a subset of. */
+    /** Opening balance + the balance of every received bill (FR-PUR-09), via
+     *  {@link PaymentService} - see docs/02-data-model.md section 4.6 for the full formula. */
     public Money dues(long supplierId) {
-        Supplier supplier = repository.findById(supplierId)
-                .orElseThrow(() -> new IllegalArgumentException("Supplier not found."));
-        return supplier.openingBalance()
-                .plus(repository.totalReceivedBillsValue(supplierId))
-                .minus(repository.totalReturnsValue(supplierId));
+        return paymentService.supplierDues(supplierId);
     }
 }

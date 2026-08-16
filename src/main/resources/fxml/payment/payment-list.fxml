@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.payment.PaymentListController"
+            styleClass="app-root">
+
+    <top>
+        <VBox styleClass="wizard-header">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <padding><Insets top="14" right="24" bottom="10" left="24"/></padding>
+                <Label text="Payments" styleClass="wizard-header-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Customer Receipt" onAction="#onCustomerReceiptClicked" styleClass="primary-button"/>
+                <Button text="Supplier Payment" onAction="#onSupplierPaymentClicked" styleClass="primary-button"/>
+                <Button text="Back" onAction="#onBackClicked"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <padding><Insets top="0" right="24" bottom="14" left="24"/></padding>
+                <ComboBox fx:id="partyTypeFilterCombo" promptText="All parties"/>
+                <ComboBox fx:id="modeFilterCombo" promptText="All modes"/>
+                <Label text="From" style="-fx-text-fill: white;"/>
+                <DatePicker fx:id="dateFromPicker" prefWidth="140"/>
+                <Label text="To" style="-fx-text-fill: white;"/>
+                <DatePicker fx:id="dateToPicker" prefWidth="140"/>
+                <CheckBox fx:id="showDeletedCheck" text="Show deleted" style="-fx-text-fill: white;"/>
+                <Button text="Search" onAction="#onSearchClicked"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox>
+            <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true">
+                <padding><Insets top="8" right="24" bottom="0" left="24"/></padding>
+            </Label>
+            <TableView fx:id="table" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="directionColumn" text="Dir" prefWidth="60"/>
+                    <TableColumn fx:id="dateColumn" text="Date" prefWidth="100"/>
+                    <TableColumn fx:id="partyColumn" text="Party" prefWidth="170"/>
+                    <TableColumn fx:id="amountColumn" text="Amount" prefWidth="100"/>
+                    <TableColumn fx:id="modeColumn" text="Mode" prefWidth="110"/>
+                    <TableColumn fx:id="referenceColumn" text="Reference" prefWidth="120"/>
+                    <TableColumn fx:id="statusColumn" text="Status" prefWidth="180"/>
+                    <TableColumn fx:id="actionsColumn" text="" prefWidth="80"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

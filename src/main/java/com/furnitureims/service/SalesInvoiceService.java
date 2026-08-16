@@ -2,6 +2,7 @@ package com.furnitureims.service;
 
 import com.furnitureims.domain.Customer;
 import com.furnitureims.domain.ItemModel;
+import com.furnitureims.domain.Payment;
 import com.furnitureims.domain.Piece;
 import com.furnitureims.domain.SalesInvoice;
 import com.furnitureims.domain.SalesLine;
@@ -25,6 +26,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -61,11 +63,12 @@ public class SalesInvoiceService {
     private final ItemModelRepository itemModelRepository;
     private final PieceService pieceService;
     private final SequenceCounterRepository sequenceCounterRepository;
+    private final PaymentService paymentService;
 
     public SalesInvoiceService(SalesInvoiceRepository salesInvoiceRepository, SalesLineRepository salesLineRepository,
                                 CustomerRepository customerRepository, ShopProfileRepository shopProfileRepository,
                                 ItemModelRepository itemModelRepository, PieceService pieceService,
-                                SequenceCounterRepository sequenceCounterRepository) {
+                                SequenceCounterRepository sequenceCounterRepository, PaymentService paymentService) {
         this.salesInvoiceRepository = salesInvoiceRepository;
         this.salesLineRepository = salesLineRepository;
         this.customerRepository = customerRepository;
@@ -73,6 +76,7 @@ public class SalesInvoiceService {
         this.itemModelRepository = itemModelRepository;
         this.pieceService = pieceService;
         this.sequenceCounterRepository = sequenceCounterRepository;
+        this.paymentService = paymentService;
     }
 
     public Optional<SalesInvoice> findById(long id) {
@@ -87,10 +91,11 @@ public class SalesInvoiceService {
         return salesInvoiceRepository.search(criteria);
     }
 
-    /** "Paid" is always zero until milestone M5's payment table exists - the same
-     *  deferral {@code PurchaseBillService.balance} makes on the purchase side. */
+    /** grand_total minus credit notes minus allocated payments (FR-PAY-03), via
+     *  {@link PaymentService} - the single source of truth for every balance in the
+     *  system. Zero for a cancelled invoice. */
     public Money balance(SalesInvoice invoice) {
-        return invoice.status() == SalesInvoice.Status.ACTIVE ? invoice.grandTotal() : Money.ZERO;
+        return paymentService.invoiceBalance(invoice.id());
     }
 
     /** Computes every derived figure without persisting or touching stock - safe to call
@@ -204,12 +209,27 @@ public class SalesInvoiceService {
                 sgstTotal, igstTotal, roundOff, grandTotal);
     }
 
-    /** FR-SAL-08: allocates the invoice number, writes the invoice and its lines, copies
-     *  each piece's landed cost into {@code cost_at_sale}, and moves every piece to SOLD -
-     *  all in the one transaction this method runs in. Any failure rolls back all of it. */
+    /** Delegates to the full overload with no advance payment. */
     @Transactional
     public long createInvoice(long customerId, String placeOfSupplyStateCode, boolean priceInclusive,
                                List<InvoiceLineInput> lineInputs, Money billDiscount, LocalDate invoiceDate) {
+        return createInvoice(customerId, placeOfSupplyStateCode, priceInclusive, lineInputs, billDiscount,
+                invoiceDate, null, null, null, null);
+    }
+
+    /** FR-SAL-08: allocates the invoice number, writes the invoice and its lines, copies
+     *  each piece's landed cost into {@code cost_at_sale}, and moves every piece to SOLD -
+     *  all in the one transaction this method runs in. Any failure rolls back all of it.
+     *  <p>
+     *  FR-PAY-01: an optional advance collected at the moment of billing - pass
+     *  {@code advanceAmount == null} (or zero) to skip it. When present it is recorded as a
+     *  customer payment allocated in full to the invoice just created, via
+     *  {@link PaymentService#recordCustomerPayment}. */
+    @Transactional
+    public long createInvoice(long customerId, String placeOfSupplyStateCode, boolean priceInclusive,
+                               List<InvoiceLineInput> lineInputs, Money billDiscount, LocalDate invoiceDate,
+                               Money advanceAmount, Payment.Mode advanceMode, String advanceReferenceNo,
+                               String advanceNote) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found."));
         InvoicePreview preview = preview(placeOfSupplyStateCode, lineInputs, priceInclusive, billDiscount);
@@ -239,12 +259,17 @@ public class SalesInvoiceService {
             pieceService.markSold(piece.id(), invoiceId);
         }
 
+        if (advanceAmount != null && advanceAmount.isPositive()) {
+            paymentService.recordCustomerPayment(customer.id(), advanceAmount, advanceMode, advanceReferenceNo,
+                    advanceNote, invoiceDate, Map.of(invoiceId, advanceAmount));
+        }
+
         return invoiceId;
     }
 
-    /** FR-SAL-11: restores every sold piece to IN_STOCK and marks the invoice cancelled -
-     *  never deleted, and its number never reused. "Reverses payments allocated to it" is
-     *  deferred to milestone M5, since no payments exist yet. */
+    /** FR-SAL-11: restores every sold piece to IN_STOCK, reverses any payments allocated to
+     *  it via {@link PaymentService#reverseAllocationsForInvoice}, and marks the invoice
+     *  cancelled - never deleted, and its number never reused. */
     @Transactional
     public void cancelInvoice(long invoiceId, String reason) {
         if (reason == null || reason.isBlank()) {
@@ -258,6 +283,7 @@ public class SalesInvoiceService {
         for (SalesLine line : salesLineRepository.findBySalesInvoiceId(invoiceId)) {
             pieceService.markInvoiceCancelled(line.pieceId(), invoiceId);
         }
+        paymentService.reverseAllocationsForInvoice(invoiceId);
         salesInvoiceRepository.cancel(invoiceId, LocalDateTime.now(), reason.trim());
     }
 }

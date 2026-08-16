@@ -96,22 +96,4 @@ public class SupplierRepository {
                 "updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','localtime') WHERE id = ?", active ? 1 : 0, id);
     }
 
-    /** SUM(grand_total) of RECEIVED bills - the "amount payable" half of FR-PUR-09.
-     *  "Amount paid" needs the payment table, which is milestone M5. */
-    public Money totalReceivedBillsValue(long supplierId) {
-        Long paisa = jdbc.queryForObject(
-                "SELECT COALESCE(SUM(grand_total), 0) FROM purchase_bill WHERE supplier_id = ? AND status = 'RECEIVED'",
-                Long.class, supplierId);
-        return Money.ofPaisa(paisa == null ? 0 : paisa);
-    }
-
-    public Money totalReturnsValue(long supplierId) {
-        Long paisa = jdbc.queryForObject("""
-                SELECT COALESCE(SUM(pr.total_amount), 0)
-                FROM purchase_return pr
-                JOIN purchase_bill pb ON pb.id = pr.purchase_bill_id
-                WHERE pb.supplier_id = ?
-                """, Long.class, supplierId);
-        return Money.ofPaisa(paisa == null ? 0 : paisa);
-    }
 }
