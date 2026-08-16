@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="14" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.furnitureims.ui.setup.Step4GoogleDriveController">
+    <padding><Insets top="8" right="24" bottom="8" left="24"/></padding>
+
+    <Label text="Connect Google Drive" styleClass="wizard-step-title"/>
+    <Label text="Backups are encrypted and uploaded to a Google Drive folder this application creates for itself."
+           wrapText="true" styleClass="wizard-step-subtitle"/>
+
+    <VBox spacing="10" styleClass="wizard-callout">
+        <Button text="Connect Google Drive" disable="true"/>
+        <Label text="Not available in this build yet - Google Drive backup is being built next. You can finish setup now and connect an account once it arrives; nothing will be lost by waiting."
+               wrapText="true" styleClass="wizard-warning-text"/>
+    </VBox>
+
+    <Label text="Until connected, backups will not run. The dashboard will show this clearly once the rest of the app is built."
+           wrapText="true" styleClass="wizard-step-subtitle"/>
+</VBox>

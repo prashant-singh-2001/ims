@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.furnitureims.ui.login.LoginController"
+           style="-fx-background-color: rgba(31,45,61,0.92);">
+
+    <VBox fx:id="loginPane" spacing="14" maxWidth="360" maxHeight="-Infinity"
+          alignment="CENTER" style="-fx-background-color: white; -fx-background-radius: 8; -fx-padding: 32;">
+        <Label text="Furniture Shop Inventory Management" wrapText="true" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+        <GridPane hgap="10" vgap="10">
+            <columnConstraints>
+                <ColumnConstraints minWidth="90"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+            <Label text="Username" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="usernameField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Password" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <PasswordField fx:id="passwordField" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                           onAction="#onUnlockClicked"/>
+        </GridPane>
+
+        <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
+        <Label fx:id="throttleLabel" styleClass="wizard-warning-text" wrapText="true"/>
+
+        <Button fx:id="unlockButton" text="Unlock" onAction="#onUnlockClicked" styleClass="primary-button" maxWidth="Infinity"/>
+        <Hyperlink text="Forgot password?" onAction="#onForgotPasswordClicked"/>
+    </VBox>
+
+    <VBox fx:id="recoveryPane" spacing="14" maxWidth="380" maxHeight="-Infinity"
+          alignment="CENTER" visible="false" managed="false"
+          style="-fx-background-color: white; -fx-background-radius: 8; -fx-padding: 32;">
+        <Label text="Reset Password with Recovery Code" wrapText="true" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+        <GridPane hgap="10" vgap="10">
+            <columnConstraints>
+                <ColumnConstraints minWidth="120"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+            <Label text="Username" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="recoveryUsernameField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Recovery code" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextField fx:id="recoveryCodeField" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                       promptText="XXXX-XXXX-XXXX-XXXX"/>
+
+            <Label text="New password" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <PasswordField fx:id="newPasswordField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label text="Confirm new password" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <PasswordField fx:id="confirmNewPasswordField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+        </GridPane>
+
+        <Label fx:id="recoveryErrorLabel" styleClass="wizard-error-label" wrapText="true"/>
+        <Label fx:id="newRecoveryCodeLabel" styleClass="wizard-recovery-code" wrapText="true"/>
+
+        <Button text="Reset Password" onAction="#onResetPasswordClicked" styleClass="primary-button" maxWidth="Infinity"/>
+        <Hyperlink text="Back to login" onAction="#onCancelRecoveryClicked"/>
+    </VBox>
+</StackPane>

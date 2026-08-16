@@ -1,0 +1,25 @@
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+bin/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Local dev data (never commit a real shop database)
+*.db
+*.db-wal
+*.db-shm
+/run-data/
+
+# Secrets - real OAuth client credentials must never be committed
+application-local.yml
+*.env

@@ -1,0 +1,11 @@
+spring:
+  main:
+    banner-mode: off
+  jmx:
+    enabled: false
+
+# The DataSource is a hand-written @Bean in com.furnitureims.config.DataSourceConfig,
+# pointed at %LOCALAPPDATA%\FurnitureIMS\data\app.db via AppPaths - it can't be a static
+# spring.datasource.url property because that path is only known at runtime. Spring Boot's
+# own DataSourceAutoConfiguration backs off automatically once that bean exists, and
+# Flyway autoconfiguration picks it up the same way, so no further wiring is needed here.

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.ColumnConstraints?>
+
+<VBox spacing="12" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.furnitureims.ui.setup.Step2OwnerLoginController">
+    <padding><Insets top="8" right="24" bottom="8" left="24"/></padding>
+
+    <Label text="Owner Login" styleClass="wizard-step-title"/>
+    <Label text="This password unlocks the application every time it starts."
+           wrapText="true" styleClass="wizard-step-subtitle"/>
+
+    <VBox fx:id="credentialsPane" spacing="10">
+        <GridPane hgap="12" vgap="10">
+            <columnConstraints>
+                <ColumnConstraints minWidth="160"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+            <Label text="Username *" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="usernameField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Password *" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <PasswordField fx:id="passwordField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Confirm password *" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <PasswordField fx:id="confirmPasswordField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        </GridPane>
+
+        <Label fx:id="credentialsErrorLabel" styleClass="wizard-error-label" wrapText="true"/>
+
+        <Button fx:id="createAccountButton" text="Create Account" onAction="#onCreateAccountClicked"/>
+    </VBox>
+
+    <VBox fx:id="recoveryCodePane" spacing="12" styleClass="wizard-callout">
+        <Label text="Your account is set up. Write down this recovery code now:"
+               wrapText="true" style="-fx-font-weight: bold;"/>
+        <Label fx:id="recoveryCodeLabel" styleClass="wizard-recovery-code"/>
+        <Label text="This is the only way back in if the login password is ever forgotten. Keep it somewhere off this PC - it will not be shown again after this screen."
+               wrapText="true" styleClass="wizard-warning-text"/>
+        <CheckBox fx:id="recoveryCodeConfirmedCheck"
+                  text="I have written this code down and stored it safely, away from this PC"/>
+    </VBox>
+</VBox>
