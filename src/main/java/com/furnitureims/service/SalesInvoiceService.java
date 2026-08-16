@@ -242,7 +242,7 @@ public class SalesInvoiceService {
                 preview.interstate(), priceInclusive, preview.grossValue(), preview.lineDiscountTotal(),
                 billDiscount == null ? Money.ZERO : billDiscount, preview.taxableValue(), preview.cgstAmount(),
                 preview.sgstAmount(), preview.igstAmount(), preview.roundOff(), preview.grandTotal(),
-                SalesInvoice.Status.ACTIVE, null, null, null);
+                SalesInvoice.Status.ACTIVE, null, null, null, null);
         long invoiceId = salesInvoiceRepository.create(toSave);
 
         for (LinePreview line : preview.lines()) {

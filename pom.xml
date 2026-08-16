@@ -25,6 +25,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>25.0.2</javafx.version>
         <sqlite-jdbc.version>3.53.2.1</sqlite-jdbc.version>
+        <openpdf.version>3.0.5</openpdf.version>
         <!-- Single-target platform: this app ships to Windows only (NFR-01) -->
         <javafx.platform>win</javafx.platform>
     </properties>
@@ -61,6 +62,23 @@
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>${sqlite-jdbc.version}</version>
+        </dependency>
+
+        <!-- PDF generation for FR-DOC-01/05 (invoices, credit notes, debit notes). LGPL/MPL,
+             pure Java, no native deps - unlike iText 7+ this carries no AGPL/commercial
+             licensing concern for a tool sold to a shop. Package is org.openpdf.* since 3.0. -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>${openpdf.version}</version>
+        </dependency>
+
+        <!-- SMTP send for FR-DOC-04. Only used for JavaMailSenderImpl/MimeMessageHelper -
+             SMTP host/port/credentials are user-configurable at runtime (settings screen),
+             so this app never relies on Spring Boot's static-properties mail autoconfiguration. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
         <!-- Spring Boot 4 modularised Flyway autoconfiguration out of spring-boot-autoconfigure;

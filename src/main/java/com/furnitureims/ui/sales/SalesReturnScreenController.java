@@ -1,14 +1,23 @@
 package com.furnitureims.ui.sales;
 
+import com.furnitureims.domain.Customer;
 import com.furnitureims.domain.SalesInvoice;
 import com.furnitureims.domain.SalesLine;
 import com.furnitureims.domain.SalesReturn;
+import com.furnitureims.service.CustomerService;
+import com.furnitureims.service.DocumentService;
+import com.furnitureims.service.EmailService;
 import com.furnitureims.service.PieceService;
 import com.furnitureims.service.SalesInvoiceService;
 import com.furnitureims.service.SalesReturnService;
+import com.furnitureims.service.WhatsAppShareService;
 import com.furnitureims.ui.SceneRouter;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -18,19 +27,26 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
 import org.springframework.stereotype.Component;
 
+import java.awt.Desktop;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Sales return (FR-SAL-10; docs/03-screens.md 6.3): pick which sold pieces from an
- *  active invoice come back. */
+/** Sales return (FR-SAL-10, FR-DOC-05; docs/03-screens.md 6.3): pick which sold pieces
+ *  from an active invoice come back. */
 @Component
 public class SalesReturnScreenController {
 
     private final SalesInvoiceService salesInvoiceService;
     private final SalesReturnService salesReturnService;
     private final PieceService pieceService;
+    private final CustomerService customerService;
+    private final DocumentService documentService;
+    private final WhatsAppShareService whatsAppShareService;
+    private final EmailService emailService;
     private final SceneRouter sceneRouter;
 
     @FXML private Label titleLabel;
@@ -45,10 +61,16 @@ public class SalesReturnScreenController {
     private long invoiceId;
 
     public SalesReturnScreenController(SalesInvoiceService salesInvoiceService, SalesReturnService salesReturnService,
-                                        PieceService pieceService, SceneRouter sceneRouter) {
+                                        PieceService pieceService, CustomerService customerService,
+                                        DocumentService documentService, WhatsAppShareService whatsAppShareService,
+                                        EmailService emailService, SceneRouter sceneRouter) {
         this.salesInvoiceService = salesInvoiceService;
         this.salesReturnService = salesReturnService;
         this.pieceService = pieceService;
+        this.customerService = customerService;
+        this.documentService = documentService;
+        this.whatsAppShareService = whatsAppShareService;
+        this.emailService = emailService;
         this.sceneRouter = sceneRouter;
     }
 
@@ -115,17 +137,101 @@ public class SalesReturnScreenController {
             SalesReturn salesReturn = salesReturnService.returnsFor(invoiceId).stream()
                     .filter(r -> r.id() == returnId).findFirst().orElseThrow();
 
-            Alert info = new Alert(Alert.AlertType.INFORMATION);
-            info.setTitle("Return Recorded");
-            info.setHeaderText("Credit note " + salesReturn.creditNoteNo());
-            info.setContentText("Credited " + salesReturn.totalAmount().toDisplayString()
-                    + " for " + selected.size() + " piece(s).");
-            info.showAndWait();
+            Path pdfPath;
+            String pdfNote;
+            try {
+                pdfPath = documentService.generateCreditNotePdf(returnId);
+                pdfNote = "";
+            } catch (RuntimeException e) {
+                pdfPath = null;
+                pdfNote = "\n\nThe return was saved, but the PDF could not be generated: " + e.getMessage();
+            }
 
+            showCreditNoteDialog(salesReturn, selected.size(), pdfNote, pdfPath);
             sceneRouter.show("/fxml/sales/invoice-list.fxml");
         } catch (IllegalArgumentException | IllegalStateException e) {
             errorLabel.setText(e.getMessage());
         }
+    }
+
+    /** Print/WhatsApp/Email keep the dialog open (event filter consumes the click) so more
+     *  than one can be used before continuing - the same pattern NewSaleController uses. */
+    private void showCreditNoteDialog(SalesReturn salesReturn, int pieceCount, String pdfNote, Path pdfPath) {
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setTitle("Return Recorded");
+        info.setHeaderText("Credit note " + salesReturn.creditNoteNo());
+        info.setContentText("Credited " + salesReturn.totalAmount().toDisplayString()
+                + " for " + pieceCount + " piece(s)." + pdfNote);
+
+        ButtonType openPdfType = new ButtonType("Open PDF");
+        ButtonType whatsAppType = new ButtonType("WhatsApp");
+        ButtonType emailType = new ButtonType("Email");
+        ButtonType doneType = new ButtonType("Done", ButtonBar.ButtonData.OK_DONE);
+        info.getButtonTypes().setAll(openPdfType, whatsAppType, emailType, doneType);
+
+        ((Button) info.getDialogPane().lookupButton(openPdfType)).addEventFilter(ActionEvent.ACTION, e -> {
+            e.consume();
+            openPdf(pdfPath);
+        });
+        ((Button) info.getDialogPane().lookupButton(whatsAppType)).addEventFilter(ActionEvent.ACTION, e -> {
+            e.consume();
+            shareWhatsApp(salesReturn, pdfPath);
+        });
+        ((Button) info.getDialogPane().lookupButton(emailType)).addEventFilter(ActionEvent.ACTION, e -> {
+            e.consume();
+            sendEmail(salesReturn, pdfPath);
+        });
+
+        info.showAndWait();
+    }
+
+    private void openPdf(Path pdfPath) {
+        if (pdfPath == null) {
+            showActionError("The PDF was not generated for this credit note.");
+            return;
+        }
+        try {
+            Desktop.getDesktop().open(pdfPath.toFile());
+        } catch (IOException e) {
+            showActionError("Could not open the PDF: " + e.getMessage());
+        }
+    }
+
+    private void shareWhatsApp(SalesReturn salesReturn, Path pdfPath) {
+        if (pdfPath == null) {
+            showActionError("The PDF was not generated for this credit note.");
+            return;
+        }
+        try {
+            SalesInvoice invoice = salesInvoiceService.findById(salesReturn.salesInvoiceId()).orElseThrow();
+            Customer customer = customerService.findById(invoice.customerId()).orElseThrow();
+            whatsAppShareService.share(customer.name(), customer.phone(), salesReturn.creditNoteNo(),
+                    salesReturn.returnDate(), salesReturn.totalAmount(), pdfPath);
+        } catch (RuntimeException e) {
+            showActionError(e.getMessage());
+        }
+    }
+
+    private void sendEmail(SalesReturn salesReturn, Path pdfPath) {
+        if (pdfPath == null) {
+            showActionError("The PDF was not generated for this credit note.");
+            return;
+        }
+        try {
+            SalesInvoice invoice = salesInvoiceService.findById(salesReturn.salesInvoiceId()).orElseThrow();
+            Customer customer = customerService.findById(invoice.customerId()).orElseThrow();
+            emailService.sendDocument(customer.email(), customer.name(), salesReturn.creditNoteNo(),
+                    salesReturn.returnDate(), salesReturn.totalAmount(), pdfPath);
+        } catch (RuntimeException e) {
+            showActionError(e.getMessage());
+        }
+    }
+
+    private static void showActionError(String message) {
+        Alert error = new Alert(Alert.AlertType.ERROR);
+        error.setHeaderText(null);
+        error.setContentText(message);
+        error.showAndWait();
     }
 
     @FXML

@@ -43,6 +43,7 @@
             </HBox>
             <HBox spacing="12" alignment="CENTER">
                 <Button text="Payments" onAction="#onPaymentsClicked" styleClass="primary-button"/>
+                <Button text="Settings" onAction="#onSettingsClicked"/>
             </HBox>
         </VBox>
     </center>

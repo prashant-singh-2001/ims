@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.settings.SettingsController"
+            styleClass="app-root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <Label text="Settings" styleClass="wizard-header-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Back" onAction="#onBackClicked"/>
+        </HBox>
+    </top>
+
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+
+            <Tab text="Invoice">
+                <ScrollPane fitToWidth="true">
+                    <VBox spacing="12">
+                        <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+                        <Label text="Declaration text" style="-fx-font-weight: bold;"/>
+                        <TextArea fx:id="declarationArea" prefRowCount="3" wrapText="true"
+                                  promptText="Printed near the signature block on every invoice, credit note and debit note."/>
+
+                        <Label text="Signature line" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="signatureField" promptText="e.g. Authorized Signatory"/>
+
+                        <CheckBox fx:id="showPieceTagsCheck"
+                                  text="List individual piece tags beneath a grouped invoice line"/>
+
+                        <Label text="Shop logo" style="-fx-font-weight: bold;"/>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Button text="Upload Logo" onAction="#onUploadLogoClicked"/>
+                            <Label fx:id="logoStatusLabel" styleClass="wizard-step-subtitle"/>
+                        </HBox>
+
+                        <Label fx:id="invoiceStatusLabel" styleClass="wizard-step-subtitle"/>
+                        <Button text="Save Invoice Settings" onAction="#onSaveInvoiceSettingsClicked"
+                                styleClass="primary-button"/>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+            <Tab text="Email">
+                <ScrollPane fitToWidth="true">
+                    <VBox spacing="12">
+                        <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+                        <GridPane hgap="12" vgap="10">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="130"/>
+                                <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                                <ColumnConstraints minWidth="110"/>
+                                <ColumnConstraints hgrow="ALWAYS" minWidth="150"/>
+                            </columnConstraints>
+                            <Label text="SMTP host *" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <TextField fx:id="smtpHostField" promptText="smtp.gmail.com"
+                                       GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <Label text="Port *" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                            <TextField fx:id="smtpPortField" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                            <Label text="Username *" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <TextField fx:id="smtpUsernameField" promptText="you@gmail.com"
+                                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <Label text="App password *" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                            <PasswordField fx:id="smtpAppPasswordField" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                            <Label text="From name" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                            <TextField fx:id="emailFromNameField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                            <CheckBox fx:id="smtpUseTlsCheck" text="Use TLS"
+                                      GridPane.rowIndex="2" GridPane.columnIndex="2" GridPane.columnSpan="2"/>
+                        </GridPane>
+
+                        <Label text="Subject template" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="emailSubjectField"/>
+
+                        <Label text="Body template" style="-fx-font-weight: bold;"/>
+                        <TextArea fx:id="emailBodyArea" prefRowCount="5" wrapText="true"/>
+                        <Label text="Placeholders: {customerName} {invoiceNo} {invoiceDate} {grandTotal} {shopName}"
+                               styleClass="wizard-step-subtitle"/>
+
+                        <Label fx:id="emailStatusLabel" styleClass="wizard-step-subtitle"/>
+                        <Button text="Save Email Settings" onAction="#onSaveEmailSettingsClicked"
+                                styleClass="primary-button"/>
+
+                        <Label text="Send a test email" style="-fx-font-weight: bold;"/>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <TextField fx:id="testEmailToField" promptText="test@example.com" HBox.hgrow="ALWAYS"/>
+                            <Button text="Send Test Email" onAction="#onSendTestEmailClicked"/>
+                        </HBox>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+            <Tab text="WhatsApp">
+                <ScrollPane fitToWidth="true">
+                    <VBox spacing="12">
+                        <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+                        <Label text="Message template" style="-fx-font-weight: bold;"/>
+                        <TextArea fx:id="whatsAppTemplateArea" prefRowCount="5" wrapText="true"/>
+                        <Label text="Placeholders: {customerName} {invoiceNo} {invoiceDate} {grandTotal} {shopName}"
+                               styleClass="wizard-step-subtitle"/>
+                        <Label text="A free WhatsApp link cannot attach the PDF automatically - sharing also opens the invoice's folder so it can be attached by hand."
+                               wrapText="true" styleClass="wizard-warning-text"/>
+
+                        <Label fx:id="whatsAppStatusLabel" styleClass="wizard-step-subtitle"/>
+                        <Button text="Save WhatsApp Settings" onAction="#onSaveWhatsAppSettingsClicked"
+                                styleClass="primary-button"/>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+        </TabPane>
+    </center>
+</BorderPane>

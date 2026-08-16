@@ -24,6 +24,10 @@
             <Region HBox.hgrow="ALWAYS"/>
             <Button fx:id="returnButton" text="Return Pieces" onAction="#onReturnClicked"/>
             <Button fx:id="cancelButton" text="Cancel Invoice" onAction="#onCancelClicked"/>
+            <Button text="Generate PDF" onAction="#onGeneratePdfClicked"/>
+            <Button fx:id="openPdfButton" text="Open PDF" onAction="#onOpenPdfClicked"/>
+            <Button fx:id="whatsAppButton" text="WhatsApp" onAction="#onWhatsAppClicked"/>
+            <Button fx:id="emailButton" text="Email" onAction="#onEmailClicked"/>
             <Button text="Back to List" onAction="#onBackClicked"/>
         </HBox>
     </top>

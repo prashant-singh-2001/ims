@@ -10,16 +10,22 @@ import com.furnitureims.money.Money;
 import com.furnitureims.repository.ItemModelSearchCriteria;
 import com.furnitureims.repository.PieceSearchCriteria;
 import com.furnitureims.service.CustomerService;
+import com.furnitureims.service.DocumentService;
+import com.furnitureims.service.EmailService;
 import com.furnitureims.service.ItemModelService;
 import com.furnitureims.service.PieceService;
 import com.furnitureims.service.SalesInvoiceService;
+import com.furnitureims.service.WhatsAppShareService;
 import com.furnitureims.ui.SceneRouter;
 import com.furnitureims.ui.catalogue.PieceRow;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -33,7 +39,10 @@ import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import org.springframework.stereotype.Component;
 
+import java.awt.Desktop;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,11 +70,15 @@ public class NewSaleController {
     private final ItemModelService itemModelService;
     private final PieceService pieceService;
     private final SalesInvoiceService salesInvoiceService;
+    private final DocumentService documentService;
+    private final WhatsAppShareService whatsAppShareService;
+    private final EmailService emailService;
     private final SceneRouter sceneRouter;
 
     @FXML private TextField phoneField;
     @FXML private Label customerStatusLabel;
     @FXML private TextField nameField;
+    @FXML private TextField emailField;
     @FXML private TextField addressLine1Field;
     @FXML private TextField addressLine2Field;
     @FXML private TextField cityField;
@@ -108,11 +121,15 @@ public class NewSaleController {
 
     public NewSaleController(CustomerService customerService, ItemModelService itemModelService,
                               PieceService pieceService, SalesInvoiceService salesInvoiceService,
-                              SceneRouter sceneRouter) {
+                              DocumentService documentService, WhatsAppShareService whatsAppShareService,
+                              EmailService emailService, SceneRouter sceneRouter) {
         this.customerService = customerService;
         this.itemModelService = itemModelService;
         this.pieceService = pieceService;
         this.salesInvoiceService = salesInvoiceService;
+        this.documentService = documentService;
+        this.whatsAppShareService = whatsAppShareService;
+        this.emailService = emailService;
         this.sceneRouter = sceneRouter;
     }
 
@@ -274,6 +291,7 @@ public class NewSaleController {
             Customer c = found.get();
             existingCustomerId = c.id();
             nameField.setText(c.name());
+            emailField.setText(c.email());
             addressLine1Field.setText(c.addressLine1());
             addressLine2Field.setText(c.addressLine2());
             cityField.setText(c.city());
@@ -368,21 +386,106 @@ public class NewSaleController {
                     nullIfBlank(advanceNoteField.getText()));
             SalesInvoice invoice = salesInvoiceService.findById(invoiceId).orElseThrow();
 
-            Alert info = new Alert(Alert.AlertType.INFORMATION);
-            info.setTitle("Sale Recorded");
-            info.setHeaderText("Invoice " + invoice.invoiceNo());
-            String content = "Grand total: " + invoice.grandTotal().toDisplayString();
-            if (advanceAmount.isPositive()) {
-                content += "\nAdvance received: " + advanceAmount.toDisplayString()
-                        + "\nBalance due: " + salesInvoiceService.balance(invoice).toDisplayString();
+            Path pdfPath;
+            String pdfNote;
+            try {
+                pdfPath = documentService.generateInvoicePdf(invoiceId);
+                pdfNote = "";
+            } catch (RuntimeException e) {
+                pdfPath = null;
+                pdfNote = "\n\nThe sale was saved, but the PDF could not be generated: " + e.getMessage();
             }
-            info.setContentText(content);
-            info.showAndWait();
 
+            showSavedInvoiceDialog(invoice, advanceAmount, pdfNote, pdfPath);
             resetForNewSale();
         } catch (IllegalArgumentException | IllegalStateException e) {
             errorLabel.setText(e.getMessage());
         }
+    }
+
+    /** docs/03-screens.md 6.1: "Then: PDF generated -> Print · WhatsApp · Email · New
+     *  Sale." Print/WhatsApp/Email each perform their action and keep the dialog open (an
+     *  event filter on the button consumes the click before the dialog's default close
+     *  behaviour runs) so the owner can use more than one before moving on; only "New
+     *  Sale" actually closes it. */
+    private void showSavedInvoiceDialog(SalesInvoice invoice, Money advanceAmount, String pdfNote, Path pdfPath) {
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setTitle("Sale Recorded");
+        info.setHeaderText("Invoice " + invoice.invoiceNo());
+        String content = "Grand total: " + invoice.grandTotal().toDisplayString();
+        if (advanceAmount.isPositive()) {
+            content += "\nAdvance received: " + advanceAmount.toDisplayString()
+                    + "\nBalance due: " + salesInvoiceService.balance(invoice).toDisplayString();
+        }
+        info.setContentText(content + pdfNote);
+
+        ButtonType openPdfType = new ButtonType("Open PDF");
+        ButtonType whatsAppType = new ButtonType("WhatsApp");
+        ButtonType emailType = new ButtonType("Email");
+        ButtonType newSaleType = new ButtonType("New Sale", ButtonBar.ButtonData.OK_DONE);
+        info.getButtonTypes().setAll(openPdfType, whatsAppType, emailType, newSaleType);
+
+        ((Button) info.getDialogPane().lookupButton(openPdfType)).addEventFilter(ActionEvent.ACTION, e -> {
+            e.consume();
+            openPdf(pdfPath);
+        });
+        ((Button) info.getDialogPane().lookupButton(whatsAppType)).addEventFilter(ActionEvent.ACTION, e -> {
+            e.consume();
+            shareWhatsApp(invoice, pdfPath);
+        });
+        ((Button) info.getDialogPane().lookupButton(emailType)).addEventFilter(ActionEvent.ACTION, e -> {
+            e.consume();
+            sendEmail(invoice, pdfPath);
+        });
+
+        info.showAndWait();
+    }
+
+    private void openPdf(Path pdfPath) {
+        if (pdfPath == null) {
+            showActionError("The PDF was not generated for this invoice.");
+            return;
+        }
+        try {
+            Desktop.getDesktop().open(pdfPath.toFile());
+        } catch (IOException e) {
+            showActionError("Could not open the PDF: " + e.getMessage());
+        }
+    }
+
+    private void shareWhatsApp(SalesInvoice invoice, Path pdfPath) {
+        if (pdfPath == null) {
+            showActionError("The PDF was not generated for this invoice.");
+            return;
+        }
+        try {
+            Customer customer = customerService.findById(invoice.customerId()).orElseThrow();
+            whatsAppShareService.share(customer.name(), customer.phone(), invoice.invoiceNo(),
+                    invoice.invoiceDate(), invoice.grandTotal(), pdfPath);
+        } catch (RuntimeException e) {
+            showActionError(e.getMessage());
+        }
+    }
+
+    private void sendEmail(SalesInvoice invoice, Path pdfPath) {
+        if (pdfPath == null) {
+            showActionError("The PDF was not generated for this invoice.");
+            return;
+        }
+        try {
+            Customer customer = customerService.findById(invoice.customerId()).orElseThrow();
+            emailService.sendDocument(customer.email(), customer.name(), invoice.invoiceNo(),
+                    invoice.invoiceDate(), invoice.grandTotal(), pdfPath);
+        } catch (RuntimeException e) {
+            showActionError(e.getMessage());
+        }
+    }
+
+    private static void showActionError(String message) {
+        Alert error = new Alert(Alert.AlertType.ERROR);
+        error.setHeaderText(null);
+        error.setContentText(message);
+        error.showAndWait();
     }
 
     private long resolveCustomerId() {
@@ -391,10 +494,11 @@ public class NewSaleController {
         }
         IndianState state = customerStateCombo.getValue();
         Customer draft = new Customer(0, requireText(nameField.getText(), "Customer name"),
-                requireText(phoneField.getText(), "Customer phone"), nullIfBlank(addressLine1Field.getText()),
-                nullIfBlank(addressLine2Field.getText()), nullIfBlank(cityField.getText()),
-                nullIfBlank(pincodeField.getText()), state == null ? null : state.displayName(),
-                state == null ? null : state.gstCode(), nullIfBlank(gstinField.getText()), null);
+                requireText(phoneField.getText(), "Customer phone"), nullIfBlank(emailField.getText()),
+                nullIfBlank(addressLine1Field.getText()), nullIfBlank(addressLine2Field.getText()),
+                nullIfBlank(cityField.getText()), nullIfBlank(pincodeField.getText()),
+                state == null ? null : state.displayName(), state == null ? null : state.gstCode(),
+                nullIfBlank(gstinField.getText()), null);
         return customerService.create(draft);
     }
 
@@ -415,6 +519,7 @@ public class NewSaleController {
         existingCustomerId = null;
         phoneField.clear();
         nameField.clear();
+        emailField.clear();
         addressLine1Field.clear();
         addressLine2Field.clear();
         cityField.clear();

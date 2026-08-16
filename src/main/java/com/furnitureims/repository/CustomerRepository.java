@@ -17,7 +17,7 @@ import java.util.Optional;
 public class CustomerRepository {
 
     private static final RowMapper<Customer> MAPPER = (rs, rowNum) -> new Customer(
-            rs.getLong("id"), rs.getString("name"), rs.getString("phone"),
+            rs.getLong("id"), rs.getString("name"), rs.getString("phone"), rs.getString("email"),
             rs.getString("address_line1"), rs.getString("address_line2"), rs.getString("city"),
             rs.getString("pincode"), rs.getString("state_name"), rs.getString("state_code"),
             rs.getString("gstin"), rs.getString("notes"));
@@ -49,20 +49,21 @@ public class CustomerRepository {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement("""
-                    INSERT INTO customer (name, phone, address_line1, address_line2, city, pincode,
+                    INSERT INTO customer (name, phone, email, address_line1, address_line2, city, pincode,
                             state_name, state_code, gstin, notes)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, c.name());
             ps.setString(2, c.phone());
-            ps.setString(3, c.addressLine1());
-            ps.setString(4, c.addressLine2());
-            ps.setString(5, c.city());
-            ps.setString(6, c.pincode());
-            ps.setString(7, c.stateName());
-            ps.setString(8, c.stateCode());
-            ps.setString(9, c.gstin());
-            ps.setString(10, c.notes());
+            ps.setString(3, c.email());
+            ps.setString(4, c.addressLine1());
+            ps.setString(5, c.addressLine2());
+            ps.setString(6, c.city());
+            ps.setString(7, c.pincode());
+            ps.setString(8, c.stateName());
+            ps.setString(9, c.stateCode());
+            ps.setString(10, c.gstin());
+            ps.setString(11, c.notes());
             return ps;
         }, keyHolder);
         return Objects.requireNonNull(keyHolder.getKey()).longValue();

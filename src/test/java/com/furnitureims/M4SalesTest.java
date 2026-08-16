@@ -90,7 +90,8 @@ class M4SalesTest {
     }
 
     private long customerId(String name, String phone) {
-        return customerService.create(new Customer(0, name, phone, null, null, null, null, null, null, null, null));
+        return customerService.create(
+                new Customer(0, name, phone, null, null, null, null, null, null, null, null, null));
     }
 
     @Test

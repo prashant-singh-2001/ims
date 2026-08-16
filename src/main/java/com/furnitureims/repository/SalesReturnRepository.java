@@ -72,4 +72,9 @@ public class SalesReturnRepository {
         }, keyHolder);
         return Objects.requireNonNull(keyHolder.getKey()).longValue();
     }
+
+    /** FR-DOC-02/05: overwrites the same row's path on regeneration. */
+    public void updatePdfPath(long id, String pdfPath) {
+        jdbc.update("UPDATE sales_return SET pdf_path = ? WHERE id = ?", pdfPath, id);
+    }
 }

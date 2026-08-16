@@ -4,11 +4,15 @@ import com.furnitureims.domain.Customer;
 import com.furnitureims.domain.SalesInvoice;
 import com.furnitureims.domain.SalesLine;
 import com.furnitureims.service.CustomerService;
+import com.furnitureims.service.DocumentService;
+import com.furnitureims.service.EmailService;
 import com.furnitureims.service.PieceService;
 import com.furnitureims.service.SalesInvoiceService;
+import com.furnitureims.service.WhatsAppShareService;
 import com.furnitureims.ui.SceneRouter;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -17,14 +21,16 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.springframework.stereotype.Component;
 
+import java.awt.Desktop;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Invoice detail (FR-SAL-11/12; docs/03-screens.md 6.2). There is deliberately no Edit
- * button - a saved invoice is corrected by a sales return or by cancellation, never
- * rewritten. Payment history, PDF regeneration and share actions are milestones M5/M6 and
- * intentionally absent here.
+ * Invoice detail (FR-SAL-11/12, FR-DOC-02/03/04; docs/03-screens.md 6.2). There is
+ * deliberately no Edit button - a saved invoice is corrected by a sales return or by
+ * cancellation, never rewritten.
  */
 @Component
 public class InvoiceDetailController {
@@ -33,6 +39,9 @@ public class InvoiceDetailController {
     private final CustomerService customerService;
     private final PieceService pieceService;
     private final SalesReturnScreenController salesReturnScreenController;
+    private final DocumentService documentService;
+    private final WhatsAppShareService whatsAppShareService;
+    private final EmailService emailService;
     private final SceneRouter sceneRouter;
 
     @FXML private Label titleLabel;
@@ -43,6 +52,9 @@ public class InvoiceDetailController {
     @FXML private Label balanceLabel;
     @FXML private Button cancelButton;
     @FXML private Button returnButton;
+    @FXML private Button openPdfButton;
+    @FXML private Button whatsAppButton;
+    @FXML private Button emailButton;
     @FXML private Label errorLabel;
 
     @FXML private TableView<SalesLineRow> linesTable;
@@ -58,11 +70,15 @@ public class InvoiceDetailController {
 
     public InvoiceDetailController(SalesInvoiceService salesInvoiceService, CustomerService customerService,
                                     PieceService pieceService, SalesReturnScreenController salesReturnScreenController,
-                                    SceneRouter sceneRouter) {
+                                    DocumentService documentService, WhatsAppShareService whatsAppShareService,
+                                    EmailService emailService, SceneRouter sceneRouter) {
         this.salesInvoiceService = salesInvoiceService;
         this.customerService = customerService;
         this.pieceService = pieceService;
         this.salesReturnScreenController = salesReturnScreenController;
+        this.documentService = documentService;
+        this.whatsAppShareService = whatsAppShareService;
+        this.emailService = emailService;
         this.sceneRouter = sceneRouter;
     }
 
@@ -99,6 +115,10 @@ public class InvoiceDetailController {
         boolean active = invoice.status() == SalesInvoice.Status.ACTIVE;
         cancelButton.setDisable(!active);
         returnButton.setDisable(!active);
+        boolean hasPdf = invoice.pdfPath() != null;
+        openPdfButton.setDisable(!hasPdf);
+        whatsAppButton.setDisable(!hasPdf);
+        emailButton.setDisable(!hasPdf);
 
         List<SalesLine> lines = salesInvoiceService.linesFor(invoiceId);
         List<SalesLineRow> rows = lines.stream()
@@ -130,6 +150,64 @@ public class InvoiceDetailController {
     private void onReturnClicked() {
         salesReturnScreenController.openFor(invoiceId);
         sceneRouter.show("/fxml/sales/sales-return.fxml");
+    }
+
+    /** FR-DOC-02: also the button to press if a PDF was never generated in the first
+     *  place - generating and regenerating are the same operation. */
+    @FXML
+    private void onGeneratePdfClicked() {
+        try {
+            documentService.generateInvoicePdf(invoiceId);
+            errorLabel.setText("");
+            reload();
+        } catch (RuntimeException e) {
+            errorLabel.setText(e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onOpenPdfClicked() {
+        SalesInvoice invoice = salesInvoiceService.findById(invoiceId).orElseThrow();
+        try {
+            Desktop.getDesktop().open(documentService.resolve(invoice.pdfPath()).toFile());
+            errorLabel.setText("");
+        } catch (IOException | RuntimeException e) {
+            errorLabel.setText("Could not open the PDF: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onWhatsAppClicked() {
+        SalesInvoice invoice = salesInvoiceService.findById(invoiceId).orElseThrow();
+        Customer customer = customerService.findById(invoice.customerId()).orElse(null);
+        try {
+            Path pdf = documentService.resolve(invoice.pdfPath());
+            whatsAppShareService.share(customer == null ? null : customer.name(),
+                    customer == null ? null : customer.phone(), invoice.invoiceNo(), invoice.invoiceDate(),
+                    invoice.grandTotal(), pdf);
+            errorLabel.setText("");
+        } catch (RuntimeException e) {
+            errorLabel.setText(e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onEmailClicked() {
+        SalesInvoice invoice = salesInvoiceService.findById(invoiceId).orElseThrow();
+        Customer customer = customerService.findById(invoice.customerId()).orElse(null);
+        try {
+            Path pdf = documentService.resolve(invoice.pdfPath());
+            emailService.sendDocument(customer == null ? null : customer.email(),
+                    customer == null ? null : customer.name(), invoice.invoiceNo(), invoice.invoiceDate(),
+                    invoice.grandTotal(), pdf);
+            errorLabel.setText("");
+            Alert info = new Alert(Alert.AlertType.INFORMATION);
+            info.setHeaderText(null);
+            info.setContentText("Email sent.");
+            info.showAndWait();
+        } catch (RuntimeException e) {
+            errorLabel.setText(e.getMessage());
+        }
     }
 
     @FXML

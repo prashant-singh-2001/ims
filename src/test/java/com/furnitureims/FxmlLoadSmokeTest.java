@@ -118,7 +118,8 @@ class FxmlLoadSmokeTest {
                 "/fxml/sales/invoice-list.fxml",
                 "/fxml/payment/customer-receipt.fxml",
                 "/fxml/payment/supplier-payment.fxml",
-                "/fxml/payment/payment-list.fxml"
+                "/fxml/payment/payment-list.fxml",
+                "/fxml/settings/settings.fxml"
         );
         for (String screen : screens) {
             loadOnFxThread(screen);
@@ -198,7 +199,7 @@ class FxmlLoadSmokeTest {
         Piece piece = pieceService.createOpeningStock(
                 modelId, 1, Money.ofRupees("500.00"), locationId, LocalDate.now()).get(0);
         long customerId = customerService.create(new Customer(0, "Smoke Test Customer", "9000000099",
-                null, null, null, null, null, null, null, null));
+                null, null, null, null, null, null, null, null, null));
 
         long invoiceId = salesInvoiceService.createInvoice(customerId, "27", false,
                 List.of(new SalesInvoiceService.InvoiceLineInput(piece.id(), Money.ofRupees("1000.00"), Money.ZERO)),

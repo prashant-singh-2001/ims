@@ -31,6 +31,7 @@ public record SalesInvoice(
         Status status,
         LocalDateTime cancelledAt,
         String cancelReason,
+        String pdfPath,
         String notes
 ) {
     public enum Status { ACTIVE, CANCELLED }

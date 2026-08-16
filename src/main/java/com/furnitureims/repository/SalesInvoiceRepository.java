@@ -41,6 +41,7 @@ public class SalesInvoiceRepository {
             SalesInvoice.Status.valueOf(rs.getString("status")),
             rs.getString("cancelled_at") == null ? null : LocalDateTime.parse(rs.getString("cancelled_at")),
             rs.getString("cancel_reason"),
+            rs.getString("pdf_path"),
             rs.getString("notes")
     );
 
@@ -99,6 +100,17 @@ public class SalesInvoiceRepository {
                         updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now', 'localtime')
                 WHERE id = ?
                 """, cancelledAt.toString(), reason, id);
+    }
+
+    /** FR-DOC-02: called after a PDF is (re)generated on disk - regeneration overwrites the
+     *  same row's path rather than creating a new one, since there is exactly one current
+     *  PDF per invoice. */
+    public void updatePdfPath(long id, String pdfPath) {
+        jdbc.update("""
+                UPDATE sales_invoice SET pdf_path = ?,
+                        updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now', 'localtime')
+                WHERE id = ?
+                """, pdfPath, id);
     }
 
     public List<SalesInvoiceListRow> search(SalesInvoiceSearchCriteria criteria) {
