@@ -73,4 +73,14 @@ public class DashboardPlaceholderController {
     private void onPurchaseBillsClicked() {
         sceneRouter.show("/fxml/purchase/purchase-bill-list.fxml");
     }
+
+    @FXML
+    private void onNewSaleClicked() {
+        sceneRouter.show("/fxml/sales/new-sale.fxml");
+    }
+
+    @FXML
+    private void onInvoicesClicked() {
+        sceneRouter.show("/fxml/sales/invoice-list.fxml");
+    }
 }

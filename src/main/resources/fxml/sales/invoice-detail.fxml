@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.sales.InvoiceDetailController"
+            styleClass="app-root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <Label fx:id="titleLabel" styleClass="wizard-header-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="returnButton" text="Return Pieces" onAction="#onReturnClicked"/>
+            <Button fx:id="cancelButton" text="Cancel Invoice" onAction="#onCancelClicked"/>
+            <Button text="Back to List" onAction="#onBackClicked"/>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="16">
+            <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+            <GridPane hgap="20" vgap="6">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="120"/>
+                    <ColumnConstraints minWidth="200"/>
+                    <ColumnConstraints minWidth="120"/>
+                    <ColumnConstraints minWidth="150"/>
+                </columnConstraints>
+                <Label text="Customer" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label fx:id="customerLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                <Label text="Place of supply" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                <Label fx:id="placeOfSupplyLabel" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                <Label text="Status" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label fx:id="statusLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                <Label text="Grand total" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                <Label fx:id="grandTotalLabel" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                <Label text="Balance" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Label fx:id="balanceLabel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+            </GridPane>
+
+            <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
+
+            <Label text="Items" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+            <TableView fx:id="linesTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="tagColumn" text="Tag" prefWidth="90"/>
+                    <TableColumn fx:id="descriptionColumn" text="Item" prefWidth="200"/>
+                    <TableColumn fx:id="priceColumn" text="Price" prefWidth="90"/>
+                    <TableColumn fx:id="discountColumn" text="Discount" prefWidth="90"/>
+                    <TableColumn fx:id="taxableColumn" text="Taxable" prefWidth="90"/>
+                    <TableColumn fx:id="taxColumn" text="Tax" prefWidth="90"/>
+                    <TableColumn fx:id="totalColumn" text="Total" prefWidth="90"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

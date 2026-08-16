@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.sales.SalesReturnScreenController"
+            styleClass="app-root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <Label fx:id="titleLabel" styleClass="wizard-header-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Back to List" onAction="#onBackClicked"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true">
+            <VBox spacing="12">
+                <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+                <Label text="Pieces sold on this invoice" style="-fx-font-weight: bold;"/>
+                <VBox fx:id="pieceCheckboxesBox" spacing="6"/>
+
+                <Label text="Reason *" style="-fx-font-weight: bold;"/>
+                <TextField fx:id="reasonField"/>
+
+                <Label text="Return date" style="-fx-font-weight: bold;"/>
+                <DatePicker fx:id="returnDatePicker"/>
+
+                <Label text="Refund" style="-fx-font-weight: bold;"/>
+                <HBox spacing="16">
+                    <RadioButton fx:id="adjustAgainstDueRadio" text="Adjust against outstanding balance"/>
+                    <RadioButton fx:id="cashRefundRadio" text="Cash refund"/>
+                </HBox>
+
+                <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
+                <Button text="Submit Return" onAction="#onSubmitClicked" styleClass="primary-button"/>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

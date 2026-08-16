@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.sales.NewSaleController"
+            styleClass="app-root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <Label text="New Sale" styleClass="wizard-header-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Invoices" onAction="#onBackClicked"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true">
+            <VBox spacing="16">
+                <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+                <Label text="Customer" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <GridPane hgap="12" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+                        <ColumnConstraints minWidth="110"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="160"/>
+                    </columnConstraints>
+                    <Label text="Phone *" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <HBox spacing="8" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                        <TextField fx:id="phoneField" HBox.hgrow="ALWAYS"/>
+                        <Button text="Look Up" onAction="#onLookUpCustomerClicked"/>
+                    </HBox>
+                    <Label fx:id="customerStatusLabel" styleClass="wizard-step-subtitle"
+                           GridPane.rowIndex="0" GridPane.columnIndex="2" GridPane.columnSpan="2"/>
+
+                    <Label text="Name *" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <TextField fx:id="nameField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    <Label text="GSTIN" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                    <TextField fx:id="gstinField" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                    <Label text="Address line 1" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <TextField fx:id="addressLine1Field" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                    <Label text="Address line 2" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+                    <TextField fx:id="addressLine2Field" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+
+                    <Label text="City" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                    <TextField fx:id="cityField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                    <Label text="Pincode" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+                    <TextField fx:id="pincodeField" GridPane.rowIndex="3" GridPane.columnIndex="3"/>
+
+                    <Label text="Customer state" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="customerStateCombo" GridPane.rowIndex="4" GridPane.columnIndex="1" maxWidth="Infinity"/>
+                    <Label text="Place of supply *" GridPane.rowIndex="4" GridPane.columnIndex="2"/>
+                    <ComboBox fx:id="placeOfSupplyCombo" GridPane.rowIndex="4" GridPane.columnIndex="3" maxWidth="Infinity"
+                              promptText="Decides CGST/SGST vs IGST"/>
+                </GridPane>
+
+                <Label text="Add items" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="Model:"/>
+                    <ComboBox fx:id="modelSearchCombo" promptText="Search by model" prefWidth="260"/>
+                    <Label text="or tag:"/>
+                    <TextField fx:id="tagField" promptText="e.g. SOF-0042" prefWidth="140"/>
+                    <Button text="Add by Tag" onAction="#onAddByTagClicked"/>
+                </HBox>
+                <TableView fx:id="piecesTable" prefHeight="160">
+                    <columns>
+                        <TableColumn fx:id="pieceTagColumn" text="Tag" prefWidth="90"/>
+                        <TableColumn fx:id="pieceModelColumn" text="Model" prefWidth="220"/>
+                        <TableColumn fx:id="pieceLocationColumn" text="Location" prefWidth="120"/>
+                        <TableColumn fx:id="pieceCostColumn" text="Cost" prefWidth="100"/>
+                        <TableColumn fx:id="pieceActionsColumn" text="" prefWidth="80"/>
+                    </columns>
+                </TableView>
+
+                <Label text="Bill lines" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <HBox spacing="8">
+                    <Label text="Item" prefWidth="220" style="-fx-font-weight: bold;"/>
+                    <Label text="Price" prefWidth="100" style="-fx-font-weight: bold;"/>
+                    <Label text="Discount" prefWidth="90" style="-fx-font-weight: bold;"/>
+                    <Label text="Taxable" prefWidth="90" style="-fx-font-weight: bold;"/>
+                    <Label text="Tax" prefWidth="90" style="-fx-font-weight: bold;"/>
+                    <Label text="Total" prefWidth="90" style="-fx-font-weight: bold;"/>
+                </HBox>
+                <VBox fx:id="rowsBox" spacing="6"/>
+
+                <HBox spacing="20" alignment="CENTER_LEFT">
+                    <CheckBox fx:id="priceInclusiveCheck" text="Entered prices include tax"/>
+                    <Label text="Bill discount"/>
+                    <TextField fx:id="billDiscountField" prefWidth="120"/>
+                    <Button text="Recalculate Totals" onAction="#onRecalculateClicked"/>
+                </HBox>
+
+                <GridPane hgap="20" vgap="6" styleClass="wizard-callout">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120"/>
+                        <ColumnConstraints minWidth="110"/>
+                        <ColumnConstraints minWidth="120"/>
+                        <ColumnConstraints minWidth="110"/>
+                    </columnConstraints>
+                    <Label text="Gross value" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <Label fx:id="grossValueLabel" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                    <Label text="Line discounts" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                    <Label fx:id="lineDiscountLabel" text="-" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                    <Label text="Taxable value" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <Label fx:id="taxableValueLabel" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    <Label text="Round off" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                    <Label fx:id="roundOffLabel" text="-" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                    <Label text="CGST" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <Label fx:id="cgstLabel" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                    <Label text="SGST" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+                    <Label fx:id="sgstLabel" text="-" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+
+                    <Label text="IGST" style="-fx-font-weight: bold;" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                    <Label fx:id="igstLabel" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                    <Label text="Grand Total" style="-fx-font-weight: bold;" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+                    <Label fx:id="grandTotalLabel" text="-" style="-fx-font-weight: bold;" GridPane.rowIndex="3" GridPane.columnIndex="3"/>
+                </GridPane>
+
+                <Label fx:id="warningLabel" styleClass="wizard-warning-text" wrapText="true"/>
+                <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
+
+                <Button text="Save Sale" onAction="#onSaveClicked" styleClass="primary-button"/>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

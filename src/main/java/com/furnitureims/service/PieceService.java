@@ -60,6 +60,11 @@ public class PieceService {
         return pieceRepository.findById(id);
     }
 
+    /** Backs the billing screen's direct-tag entry (FR-SAL-01). */
+    public Optional<Piece> findByTag(String tag) {
+        return pieceRepository.findByTag(tag);
+    }
+
     public List<PieceSummary> search(PieceSearchCriteria criteria) {
         return pieceRepository.search(criteria);
     }
@@ -161,6 +166,56 @@ public class PieceService {
         pieceRepository.updateState(pieceId, Piece.State.RETURNED_TO_SUPPLIER, null);
         stockMovementRepository.record(pieceId, StockMovement.Type.PURCHASE_RETURN, piece.state(),
                 Piece.State.RETURNED_TO_SUPPLIER, null, null, "PURCHASE_RETURN", purchaseReturnId, null);
+    }
+
+    /** IN_STOCK -> SOLD (FR-SAL-08), invoked by {@code SalesInvoiceService} within the
+     *  same transaction as saving the invoice - not reachable from the piece register's
+     *  own manual actions, see the class Javadoc. */
+    @Transactional
+    public void markSold(long pieceId, long salesInvoiceId) {
+        Piece piece = pieceRepository.findById(pieceId)
+                .orElseThrow(() -> new IllegalArgumentException("Piece not found."));
+        if (piece.state() != Piece.State.IN_STOCK) {
+            throw new IllegalStateException(
+                    "Piece " + piece.tag() + " is " + piece.state() + " and cannot be sold.");
+        }
+        pieceRepository.updateState(pieceId, Piece.State.SOLD, null);
+        stockMovementRepository.record(pieceId, StockMovement.Type.SALE, piece.state(), Piece.State.SOLD,
+                null, null, "SALES_INVOICE", salesInvoiceId, null);
+    }
+
+    /** SOLD -> IN_STOCK via a sales return (FR-SAL-10), invoked by
+     *  {@code SalesReturnService} with the credit note it belongs to. Distinct from
+     *  {@link #markInvoiceCancelled} even though both land on the same target state,
+     *  because they are different real-world events with different ref documents
+     *  (docs/02-data-model.md section 3 lists both as separate SOLD -> IN_STOCK causes). */
+    @Transactional
+    public void markSalesReturned(long pieceId, long salesReturnId) {
+        Piece piece = pieceRepository.findById(pieceId)
+                .orElseThrow(() -> new IllegalArgumentException("Piece not found."));
+        if (piece.state() != Piece.State.SOLD) {
+            throw new IllegalStateException(
+                    "Piece " + piece.tag() + " is " + piece.state() + " and cannot be returned from a sale.");
+        }
+        pieceRepository.updateState(pieceId, Piece.State.IN_STOCK, null);
+        stockMovementRepository.record(pieceId, StockMovement.Type.SALES_RETURN, piece.state(),
+                Piece.State.IN_STOCK, null, null, "SALES_RETURN", salesReturnId, null);
+    }
+
+    /** SOLD -> IN_STOCK via cancelling the whole invoice (FR-SAL-11), invoked by
+     *  {@code SalesInvoiceService}. See {@link #markSalesReturned} for why this is a
+     *  separate method rather than the same one with a different ref type. */
+    @Transactional
+    public void markInvoiceCancelled(long pieceId, long salesInvoiceId) {
+        Piece piece = pieceRepository.findById(pieceId)
+                .orElseThrow(() -> new IllegalArgumentException("Piece not found."));
+        if (piece.state() != Piece.State.SOLD) {
+            throw new IllegalStateException(
+                    "Piece " + piece.tag() + " is " + piece.state() + " and cannot be restored by cancelling the invoice.");
+        }
+        pieceRepository.updateState(pieceId, Piece.State.IN_STOCK, null);
+        stockMovementRepository.record(pieceId, StockMovement.Type.INVOICE_CANCELLED, piece.state(),
+                Piece.State.IN_STOCK, null, null, "SALES_INVOICE", salesInvoiceId, null);
     }
 
     /** FR-PIECE-02: {@code <model code>-<zero-padded sequence>}, guaranteed unique. */

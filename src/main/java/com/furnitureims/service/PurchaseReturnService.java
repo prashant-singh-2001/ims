@@ -10,6 +10,7 @@ import com.furnitureims.repository.PurchaseLineRepository;
 import com.furnitureims.repository.PurchaseReturnLineRepository;
 import com.furnitureims.repository.PurchaseReturnRepository;
 import com.furnitureims.repository.SequenceCounterRepository;
+import com.furnitureims.util.FinancialYear;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -156,16 +157,8 @@ public class PurchaseReturnService {
     }
 
     private String generateDebitNoteNo() {
-        String fy = currentFinancialYear();
+        String fy = FinancialYear.current();
         long seq = sequenceCounterRepository.next("DEBIT_NOTE", fy);
         return "DN/" + fy + "/" + String.format("%04d", seq);
-    }
-
-    /** FR-SYS-04: the financial year runs 1 April to 31 March. */
-    private static String currentFinancialYear() {
-        LocalDate today = LocalDate.now();
-        int startYear = today.getMonthValue() >= 4 ? today.getYear() : today.getYear() - 1;
-        int endYear = (startYear + 1) % 100;
-        return String.format("%02d-%02d", startYear % 100, endYear);
     }
 }
