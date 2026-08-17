@@ -26,6 +26,10 @@
         <javafx.version>25.0.2</javafx.version>
         <sqlite-jdbc.version>3.53.2.1</sqlite-jdbc.version>
         <openpdf.version>3.0.5</openpdf.version>
+        <jna.version>5.15.0</jna.version>
+        <google-api-client.version>2.7.0</google-api-client.version>
+        <google-oauth-client.version>1.36.0</google-oauth-client.version>
+        <google-api-services-drive.version>v3-rev20240914-2.0.0</google-api-services-drive.version>
         <!-- Single-target platform: this app ships to Windows only (NFR-01) -->
         <javafx.platform>win</javafx.platform>
     </properties>
@@ -94,21 +98,63 @@
             <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
 
+        <!-- Explicit "win" classifier (M9): without it, Maven Central resolves org.openjfx
+             artifacts to an empty placeholder jar (a few hundred bytes, no native code) -
+             `mvn javafx:run` never notices because that plugin resolves its own classpath
+             independently, but anything that packages the plain dependency graph (the fat
+             jar spring-boot-maven-plugin builds below, and therefore jpackage) would ship
+             a build that fails at startup with UnsatisfiedLinkError on a real machine. -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
+            <classifier>${javafx.platform}</classifier>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
+            <classifier>${javafx.platform}</classifier>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <!-- FR-BAK-08: Windows DPAPI, scoped to the current Windows user, for the Drive
+             refresh token and (see BackupService/SetupService) the backup password itself.
+             jna-platform's Crypt32Util wraps CryptProtectData/CryptUnprotectData directly -
+             no hand-written JNI needed. -->
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>${jna.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>${jna.version}</version>
+        </dependency>
+
+        <!-- FR-BAK-07/08: Google Drive API v3 + the OAuth 2.0 desktop loopback flow.
+             google-oauth-client-jetty supplies LocalServerReceiver, the standard way a
+             desktop app receives the OAuth redirect without a real web server. -->
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>${google-api-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.oauth-client</groupId>
+            <artifactId>google-oauth-client-jetty</artifactId>
+            <version>${google-oauth-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-drive</artifactId>
+            <version>${google-api-services-drive.version}</version>
         </dependency>
     </dependencies>
 
@@ -124,10 +170,7 @@
             </plugin>
 
             <!-- Dev-loop runner: `mvn javafx:run`. Resolves platform-specific JavaFX natives
-                 and puts them on the module path correctly, which a plain `java -jar` on a
-                 Spring Boot fat jar does not do reliably for JavaFX. Final Windows installer
-                 packaging (jlink + jpackage) is scoped to milestone M9 per docs/04-roadmap.md
-                 and is intentionally not wired up yet. -->
+                 and puts them on the module path correctly for a fast local run/debug cycle. -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -136,6 +179,29 @@
                     <mainClass>com.furnitureims.Launcher</mainClass>
                     <launcher>furniture-ims</launcher>
                 </configuration>
+            </plugin>
+
+            <!-- `mvn package` now produces a real executable fat jar (target/furniture-ims.jar) -
+                 every dependency, including the "win"-classified JavaFX jars fixed above, nested
+                 inside via Spring Boot's own loader, entry point com.furnitureims.Launcher rather
+                 than FurnitureImsApplication (which has no main()). This fat jar is the input
+                 scripts/package-windows.ps1 feeds to jlink + jpackage to build the Windows
+                 installer (NFR-02, milestone M9) - see that script for why jlink only needs to
+                 supply java.desktop and friends, not the JavaFX modules themselves: this app runs
+                 JavaFX in classpath (non-modular) mode, the same way `mvn javafx:run` already does. -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.furnitureims.Launcher</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

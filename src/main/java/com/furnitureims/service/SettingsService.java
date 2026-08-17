@@ -1,7 +1,12 @@
 package com.furnitureims.service;
 
 import com.furnitureims.repository.AppSettingRepository;
+import com.furnitureims.security.PasswordHasher;
+import com.furnitureims.util.WindowsDpapi;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
+import java.util.Optional;
 
 /** Typed accessors over the generic app_setting key/value store (FR-SYS-02). */
 @Service
@@ -9,11 +14,25 @@ public class SettingsService {
 
     private static final String IDLE_LOCK_MINUTES_KEY = "security.idle_lock_minutes";
     private static final int DEFAULT_IDLE_LOCK_MINUTES = 10;
+    private static final String REDACTED = "(redacted)";
 
     private final AppSettingRepository settings;
+    private final PasswordHasher passwordHasher;
+    private final AuditLogService auditLogService;
 
-    public SettingsService(AppSettingRepository settings) {
+    public SettingsService(AppSettingRepository settings, PasswordHasher passwordHasher,
+                            AuditLogService auditLogService) {
         this.settings = settings;
+        this.passwordHasher = passwordHasher;
+        this.auditLogService = auditLogService;
+    }
+
+    /** FR-SYS-03: every settings change is audited under one action name, with the changed
+     *  key and its new value - {@code value} must already be redacted by the caller for
+     *  anything secret (passwords, client secrets), matching NFR-10's "never logged" rule
+     *  for the same category of data. */
+    private void auditSettingChanged(String key, String value) {
+        auditLogService.record("SETTING_CHANGED", "APP_SETTING", null, null, Map.of("key", key, "value", value));
     }
 
     /** FR-AUTH-04: default 10 minutes, valid range 1-120, or 0 meaning "never". */
@@ -28,6 +47,7 @@ public class SettingsService {
             throw new IllegalArgumentException("Idle lock minutes must be between 0 (never) and 120");
         }
         settings.set(IDLE_LOCK_MINUTES_KEY, Integer.toString(minutes));
+        auditSettingChanged(IDLE_LOCK_MINUTES_KEY, Integer.toString(minutes));
     }
 
     // ---- Documents (FR-DOC-01..06) -----------------------------------------------------
@@ -68,6 +88,7 @@ public class SettingsService {
 
     public void setShowPieceTagsUnderGroupedLine(boolean show) {
         settings.set(SHOW_PIECE_TAGS_KEY, Boolean.toString(show));
+        auditSettingChanged(SHOW_PIECE_TAGS_KEY, Boolean.toString(show));
     }
 
     /** FR-DOC-04: SMTP host/port/credentials are user-configurable at runtime, not static
@@ -91,6 +112,8 @@ public class SettingsService {
         settings.set(SMTP_USERNAME_KEY, s.username() == null ? "" : s.username());
         settings.set(SMTP_APP_PASSWORD_KEY, s.appPassword() == null ? "" : s.appPassword());
         settings.set(EMAIL_FROM_NAME_KEY, s.fromName() == null ? "" : s.fromName());
+        auditSettingChanged(SMTP_HOST_KEY, "host=" + s.host() + ", port=" + s.port() + ", useTls=" + s.useTls()
+                + ", username=" + s.username() + ", appPassword=" + REDACTED);
     }
 
     public String emailSubjectTemplate() {
@@ -99,6 +122,7 @@ public class SettingsService {
 
     public void setEmailSubjectTemplate(String template) {
         settings.set(EMAIL_SUBJECT_TEMPLATE_KEY, template);
+        auditSettingChanged(EMAIL_SUBJECT_TEMPLATE_KEY, template);
     }
 
     public String emailBodyTemplate() {
@@ -107,6 +131,7 @@ public class SettingsService {
 
     public void setEmailBodyTemplate(String template) {
         settings.set(EMAIL_BODY_TEMPLATE_KEY, template);
+        auditSettingChanged(EMAIL_BODY_TEMPLATE_KEY, template);
     }
 
     /** FR-DOC-03: placeholders {customerName}, {invoiceNo}, {invoiceDate}, {grandTotal},
@@ -117,5 +142,136 @@ public class SettingsService {
 
     public void setWhatsAppMessageTemplate(String template) {
         settings.set(WHATSAPP_MESSAGE_TEMPLATE_KEY, template);
+        auditSettingChanged(WHATSAPP_MESSAGE_TEMPLATE_KEY, template);
+    }
+
+    // ---- Backup (FR-BAK-01..16) -----------------------------------------------------------
+
+    private static final String BACKUP_PASSWORD_VERIFIER_KEY = "backup.password_verifier_hash";
+    private static final String BACKUP_PASSWORD_DPAPI_KEY = "backup.password_dpapi_protected";
+    private static final String BACKUP_DAILY_TIME_KEY = "backup.daily_time";
+    private static final String BACKUP_WEEKLY_DAY_KEY = "backup.weekly_day";
+    private static final String BACKUP_RETENTION_DAILY_KEY = "backup.retention_daily";
+    private static final String BACKUP_RETENTION_WEEKLY_KEY = "backup.retention_weekly";
+    private static final String BACKUP_DRIVE_FOLDER_KEY = "backup.drive_folder_name";
+    private static final String GOOGLE_CLIENT_ID_KEY = "backup.google_client_id";
+    private static final String GOOGLE_CLIENT_SECRET_KEY = "backup.google_client_secret";
+    private static final String GOOGLE_REFRESH_TOKEN_DPAPI_KEY = "backup.google_refresh_token_dpapi_protected";
+
+    private static final String DEFAULT_DAILY_TIME = "21:30";
+    private static final String DEFAULT_WEEKLY_DAY = "SUNDAY";
+    private static final int DEFAULT_RETENTION_DAILY = 14;
+    private static final int DEFAULT_RETENTION_WEEKLY = 12;
+    private static final String DEFAULT_DRIVE_FOLDER = "FurnitureShopBackups";
+
+    /** Sets both the bcrypt verifier used at setup/change time to confirm the owner typed
+     *  the password correctly, and a Windows-DPAPI-protected copy of the password itself
+     *  (see {@link WindowsDpapi}) - the second is what lets the nightly scheduled backup
+     *  (FR-BAK-01) run with nobody present to type anything, without violating FR-BAK-06's
+     *  "never stored in recoverable form": a DPAPI-protected value is only unprotectable by
+     *  this same Windows user on this same PC, the same trust boundary FR-BAK-08 already
+     *  uses for the Drive refresh token. */
+    public void setBackupPassword(String password) {
+        settings.set(BACKUP_PASSWORD_VERIFIER_KEY, passwordHasher.hash(password));
+        settings.set(BACKUP_PASSWORD_DPAPI_KEY, WindowsDpapi.protect(password));
+        auditSettingChanged(BACKUP_PASSWORD_VERIFIER_KEY, REDACTED);
+    }
+
+    public boolean hasBackupPassword() {
+        return settings.get(BACKUP_PASSWORD_VERIFIER_KEY).isPresent();
+    }
+
+    public boolean verifyBackupPassword(String password) {
+        return settings.get(BACKUP_PASSWORD_VERIFIER_KEY)
+                .map(hash -> passwordHasher.matches(password, hash))
+                .orElse(false);
+    }
+
+    /** For the unattended scheduled backup only - every interactive flow (Backup Now,
+     *  restore) should have the owner type the password instead, since a restore may be
+     *  against an *older* archive that used a since-changed password (screens.md: "Change
+     *  backup password re-encrypts nothing retroactively"). */
+    public Optional<String> currentBackupPasswordForScheduledRun() {
+        return settings.get(BACKUP_PASSWORD_DPAPI_KEY).map(WindowsDpapi::unprotect);
+    }
+
+    public String backupDailyTime() {
+        return settings.getOrDefault(BACKUP_DAILY_TIME_KEY, DEFAULT_DAILY_TIME);
+    }
+
+    public void setBackupDailyTime(String time) {
+        settings.set(BACKUP_DAILY_TIME_KEY, time);
+        auditSettingChanged(BACKUP_DAILY_TIME_KEY, time);
+    }
+
+    public String backupWeeklyDay() {
+        return settings.getOrDefault(BACKUP_WEEKLY_DAY_KEY, DEFAULT_WEEKLY_DAY);
+    }
+
+    public void setBackupWeeklyDay(String day) {
+        settings.set(BACKUP_WEEKLY_DAY_KEY, day);
+        auditSettingChanged(BACKUP_WEEKLY_DAY_KEY, day);
+    }
+
+    public int backupRetentionDaily() {
+        return Integer.parseInt(settings.getOrDefault(BACKUP_RETENTION_DAILY_KEY,
+                String.valueOf(DEFAULT_RETENTION_DAILY)));
+    }
+
+    public void setBackupRetentionDaily(int count) {
+        settings.set(BACKUP_RETENTION_DAILY_KEY, String.valueOf(count));
+        auditSettingChanged(BACKUP_RETENTION_DAILY_KEY, String.valueOf(count));
+    }
+
+    public int backupRetentionWeekly() {
+        return Integer.parseInt(settings.getOrDefault(BACKUP_RETENTION_WEEKLY_KEY,
+                String.valueOf(DEFAULT_RETENTION_WEEKLY)));
+    }
+
+    public void setBackupRetentionWeekly(int count) {
+        settings.set(BACKUP_RETENTION_WEEKLY_KEY, String.valueOf(count));
+        auditSettingChanged(BACKUP_RETENTION_WEEKLY_KEY, String.valueOf(count));
+    }
+
+    public String backupDriveFolderName() {
+        return settings.getOrDefault(BACKUP_DRIVE_FOLDER_KEY, DEFAULT_DRIVE_FOLDER);
+    }
+
+    public void setBackupDriveFolderName(String folderName) {
+        settings.set(BACKUP_DRIVE_FOLDER_KEY, folderName);
+        auditSettingChanged(BACKUP_DRIVE_FOLDER_KEY, folderName);
+    }
+
+    /** The SRS is explicit these come from the owner's own Google Cloud project
+     *  (docs/01-requirements.md section 5) - never hardcoded, since a client secret baked
+     *  into a distributed desktop app would be exposed to every installation anyway. */
+    public Optional<String> googleClientId() {
+        return settings.get(GOOGLE_CLIENT_ID_KEY);
+    }
+
+    public Optional<String> googleClientSecret() {
+        return settings.get(GOOGLE_CLIENT_SECRET_KEY);
+    }
+
+    public void setGoogleOAuthClient(String clientId, String clientSecret) {
+        settings.set(GOOGLE_CLIENT_ID_KEY, clientId);
+        settings.set(GOOGLE_CLIENT_SECRET_KEY, clientSecret);
+        auditSettingChanged(GOOGLE_CLIENT_ID_KEY, "clientId=" + clientId + ", clientSecret=" + REDACTED);
+    }
+
+    public boolean isGoogleDriveConnected() {
+        return settings.get(GOOGLE_REFRESH_TOKEN_DPAPI_KEY).isPresent();
+    }
+
+    public Optional<String> googleRefreshToken() {
+        return settings.get(GOOGLE_REFRESH_TOKEN_DPAPI_KEY).map(WindowsDpapi::unprotect);
+    }
+
+    public void setGoogleRefreshToken(String refreshToken) {
+        settings.set(GOOGLE_REFRESH_TOKEN_DPAPI_KEY, WindowsDpapi.protect(refreshToken));
+    }
+
+    public void clearGoogleRefreshToken() {
+        settings.set(GOOGLE_REFRESH_TOKEN_DPAPI_KEY, null);
     }
 }

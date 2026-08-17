@@ -1,6 +1,8 @@
 package com.furnitureims.ui.shell;
 
 import com.furnitureims.domain.AppUser;
+import com.furnitureims.domain.BackupHistory;
+import com.furnitureims.repository.BackupHistoryRepository;
 import com.furnitureims.repository.ShopProfileRepository;
 import com.furnitureims.service.AppSession;
 import com.furnitureims.service.ReportService;
@@ -13,16 +15,21 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * The real dashboard (FR-RPT-05, FR-BAK-11) - replaces M1's placeholder now that reports
  * exist to fill it in (docs/03-screens.md section 3). Tiles double as drill-through
  * shortcuts into the report they summarize, per that section's own description of them.
  * <p>
- * Backup status and "Backup Now" are deliberately absent: milestone M8 hasn't built the
- * backup pipeline or {@code backup_history} table yet, so there is no real status to show -
- * a fabricated one would be worse than an honest "not configured yet" label.
+ * Backup status shows the last backup *attempt*'s own outcome as text (honest - it says
+ * FAILED if the last one failed) but colors green/amber/red based on how long it has been
+ * since the last backup that actually *succeeded* (or is waiting only on an upload,
+ * FR-BAK-12's UPLOAD_PENDING) - these are deliberately two different signals per FR-BAK-11.
  */
 @Component
 public class DashboardController {
@@ -31,6 +38,7 @@ public class DashboardController {
     private final ShopProfileRepository shopProfileRepository;
     private final IdleLockManager idleLockManager;
     private final ReportService reportService;
+    private final BackupHistoryRepository backupHistoryRepository;
     private final PurchaseBillEntryController purchaseBillEntryController;
     private final SalesProfitReportController salesProfitReportController;
     private final DuesReportController duesReportController;
@@ -48,6 +56,7 @@ public class DashboardController {
 
     public DashboardController(AppSession appSession, ShopProfileRepository shopProfileRepository,
                                 IdleLockManager idleLockManager, ReportService reportService,
+                                BackupHistoryRepository backupHistoryRepository,
                                 PurchaseBillEntryController purchaseBillEntryController,
                                 SalesProfitReportController salesProfitReportController,
                                 DuesReportController duesReportController, SceneRouter sceneRouter) {
@@ -55,6 +64,7 @@ public class DashboardController {
         this.shopProfileRepository = shopProfileRepository;
         this.idleLockManager = idleLockManager;
         this.reportService = reportService;
+        this.backupHistoryRepository = backupHistoryRepository;
         this.purchaseBillEntryController = purchaseBillEntryController;
         this.salesProfitReportController = salesProfitReportController;
         this.duesReportController = duesReportController;
@@ -79,7 +89,41 @@ public class DashboardController {
         receivableLabel.setText(summary.receivable().toDisplayString() + " (" + summary.overdueInvoiceCount()
                 + " invoice" + (summary.overdueInvoiceCount() == 1 ? "" : "s") + " outstanding)");
         payableLabel.setText(summary.payable().toDisplayString());
-        backupStatusLabel.setText("Not configured yet - coming in a later milestone");
+        updateBackupStatus();
+    }
+
+    private void updateBackupStatus() {
+        List<BackupHistory> all = backupHistoryRepository.findAllOrderedByStartedDesc();
+        if (all.isEmpty()) {
+            backupStatusLabel.setText("No backups yet");
+            applyBackupStatusColor("#b3261e");
+            return;
+        }
+
+        BackupHistory lastAttempt = all.get(0);
+        backupStatusLabel.setText(lastAttempt.status() + " - " + lastAttempt.startedAt().toString().replace('T', ' '));
+
+        Optional<BackupHistory> lastGood = all.stream()
+                .filter(b -> b.status() == BackupHistory.Status.SUCCESS
+                        || b.status() == BackupHistory.Status.UPLOAD_PENDING)
+                .findFirst();
+        if (lastGood.isEmpty()) {
+            applyBackupStatusColor("#b3261e");
+            return;
+        }
+
+        long hoursSinceGood = Duration.between(lastGood.get().startedAt(), LocalDateTime.now()).toHours();
+        if (hoursSinceGood <= 24) {
+            applyBackupStatusColor("#1a7f37");
+        } else if (hoursSinceGood <= 48) {
+            applyBackupStatusColor("#a16a00");
+        } else {
+            applyBackupStatusColor("#b3261e");
+        }
+    }
+
+    private void applyBackupStatusColor(String hex) {
+        backupStatusLabel.setStyle("-fx-text-fill: " + hex + "; -fx-font-weight: bold;");
     }
 
     @FXML
@@ -119,6 +163,11 @@ public class DashboardController {
     }
 
     @FXML
+    private void onBackupStatusTileClicked() {
+        sceneRouter.show("/fxml/backup/backup-settings.fxml");
+    }
+
+    @FXML
     private void onNewSaleClicked() {
         sceneRouter.show("/fxml/sales/new-sale.fxml");
     }
@@ -132,6 +181,11 @@ public class DashboardController {
     @FXML
     private void onPaymentsClicked() {
         sceneRouter.show("/fxml/payment/payment-list.fxml");
+    }
+
+    @FXML
+    private void onBackupNowClicked() {
+        sceneRouter.show("/fxml/backup/backup-settings.fxml");
     }
 
     @FXML

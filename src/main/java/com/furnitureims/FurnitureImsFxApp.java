@@ -2,6 +2,7 @@ package com.furnitureims;
 
 import com.furnitureims.config.SingleInstanceGuard;
 import com.furnitureims.service.SetupService;
+import com.furnitureims.ui.GlobalErrorHandler;
 import com.furnitureims.ui.SceneRouter;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -32,6 +33,9 @@ public class FurnitureImsFxApp extends Application {
     @Override
     public void start(Stage stage) {
         this.primaryStage = stage;
+        // NFR-11: binds directly to the FX Application Thread - every screen's event
+        // handlers run here, and this is what catches whatever a local try/catch missed.
+        GlobalErrorHandler.installOnCurrentThread();
 
         instanceGuard = springContext.getBean(SingleInstanceGuard.class);
         boolean acquiredLock = instanceGuard.acquire(() -> Platform.runLater(this::bringToFront));

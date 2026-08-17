@@ -27,6 +27,8 @@
             <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
             <Label text="Settings" styleClass="wizard-header-title"/>
             <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Backup and Restore" onAction="#onBackupSettingsClicked"/>
+            <Button text="Audit Log" onAction="#onAuditLogClicked"/>
             <Button text="Back" onAction="#onBackClicked"/>
         </HBox>
     </top>

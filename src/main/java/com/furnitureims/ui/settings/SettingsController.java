@@ -207,6 +207,16 @@ public class SettingsController {
     }
 
     @FXML
+    private void onBackupSettingsClicked() {
+        sceneRouter.show("/fxml/backup/backup-settings.fxml");
+    }
+
+    @FXML
+    private void onAuditLogClicked() {
+        sceneRouter.show("/fxml/settings/audit-log.fxml");
+    }
+
+    @FXML
     private void onBackClicked() {
         sceneRouter.show("/fxml/shell/dashboard.fxml");
     }

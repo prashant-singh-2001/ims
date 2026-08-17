@@ -1,6 +1,7 @@
 package com.furnitureims;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * The Spring Boot side of this app: owns dependency injection, transactions and (from
@@ -9,5 +10,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * beans to FXML controllers via a Spring-aware controller factory.
  */
 @SpringBootApplication
+@EnableScheduling
 public class FurnitureImsApplication {
 }

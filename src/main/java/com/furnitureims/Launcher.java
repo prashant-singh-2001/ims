@@ -1,6 +1,7 @@
 package com.furnitureims;
 
 import com.furnitureims.config.AppPaths;
+import com.furnitureims.ui.GlobalErrorHandler;
 import javafx.application.Application;
 
 import java.nio.file.Path;
@@ -24,6 +25,10 @@ public final class Launcher {
     public static void main(String[] args) {
         Path logDir = AppPaths.resolveRoot().resolve("logs");
         System.setProperty("FURNITURE_IMS_LOG_DIR", logDir.toString());
+
+        // NFR-11: installed before any other thread (Spring's context refresh, its
+        // @Scheduled pool, JavaFX's own worker threads) gets a chance to start.
+        GlobalErrorHandler.installDefault();
 
         Application.launch(FurnitureImsFxApp.class, args);
     }

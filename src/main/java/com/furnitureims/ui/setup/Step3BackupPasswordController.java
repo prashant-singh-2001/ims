@@ -1,31 +1,31 @@
 package com.furnitureims.ui.setup;
 
-import com.furnitureims.service.SetupService;
+import com.furnitureims.service.SettingsService;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.PasswordField;
 import org.springframework.stereotype.Component;
 
 /**
- * Setup wizard step 3: the backup encryption password (FR-BAK-05, FR-BAK-06). This
- * password is never persisted - only a bcrypt verifier is, via
- * {@link SetupService#recordBackupPasswordVerifier}, so a later screen can confirm a
- * re-entered password is correct. Actual key derivation belongs to the backup pipeline
- * (milestone M8).
+ * Setup wizard step 3: the backup encryption password (FR-BAK-05, FR-BAK-06). The
+ * plain-text password is never persisted - {@link SettingsService#setBackupPassword}
+ * stores a bcrypt verifier (so a later re-entry can be confirmed correct) and a
+ * Windows-DPAPI-protected copy (so the nightly scheduled backup in milestone M8 can run
+ * unattended); see that method's Javadoc for why the second one doesn't violate FR-BAK-06.
  */
 @Component
 public class Step3BackupPasswordController implements WizardStep {
 
     private static final int MIN_PASSWORD_LENGTH = 8;
 
-    private final SetupService setupService;
+    private final SettingsService settingsService;
 
     @FXML private PasswordField backupPasswordField;
     @FXML private PasswordField confirmBackupPasswordField;
     @FXML private CheckBox warningAcknowledgedCheck;
 
-    public Step3BackupPasswordController(SetupService setupService) {
-        this.setupService = setupService;
+    public Step3BackupPasswordController(SettingsService settingsService) {
+        this.settingsService = settingsService;
     }
 
     @Override
@@ -47,6 +47,6 @@ public class Step3BackupPasswordController implements WizardStep {
 
     @Override
     public void commit() {
-        setupService.recordBackupPasswordVerifier(backupPasswordField.getText());
+        settingsService.setBackupPassword(backupPasswordField.getText());
     }
 }

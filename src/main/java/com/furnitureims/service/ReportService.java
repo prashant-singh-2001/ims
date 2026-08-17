@@ -249,9 +249,15 @@ public class ReportService {
     public List<CustomerDueRow> customerDuesAging(Long customerId, AgingBucket bucketFilter, Money minimumAmount) {
         List<SalesInvoiceListRow> invoices = salesInvoiceService.search(
                 new SalesInvoiceSearchCriteria(customerId, SalesInvoice.Status.ACTIVE, null, null));
+        // Bulk balance lookup (two aggregate queries total), not one invoiceBalance() call
+        // per row - at 20,000-invoice scale the per-row version blew well past NFR-04's
+        // budget (caught by M9's performance test), since each call did two more queries
+        // of its own.
+        Map<Long, Money> balances = paymentService.invoiceBalances(
+                invoices.stream().map(SalesInvoiceListRow::invoice).toList());
         List<CustomerDueRow> result = new ArrayList<>();
         for (SalesInvoiceListRow row : invoices) {
-            Money balance = paymentService.invoiceBalance(row.invoice().id());
+            Money balance = balances.get(row.invoice().id());
             if (!balance.isPositive()) {
                 continue;
             }
@@ -273,9 +279,12 @@ public class ReportService {
     public List<SupplierDueRow> supplierDuesAging(Long supplierId, AgingBucket bucketFilter, Money minimumAmount) {
         List<PurchaseBillListRow> bills = purchaseBillService.search(
                 new PurchaseBillSearchCriteria(supplierId, PurchaseBill.Status.RECEIVED, null, null));
+        // Bulk balance lookup - see the identical note in customerDuesAging.
+        Map<Long, Money> balances = paymentService.purchaseBillBalances(
+                bills.stream().map(PurchaseBillListRow::bill).toList());
         List<SupplierDueRow> result = new ArrayList<>();
         for (PurchaseBillListRow row : bills) {
-            Money balance = paymentService.purchaseBillBalance(row.bill().id());
+            Money balance = balances.get(row.bill().id());
             if (!balance.isPositive()) {
                 continue;
             }

@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -131,6 +132,40 @@ public class PaymentService {
                 .toList();
     }
 
+    /** Bulk equivalent of calling {@link #invoiceBalance} once per invoice - two aggregate
+     *  queries total instead of two per invoice. Every invoice passed in is assumed ACTIVE
+     *  already (callers filter that themselves, same as the searches {@link #invoiceBalance}
+     *  itself is built from), so unlike the single-invoice version this does not re-check
+     *  status. Exists specifically so FR-RPT-04's dues report stays within its NFR-04 budget
+     *  at 20,000-invoice scale - see M9's performance test, which is what caught the N+1
+     *  pattern this replaces. */
+    public Map<Long, Money> invoiceBalances(List<SalesInvoice> activeInvoices) {
+        Map<Long, Money> creditNotesByInvoice = salesReturnRepository.sumTotalAmountByInvoiceId();
+        Map<Long, Money> paidByInvoice = paymentAllocationRepository.sumByTargetType(
+                PaymentAllocation.TargetType.SALES_INVOICE);
+        Map<Long, Money> result = new LinkedHashMap<>();
+        for (SalesInvoice invoice : activeInvoices) {
+            Money creditNotes = creditNotesByInvoice.getOrDefault(invoice.id(), Money.ZERO);
+            Money paid = paidByInvoice.getOrDefault(invoice.id(), Money.ZERO);
+            result.put(invoice.id(), invoice.grandTotal().minus(creditNotes).minus(paid));
+        }
+        return result;
+    }
+
+    /** Bulk equivalent of {@link #purchaseBillBalance} - see {@link #invoiceBalances} for why. */
+    public Map<Long, Money> purchaseBillBalances(List<PurchaseBill> receivedBills) {
+        Map<Long, Money> debitNotesByBill = purchaseReturnRepository.sumTotalAmountByBillId();
+        Map<Long, Money> paidByBill = paymentAllocationRepository.sumByTargetType(
+                PaymentAllocation.TargetType.PURCHASE_BILL);
+        Map<Long, Money> result = new LinkedHashMap<>();
+        for (PurchaseBill bill : receivedBills) {
+            Money debitNotes = debitNotesByBill.getOrDefault(bill.id(), Money.ZERO);
+            Money paid = paidByBill.getOrDefault(bill.id(), Money.ZERO);
+            result.put(bill.id(), bill.grandTotal().minus(debitNotes).minus(paid));
+        }
+        return result;
+    }
+
     public List<BillBalanceRow> unpaidBillsFor(long supplierId) {
         return purchaseBillRepository.search(new PurchaseBillSearchCriteria(supplierId, PurchaseBill.Status.RECEIVED, null, null))
                 .stream()
@@ -168,6 +203,9 @@ public class PaymentService {
                         PaymentAllocation.TargetType.SALES_INVOICE, entry.getKey(), entry.getValue()));
             }
         }
+        auditLogService.record("PAYMENT_RECORDED", "PAYMENT", paymentId, null,
+                Map.of("direction", "IN", "customerId", customerId, "amount", amount.toDisplayString(),
+                        "mode", mode.name()));
         return paymentId;
     }
 
@@ -194,6 +232,9 @@ public class PaymentService {
                         PaymentAllocation.TargetType.PURCHASE_BILL, entry.getKey(), entry.getValue()));
             }
         }
+        auditLogService.record("PAYMENT_RECORDED", "PAYMENT", paymentId, null,
+                Map.of("direction", "OUT", "supplierId", supplierId, "amount", amount.toDisplayString(),
+                        "mode", mode.name()));
         return paymentId;
     }
 

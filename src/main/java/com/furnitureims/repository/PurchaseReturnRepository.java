@@ -11,7 +11,9 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -45,6 +47,17 @@ public class PurchaseReturnRepository {
     public List<PurchaseReturn> findByPurchaseBillId(long purchaseBillId) {
         return jdbc.query("SELECT * FROM purchase_return WHERE purchase_bill_id = ? ORDER BY return_date",
                 MAPPER, purchaseBillId);
+    }
+
+    /** Bulk equivalent of summing {@link #findByPurchaseBillId} per bill - see
+     *  {@code SalesReturnRepository#sumTotalAmountByInvoiceId} for why this exists. */
+    public Map<Long, Money> sumTotalAmountByBillId() {
+        Map<Long, Money> result = new HashMap<>();
+        jdbc.query("SELECT purchase_bill_id, SUM(total_amount) AS total FROM purchase_return GROUP BY purchase_bill_id",
+                rs -> {
+                    result.put(rs.getLong("purchase_bill_id"), Money.ofPaisa(rs.getLong("total")));
+                });
+        return result;
     }
 
     public long create(PurchaseReturn r) {

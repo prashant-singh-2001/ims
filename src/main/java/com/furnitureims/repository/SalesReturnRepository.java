@@ -11,7 +11,9 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -46,6 +48,19 @@ public class SalesReturnRepository {
     public List<SalesReturn> findBySalesInvoiceId(long salesInvoiceId) {
         return jdbc.query("SELECT * FROM sales_return WHERE sales_invoice_id = ? ORDER BY return_date",
                 MAPPER, salesInvoiceId);
+    }
+
+    /** Bulk equivalent of summing {@link #findBySalesInvoiceId} per invoice - one aggregate
+     *  query instead of one per invoice, needed to keep FR-RPT-04's dues report within its
+     *  NFR-04 budget at 20,000-invoice scale. An invoice with no rows here is simply absent
+     *  from the map, meaning zero credit notes. */
+    public Map<Long, Money> sumTotalAmountByInvoiceId() {
+        Map<Long, Money> result = new HashMap<>();
+        jdbc.query("SELECT sales_invoice_id, SUM(total_amount) AS total FROM sales_return GROUP BY sales_invoice_id",
+                rs -> {
+                    result.put(rs.getLong("sales_invoice_id"), Money.ofPaisa(rs.getLong("total")));
+                });
+        return result;
     }
 
     public long create(SalesReturn r) {

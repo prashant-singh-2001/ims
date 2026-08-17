@@ -58,7 +58,7 @@
                         <Label text="Payable" style="-fx-font-weight: bold;"/>
                         <Label fx:id="payableLabel"/>
                     </VBox>
-                    <VBox spacing="4" styleClass="wizard-callout">
+                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onBackupStatusTileClicked">
                         <Label text="Backup Status" style="-fx-font-weight: bold;"/>
                         <Label fx:id="backupStatusLabel" styleClass="wizard-step-subtitle"/>
                     </VBox>
@@ -69,6 +69,7 @@
                     <Button text="New Sale" onAction="#onNewSaleClicked" styleClass="primary-button"/>
                     <Button text="New Purchase Bill" onAction="#onNewPurchaseBillClicked" styleClass="primary-button"/>
                     <Button text="Payments" onAction="#onPaymentsClicked" styleClass="primary-button"/>
+                    <Button text="Backup Now" onAction="#onBackupNowClicked" styleClass="primary-button"/>
                 </HBox>
 
                 <Label text="Reports" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>

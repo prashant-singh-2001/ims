@@ -64,11 +64,13 @@ public class SalesInvoiceService {
     private final PieceService pieceService;
     private final SequenceCounterRepository sequenceCounterRepository;
     private final PaymentService paymentService;
+    private final AuditLogService auditLogService;
 
     public SalesInvoiceService(SalesInvoiceRepository salesInvoiceRepository, SalesLineRepository salesLineRepository,
                                 CustomerRepository customerRepository, ShopProfileRepository shopProfileRepository,
                                 ItemModelRepository itemModelRepository, PieceService pieceService,
-                                SequenceCounterRepository sequenceCounterRepository, PaymentService paymentService) {
+                                SequenceCounterRepository sequenceCounterRepository, PaymentService paymentService,
+                                AuditLogService auditLogService) {
         this.salesInvoiceRepository = salesInvoiceRepository;
         this.salesLineRepository = salesLineRepository;
         this.customerRepository = customerRepository;
@@ -77,6 +79,7 @@ public class SalesInvoiceService {
         this.pieceService = pieceService;
         this.sequenceCounterRepository = sequenceCounterRepository;
         this.paymentService = paymentService;
+        this.auditLogService = auditLogService;
     }
 
     public Optional<SalesInvoice> findById(long id) {
@@ -257,12 +260,25 @@ public class SalesInvoiceService {
                     piece.landedCost()));
 
             pieceService.markSold(piece.id(), invoiceId);
+
+            // FR-SYS-03: "cost or price overridden" - the billing screen pre-fills from the
+            // model's default selling price (FR-SAL-03) and always allows changing it; log
+            // only the cases where the owner actually did, not every line of every sale.
+            if (model.defaultSalePrice() != null && !model.defaultSalePrice().equals(line.unitPriceEntered())) {
+                auditLogService.record("PRICE_OVERRIDDEN", "PIECE", piece.id(),
+                        Map.of("defaultSalePrice", model.defaultSalePrice().toDisplayString()),
+                        Map.of("enteredPrice", line.unitPriceEntered().toDisplayString(), "invoiceId", invoiceId));
+            }
         }
 
         if (advanceAmount != null && advanceAmount.isPositive()) {
             paymentService.recordCustomerPayment(customer.id(), advanceAmount, advanceMode, advanceReferenceNo,
                     advanceNote, invoiceDate, Map.of(invoiceId, advanceAmount));
         }
+
+        auditLogService.record("INVOICE_CREATED", "SALES_INVOICE", invoiceId, null,
+                Map.of("invoiceNo", invoiceNo, "customerId", customer.id(),
+                        "grandTotal", preview.grandTotal().toDisplayString()));
 
         return invoiceId;
     }
@@ -285,5 +301,8 @@ public class SalesInvoiceService {
         }
         paymentService.reverseAllocationsForInvoice(invoiceId);
         salesInvoiceRepository.cancel(invoiceId, LocalDateTime.now(), reason.trim());
+        auditLogService.record("INVOICE_CANCELLED", "SALES_INVOICE", invoiceId,
+                Map.of("status", invoice.status().name()),
+                Map.of("status", SalesInvoice.Status.CANCELLED.name(), "reason", reason.trim()));
     }
 }

@@ -10,7 +10,9 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Repository
@@ -60,6 +62,24 @@ public class PaymentAllocationRepository {
                 WHERE pa.target_type = ? AND pa.target_id = ? AND p.is_deleted = 0
                 """, Long.class, targetType.name(), targetId);
         return Money.ofPaisa(paisa == null ? 0 : paisa);
+    }
+
+    /** Bulk equivalent of {@link #sumByTarget} across every target of one type at once - a
+     *  single aggregate query instead of one per target, needed to keep FR-RPT-04's dues
+     *  report within its NFR-04 budget at 20,000-invoice scale. A target with no payments
+     *  is simply absent from the map, meaning zero paid. */
+    public Map<Long, Money> sumByTargetType(PaymentAllocation.TargetType targetType) {
+        Map<Long, Money> result = new HashMap<>();
+        jdbc.query("""
+                SELECT pa.target_id AS target_id, SUM(pa.amount) AS total
+                FROM payment_allocation pa
+                JOIN payment p ON p.id = pa.payment_id
+                WHERE pa.target_type = ? AND p.is_deleted = 0
+                GROUP BY pa.target_id
+                """, rs -> {
+            result.put(rs.getLong("target_id"), Money.ofPaisa(rs.getLong("total")));
+        }, targetType.name());
+        return result;
     }
 
     /** FR-SAL-11: undoes the link between a cancelled invoice and any payments allocated

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.settings.AuditLogController"
+            styleClass="app-root">
+
+    <top>
+        <VBox styleClass="wizard-header">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <padding><Insets top="14" right="24" bottom="6" left="24"/></padding>
+                <Label text="Audit Log" styleClass="wizard-header-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Export CSV" onAction="#onExportCsvClicked"/>
+                <Button text="Back" onAction="#onBackClicked"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <padding><Insets top="0" right="24" bottom="14" left="24"/></padding>
+                <Label text="From" textFill="WHITE"/>
+                <DatePicker fx:id="dateFromPicker" prefWidth="140"/>
+                <Label text="To" textFill="WHITE"/>
+                <DatePicker fx:id="dateToPicker" prefWidth="140"/>
+                <ComboBox fx:id="actionFilterCombo" prefWidth="180"/>
+                <Button text="Search" onAction="#onSearchClicked"/>
+                <Label fx:id="statusLabel" styleClass="wizard-step-subtitle" wrapText="true"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="table"/>
+    </center>
+</BorderPane>
