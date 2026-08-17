@@ -38,21 +38,32 @@
        that always exits immediately with "Could not find or load main class".)
 
 .PARAMETER InstallerType
-    "msi" (default) or "app-image". msi requires the WiX Toolset (v3's light.exe/
-    candle.exe, or v4/v5's wix.exe) on THIS build machine's PATH - a one-time developer
-    machine setup step, same category as the Google Cloud OAuth project setup
-    docs/01-requirements.md section 5 already documents as a prerequisite only the
-    project owner can do. Install it from https://wixtoolset.org, or `choco install
-    wixtoolset`. app-image produces a runnable folder (with its own native .exe
-    launcher and bundled runtime, no separate Java needed) without that dependency -
-    useful for a quick local smoke test of the packaging pipeline itself.
+    "msi" (default), "exe", or "app-image".
+
+    msi and exe both produce a real Windows installer (Start Menu entry,
+    uninstaller registered in "Add or Remove Programs") and both require the
+    WiX Toolset (v3's light.exe/candle.exe, or v4/v5's wix.exe) on THIS build
+    machine's PATH - a one-time developer-machine setup step, same category as
+    the Google Cloud OAuth project setup docs/01-requirements.md section 5
+    already documents as a prerequisite only the project owner can do. Install
+    it from https://wixtoolset.org, or `choco install wixtoolset`. msi is the
+    more common choice for enterprise/managed-PC deployment; exe is a
+    self-extracting setup.exe some owners find more familiar to just
+    double-click - functionally equivalent otherwise.
+
+    app-image produces a runnable folder (with its own native .exe launcher
+    and bundled runtime, no separate Java needed) with no installer step and
+    no WiX dependency - useful for a quick local smoke test of the packaging
+    pipeline, or for owners who'd rather just copy a folder than run an
+    installer.
 
 .EXAMPLE
     .\scripts\package-windows.ps1
+    .\scripts\package-windows.ps1 -InstallerType exe
     .\scripts\package-windows.ps1 -InstallerType app-image
 #>
 param(
-    [ValidateSet("msi", "app-image")]
+    [ValidateSet("msi", "exe", "app-image")]
     [string]$InstallerType = "msi",
     [switch]$SkipBuild
 )
@@ -121,12 +132,12 @@ Copy-Item $fatJar $jpackageInput
 $installerDest = Join-Path $repoRoot "target\installer"
 if (Test-Path $installerDest) { Remove-Item $installerDest -Recurse -Force }
 
-if ($InstallerType -eq "msi") {
+if ($InstallerType -ne "app-image") {
     $wixFound = (Get-Command "light.exe" -ErrorAction SilentlyContinue) `
         -or (Get-Command "wix.exe" -ErrorAction SilentlyContinue)
     if (-not $wixFound) {
-        Write-Warning "WiX Toolset not found on PATH - msi packaging will fail. Install it from " `
-            "https://wixtoolset.org (or `choco install wixtoolset`), or re-run with -InstallerType app-image."
+        Write-Warning ("WiX Toolset not found on PATH - $InstallerType packaging will fail. Install it from " `
+            + "https://wixtoolset.org (or `choco install wixtoolset`), or re-run with -InstallerType app-image.")
     }
 }
 
