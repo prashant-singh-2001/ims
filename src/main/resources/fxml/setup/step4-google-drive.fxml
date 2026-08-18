@@ -3,6 +3,12 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox spacing="14" xmlns="http://javafx.com/javafx"
@@ -15,11 +21,26 @@
            wrapText="true" styleClass="wizard-step-subtitle"/>
 
     <VBox spacing="10" styleClass="wizard-callout">
-        <Button text="Connect Google Drive" disable="true"/>
-        <Label text="Not available in this build yet - Google Drive backup is being built next. You can finish setup now and connect an account once it arrives; nothing will be lost by waiting."
-               wrapText="true" styleClass="wizard-warning-text"/>
+        <GridPane hgap="12" vgap="10">
+            <columnConstraints>
+                <ColumnConstraints minWidth="130"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="220"/>
+            </columnConstraints>
+            <Label text="Google client ID" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="googleClientIdField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+            <Label text="Google client secret" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <PasswordField fx:id="googleClientSecretField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+        </GridPane>
+        <Label text="These come from your own Google Cloud project - see docs/01-requirements.md section 5. This app never ships with one built in."
+               wrapText="true" styleClass="wizard-step-subtitle"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button fx:id="connectButton" text="Connect Google Drive" onAction="#onConnectGoogleDriveClicked"/>
+            <ProgressIndicator fx:id="progressIndicator" prefWidth="20" prefHeight="20"/>
+            <Label fx:id="statusLabel"/>
+        </HBox>
+        <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
     </VBox>
 
-    <Label text="Until connected, backups will not run. The dashboard will show this clearly once the rest of the app is built."
+    <Label text="This step is optional - you can finish setup now and connect an account later from Settings &gt; Backup. Until connected, backups are still taken and encrypted, but stay on this PC only."
            wrapText="true" styleClass="wizard-step-subtitle"/>
 </VBox>
