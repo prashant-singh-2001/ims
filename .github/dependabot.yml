@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # Maven dependencies (and the spring-boot-starter-parent version, which Dependabot tracks
+  # as well). Grouped where an independent bump would actively break the build rather than
+  # just being untidy: the six org.springframework.boot artifacts plus the parent should
+  # move together, and the two org.openjfx artifacts (javafx-controls/javafx-fxml, plus the
+  # javafx-maven-plugin build plugin under the same groupId) must stay version-locked or the
+  # build breaks outright. Everything else (sqlite-jdbc, openpdf, JNA, the three Google API
+  # client libraries, atlantafx-base) is left ungrouped - being a version or two apart from
+  # its own release cadence doesn't actually break anything for those.
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      spring-boot:
+        patterns:
+          - "org.springframework.boot:*"
+      javafx:
+        patterns:
+          - "org.openjfx:*"
+
+  # Keeps the workflow files themselves (actions/checkout, actions/setup-java, etc.) current -
+  # an out-of-date action version is itself a supply-chain and security concern, not just a
+  # dependency-freshness one.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

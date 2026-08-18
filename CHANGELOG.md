@@ -11,6 +11,16 @@ traceability), not by release date.
 
 ## [Unreleased]
 
+### M11 — Per-piece photos
+
+- Per-piece photos (FR-PIECE-10): the piece detail screen gained a Photos section — up to
+  3 images per physical piece, documenting that specific unit's condition (scuffs, wear)
+  independently of its item model's own catalogue photos (FR-ITEM-02). Same on-disk storage
+  and 1600px downscale as the existing item-model photo feature; stored under
+  `Photos/pieces/<piece id>/` to avoid colliding with `Photos/<item model id>/`. Included in
+  the backup archive automatically — no `BackupService` change needed, since it already
+  walks the whole `Photos/` tree generically.
+
 ### M10 — UI modernization and optional GST
 
 - Adopted AtlantaFX (Primer Light) as the base theme in place of stock

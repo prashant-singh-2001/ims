@@ -36,9 +36,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Flyway instance pointed at the same JDBC URL {@code DataSourceConfig} would use, writes
  * one row of "existing data" an owner would recognize, then boots the real Spring context
  * (with {@link FlywayConfig}'s real {@code FlywayMigrationStrategy} bean, not a test double)
- * against that same directory and confirms all three things NFR-09/NFR-08 promise: V7
- * applies automatically, the pre-existing data survives untouched, and a pre-migration
- * safety snapshot was actually written to disk before the migration ran.
+ * against that same directory and confirms all three things NFR-09/NFR-08 promise: every
+ * pending migration (V7, V8, ...) applies automatically up to whatever the latest version
+ * currently is, the pre-existing data survives untouched, and a pre-migration safety
+ * snapshot was actually written to disk before the migration ran.
+ * <p>
+ * The expected final version below is a literal, not derived - it must be bumped every
+ * time a new migration is added (most recently V8, M11's {@code piece_photo}), the same way
+ * {@code RouteCoverageTest} would need a new Route registered by hand. There is no dynamic
+ * "latest migration" lookup elsewhere in the app to delegate to.
  */
 class M9UpgradeTest {
 
@@ -72,8 +78,9 @@ class M9UpgradeTest {
             Integer appliedSchemaVersion = jdbc.queryForObject(
                     "SELECT MAX(CAST(version AS INTEGER)) FROM flyway_schema_history WHERE success = 1",
                     Integer.class);
-            assertEquals(7, appliedSchemaVersion,
-                    "V7 should have applied automatically on startup, with no manual database work (NFR-08)");
+            assertEquals(8, appliedSchemaVersion,
+                    "every pending migration up to the latest (V8) should have applied automatically on "
+                            + "startup, with no manual database work (NFR-08)");
 
             String preExistingCategoryName = jdbc.queryForObject(
                     "SELECT name FROM category WHERE id = ?", String.class, preExistingCategoryId);
@@ -85,7 +92,8 @@ class M9UpgradeTest {
             try (Stream<Path> files = Files.list(preMigrationDir)) {
                 List<Path> snapshots = files.toList();
                 assertFalse(snapshots.isEmpty(),
-                        "a pre-migration safety snapshot should have been written before V7 applied (NFR-09)");
+                        "a pre-migration safety snapshot should have been written before the pending "
+                                + "migrations applied (NFR-09)");
                 assertTrue(snapshots.get(0).getFileName().toString().endsWith(".db"));
                 assertTrue(Files.size(snapshots.get(0)) > 0, "the safety snapshot must not be an empty file");
             }

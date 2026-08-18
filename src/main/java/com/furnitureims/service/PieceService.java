@@ -45,15 +45,18 @@ public class PieceService {
     private final SequenceCounterRepository sequenceCounterRepository;
     private final ItemModelRepository itemModelRepository;
     private final AuditLogService auditLogService;
+    private final PiecePhotoService piecePhotoService;
 
     public PieceService(PieceRepository pieceRepository, StockMovementRepository stockMovementRepository,
                          SequenceCounterRepository sequenceCounterRepository,
-                         ItemModelRepository itemModelRepository, AuditLogService auditLogService) {
+                         ItemModelRepository itemModelRepository, AuditLogService auditLogService,
+                         PiecePhotoService piecePhotoService) {
         this.pieceRepository = pieceRepository;
         this.stockMovementRepository = stockMovementRepository;
         this.sequenceCounterRepository = sequenceCounterRepository;
         this.itemModelRepository = itemModelRepository;
         this.auditLogService = auditLogService;
+        this.piecePhotoService = piecePhotoService;
     }
 
     public Optional<Piece> findById(long id) {
@@ -142,11 +145,19 @@ public class PieceService {
      *  reversing it really is "this never happened" rather than erasing a real event. */
     @Transactional
     public void deletePiecesCreatedByPurchaseLine(long purchaseLineId) {
-        for (Piece piece : pieceRepository.findByPurchaseLineId(purchaseLineId)) {
+        List<Piece> pieces = pieceRepository.findByPurchaseLineId(purchaseLineId);
+        // M11: validate every piece before deleting any of them. Photo files (unlike the DB
+        // rows below) don't come back if the surrounding transaction rolls back, so a
+        // single interleaved loop could leave an earlier piece's photo files deleted while
+        // its DB rows survive a later piece's validation failure.
+        for (Piece piece : pieces) {
             if (piece.state() != Piece.State.IN_STOCK) {
                 throw new IllegalStateException("Piece " + piece.tag() + " is " + piece.state()
                         + " and cannot be removed by reversing the receipt.");
             }
+        }
+        for (Piece piece : pieces) {
+            piecePhotoService.deleteAllForPiece(piece.id());
             stockMovementRepository.deleteByPieceId(piece.id());
             pieceRepository.delete(piece.id());
         }

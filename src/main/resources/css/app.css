@@ -210,8 +210,8 @@
     -fx-font-weight: bold;
 }
 
-/* Photo thumbnail frame in the item-model editor. Was built with an inline setStyle()
-   call in ItemModelEditorController before M10. */
+/* Photo thumbnail frame, used in the item-model editor and (M11) the piece detail screen.
+   Was built with an inline setStyle() call in ItemModelEditorController before M10. */
 .photo-card {
     -fx-background-color: -color-bg-default;
     -fx-border-color: -color-border-default;

@@ -7,6 +7,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
@@ -53,6 +54,14 @@
                     <Button text="Rename" onAction="#onRenameTagClicked"/>
                 </HBox>
             </GridPane>
+
+            <Label text="Photos" styleClass="section-heading"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Button text="Add Photo" onAction="#onAddPhotoClicked"/>
+                <Label text="Up to 3 photos of this specific piece's condition. Large images are downscaled automatically."
+                       styleClass="wizard-step-subtitle"/>
+            </HBox>
+            <FlowPane fx:id="photoFlowPane" hgap="12" vgap="12"/>
 
             <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
 

@@ -1,0 +1,87 @@
+name: Release Windows installer
+
+# Builds the self-contained Windows installer (jlink + jpackage, see
+# scripts/package-windows.ps1) and attaches it to a GitHub Release.
+#
+# Trigger it by pushing a version tag:
+#   git tag v0.1.0 && git push origin v0.1.0
+# or run it manually from the Actions tab (Run workflow) for a one-off build without
+# cutting a release - that run still uploads the installer as a workflow artifact, it
+# just skips the "attach to a Release" step since there's no tag to attach it to.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    # jpackage only produces a native installer for the OS it runs on - this has to be
+    # windows-latest to get an .exe, and it doubles as a real (non-headless) desktop
+    # session, which the JavaFX test suite needs to actually render scenes.
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Install the WiX Toolset
+        run: choco install wixtoolset -y --no-progress
+
+      - name: Confirm WiX is on PATH
+        run: |
+          $wix = (Get-Command light.exe -ErrorAction SilentlyContinue) -or (Get-Command wix.exe -ErrorAction SilentlyContinue)
+          if (-not $wix) { throw "WiX Toolset did not land on PATH after installation." }
+
+      - name: Run the test suite
+        # No -o (offline): the very first run on a fresh runner has nothing cached yet, so
+        # Maven needs network access to resolve dependencies. The cache step above makes
+        # every run after the first one fast without needing offline mode to do it.
+        run: mvn -B -q clean test
+
+      - name: Build the installer
+        run: .\scripts\package-windows.ps1 -InstallerType exe
+
+      - name: Locate the built installer
+        id: installer
+        run: |
+          $exe = Get-ChildItem -Path target\installer -Filter *.exe -Recurse | Select-Object -First 1
+          if (-not $exe) { throw "No .exe found under target\installer - packaging must have failed silently." }
+          "path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
+          "name=$($exe.Name)" >> $env:GITHUB_OUTPUT
+
+      - name: Upload installer as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: furniture-ims-windows-installer
+          path: ${{ steps.installer.outputs.path }}
+
+      - name: Attach installer to the GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release view $tag --repo "${{ github.repository }}" 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --repo "${{ github.repository }}" --title $tag --generate-notes
+          }
+          gh release upload $tag "${{ steps.installer.outputs.path }}" --repo "${{ github.repository }}" --clobber

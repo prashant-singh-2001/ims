@@ -11,6 +11,7 @@ import com.furnitureims.repository.ShopProfileRepository;
 import com.furnitureims.service.CategoryService;
 import com.furnitureims.service.CustomerService;
 import com.furnitureims.service.ItemModelService;
+import com.furnitureims.service.PiecePhotoService;
 import com.furnitureims.service.PieceService;
 import com.furnitureims.service.PurchaseBillService;
 import com.furnitureims.service.SalesInvoiceService;
@@ -36,10 +37,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -94,6 +98,7 @@ class FxmlLoadSmokeTest {
     @Autowired private StorageLocationService storageLocationService;
     @Autowired private ItemModelService itemModelService;
     @Autowired private PieceService pieceService;
+    @Autowired private PiecePhotoService piecePhotoService;
     @Autowired private PieceDetailController pieceDetailController;
     @Autowired private ShopProfileRepository shopProfileRepository;
     @Autowired private SupplierService supplierService;
@@ -161,6 +166,13 @@ class FxmlLoadSmokeTest {
                 null, null, null, null, null, null, null, true, null));
         Piece piece = pieceService.createOpeningStock(
                 modelId, 1, Money.ofRupees("999.00"), locationId, LocalDate.now()).get(0);
+        // M11: a real photo on the fixture piece, so this test's CSS + layout pass also
+        // exercises buildPhotoCard's ImageView/Image file-loading path, not just the
+        // empty-FlowPane case.
+        BufferedImage fakePhoto = new BufferedImage(200, 200, BufferedImage.TYPE_INT_RGB);
+        Path photoSource = Files.createTempFile("fxml-smoke-piece-photo-", ".jpg");
+        ImageIO.write(fakePhoto, "jpg", photoSource.toFile());
+        piecePhotoService.addPhoto(piece.id(), photoSource);
 
         pieceDetailController.openFor(piece.id());
         loadOnFxThread("/fxml/catalogue/piece-detail.fxml");
