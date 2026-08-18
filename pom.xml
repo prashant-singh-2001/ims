@@ -25,7 +25,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>26.0.2</javafx.version>
         <sqlite-jdbc.version>3.53.2.1</sqlite-jdbc.version>
-        <atlantafx.version>2.0.1</atlantafx.version>
+        <atlantafx.version>2.1.0</atlantafx.version>
         <openpdf.version>3.0.5</openpdf.version>
         <jna.version>5.15.0</jna.version>
         <google-api-client.version>2.7.0</google-api-client.version>
