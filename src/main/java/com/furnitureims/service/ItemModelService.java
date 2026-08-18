@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -31,12 +32,14 @@ public class ItemModelService {
     private final ItemModelRepository itemModelRepository;
     private final ItemPhotoRepository itemPhotoRepository;
     private final AppPaths appPaths;
+    private final SettingsService settingsService;
 
     public ItemModelService(ItemModelRepository itemModelRepository, ItemPhotoRepository itemPhotoRepository,
-                             AppPaths appPaths) {
+                             AppPaths appPaths, SettingsService settingsService) {
         this.itemModelRepository = itemModelRepository;
         this.itemPhotoRepository = itemPhotoRepository;
         this.appPaths = appPaths;
+        this.settingsService = settingsService;
     }
 
     public Optional<ItemModel> findById(long id) {
@@ -45,6 +48,10 @@ public class ItemModelService {
 
     public List<ItemModelSummary> search(ItemModelSearchCriteria criteria) {
         return itemModelRepository.search(criteria);
+    }
+
+    public boolean modelCodeExists(String modelCode) {
+        return itemModelRepository.existsByModelCode(modelCode);
     }
 
     public List<ItemPhoto> photosFor(long itemModelId) {
@@ -56,13 +63,30 @@ public class ItemModelService {
     }
 
     public long create(ItemModel draft) {
-        validate(draft, true);
-        return itemModelRepository.create(draft);
+        ItemModel normalized = applyGstSentinelIfDisabled(draft);
+        validate(normalized, true);
+        return itemModelRepository.create(normalized);
     }
 
     public void update(ItemModel model) {
-        validate(model, false);
-        itemModelRepository.update(model);
+        ItemModel normalized = applyGstSentinelIfDisabled(model);
+        validate(normalized, false);
+        itemModelRepository.update(normalized);
+    }
+
+    /** M10: {@code hsn_code}/{@code gst_rate} are {@code NOT NULL} with no default, so a
+     *  screen that hides them while GST is off (Workstream D) can't simply leave them blank -
+     *  it never fills them in, so whatever it sent here (typically {@code null}/blank) is
+     *  replaced with the sentinel instead of being rejected by {@link #validate}. Does
+     *  nothing while GST is on, so an existing model's real HSN/rate is never overwritten by
+     *  turning the toggle off and back on. */
+    private ItemModel applyGstSentinelIfDisabled(ItemModel m) {
+        if (settingsService.isGstEnabled()) {
+            return m;
+        }
+        return new ItemModel(m.id(), m.modelCode(), m.modelName(), m.categoryId(), "", BigDecimal.ZERO,
+                m.lengthCm(), m.widthCm(), m.heightCm(), m.material(), m.finish(), m.colour(),
+                m.defaultSalePrice(), m.active(), m.notes());
     }
 
     private void validate(ItemModel m, boolean isNew) {
@@ -72,11 +96,13 @@ public class ItemModelService {
         if (m.modelName() == null || m.modelName().isBlank()) {
             throw new IllegalArgumentException("Model name is required.");
         }
-        if (m.hsnCode() == null || m.hsnCode().isBlank()) {
-            throw new IllegalArgumentException("HSN code is required.");
-        }
-        if (m.gstRate() == null) {
-            throw new IllegalArgumentException("GST rate is required.");
+        if (settingsService.isGstEnabled()) {
+            if (m.hsnCode() == null || m.hsnCode().isBlank()) {
+                throw new IllegalArgumentException("HSN code is required.");
+            }
+            if (m.gstRate() == null) {
+                throw new IllegalArgumentException("GST rate is required.");
+            }
         }
         if (isNew && itemModelRepository.existsByModelCode(m.modelCode())) {
             throw new IllegalArgumentException("Model code \"" + m.modelCode() + "\" is already in use.");

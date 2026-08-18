@@ -20,12 +20,9 @@
             styleClass="app-root">
 
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
             <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label text="Supplier Payment" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
             <Button text="Payment List" onAction="#onPaymentListClicked"/>
-            <Button text="Back" onAction="#onBackClicked"/>
         </HBox>
     </top>
 
@@ -34,14 +31,14 @@
             <VBox spacing="16">
                 <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
-                <Label text="Supplier" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label text="Supplier" styleClass="section-heading"/>
                 <ComboBox fx:id="supplierCombo" maxWidth="Infinity" promptText="Select a supplier"/>
                 <Label fx:id="supplierDuesLabel" styleClass="wizard-step-subtitle"/>
 
-                <Label text="Unpaid bills" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label text="Unpaid bills" styleClass="section-heading"/>
                 <VBox fx:id="billsBox" spacing="6"/>
 
-                <Label text="Payment" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label text="Payment" styleClass="section-heading"/>
                 <GridPane hgap="12" vgap="10">
                     <columnConstraints>
                         <ColumnConstraints minWidth="120"/>

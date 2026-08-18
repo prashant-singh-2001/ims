@@ -5,14 +5,18 @@ import com.furnitureims.domain.ShopProfile;
 import com.furnitureims.repository.ShopProfileRepository;
 import com.furnitureims.service.EmailService;
 import com.furnitureims.service.SettingsService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
+import com.furnitureims.util.GstinValidator;
 import com.furnitureims.util.ImageResizer;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import org.springframework.stereotype.Component;
 
@@ -36,6 +40,14 @@ public class SettingsController {
     private final EmailService emailService;
     private final AppPaths appPaths;
     private final SceneRouter sceneRouter;
+
+    @FXML private CheckBox gstEnabledCheck;
+    @FXML private GridPane gstDetailsGrid;
+    @FXML private Label shopStateLabel;
+    @FXML private TextField gstinField;
+    @FXML private RadioButton regularRadio;
+    @FXML private RadioButton compositionRadio;
+    @FXML private Label taxStatusLabel;
 
     @FXML private TextArea declarationArea;
     @FXML private TextField signatureField;
@@ -68,9 +80,81 @@ public class SettingsController {
 
     @FXML
     private void initialize() {
+        loadTaxSection();
         loadInvoiceSection();
         loadEmailSection();
         loadWhatsAppSection();
+    }
+
+    // ---- Tax / GST section (M10) -----------------------------------------------------------
+
+    private void loadTaxSection() {
+        boolean gstEnabled = settingsService.isGstEnabled();
+        gstEnabledCheck.setSelected(gstEnabled);
+        gstEnabledCheck.selectedProperty().addListener((obs, was, isNow) -> applyGstDetailsVisibility(isNow));
+
+        ShopProfile shop = shopProfileRepository.find().orElse(null);
+        shopStateLabel.setText(shop == null ? "-" : shop.stateName() + " (" + shop.stateCode() + ")");
+        gstinField.setText(shop == null ? "" : nullToEmpty(shop.gstin()));
+        if (shop != null && shop.registrationType() == ShopProfile.RegistrationType.COMPOSITION) {
+            compositionRadio.setSelected(true);
+        } else {
+            regularRadio.setSelected(true);
+        }
+
+        applyGstDetailsVisibility(gstEnabled);
+        taxStatusLabel.setText("");
+    }
+
+    /** State/GSTIN/registration type are only meaningful once GST is on - hidden as one
+     *  block otherwise, unlike the setup wizard's per-field split (there, State is its own
+     *  always-required address field being collected for the first time; here it is a
+     *  read-only display next to the fields that exist only to support GST). */
+    private void applyGstDetailsVisibility(boolean gstEnabled) {
+        gstDetailsGrid.setVisible(gstEnabled);
+        gstDetailsGrid.setManaged(gstEnabled);
+    }
+
+    /** M10: the only place GSTIN, and therefore registration type, can be entered outside
+     *  the setup wizard - a shop that started with GST off never had a GSTIN collected at
+     *  all, so turning the toggle on later needs an entry point for it right here. */
+    @FXML
+    private void onSaveTaxSettingsClicked() {
+        boolean gstEnabled = gstEnabledCheck.isSelected();
+        try {
+            if (gstEnabled) {
+                ShopProfile existing = shopProfileRepository.find()
+                        .orElseThrow(() -> new IllegalStateException("Shop profile has not been set up."));
+                if (gstinField.getText() == null || gstinField.getText().isBlank()) {
+                    taxStatusLabel.setText("GSTIN is required to turn GST on.");
+                    return;
+                }
+                String gstin = gstinField.getText().trim().toUpperCase();
+                if (!GstinValidator.isValidFormat(gstin)) {
+                    taxStatusLabel.setText("GSTIN does not look valid. Expected format: 22AAAAA0000A1Z5.");
+                    return;
+                }
+                if (!GstinValidator.stateCodeMatches(gstin, existing.stateCode())) {
+                    taxStatusLabel.setText("This GSTIN's state code (" + gstin.substring(0, 2)
+                            + ") does not match the shop's state, " + existing.stateName()
+                            + " (" + existing.stateCode() + ").");
+                    return;
+                }
+                ShopProfile updated = new ShopProfile(existing.shopName(), existing.addressLine1(),
+                        existing.addressLine2(), existing.city(), existing.pincode(), existing.stateName(),
+                        existing.stateCode(), gstin,
+                        compositionRadio.isSelected()
+                                ? ShopProfile.RegistrationType.COMPOSITION
+                                : ShopProfile.RegistrationType.REGULAR,
+                        existing.phone(), existing.email(), existing.logoPath(), existing.invoiceDeclaration(),
+                        existing.signatureText());
+                shopProfileRepository.save(updated);
+            }
+            settingsService.setGstEnabled(gstEnabled);
+            taxStatusLabel.setText("Saved.");
+        } catch (IllegalStateException e) {
+            taxStatusLabel.setText(e.getMessage());
+        }
     }
 
     // ---- Invoice section (FR-DOC-01/06) --------------------------------------------------
@@ -208,16 +292,12 @@ public class SettingsController {
 
     @FXML
     private void onBackupSettingsClicked() {
-        sceneRouter.show("/fxml/backup/backup-settings.fxml");
+        sceneRouter.navigate(Route.BACKUP_SETTINGS);
     }
 
     @FXML
     private void onAuditLogClicked() {
-        sceneRouter.show("/fxml/settings/audit-log.fxml");
+        sceneRouter.navigate(Route.AUDIT_LOG);
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

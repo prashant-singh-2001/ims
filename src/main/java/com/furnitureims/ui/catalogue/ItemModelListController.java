@@ -4,6 +4,8 @@ import com.furnitureims.domain.Category;
 import com.furnitureims.repository.ItemModelSearchCriteria;
 import com.furnitureims.service.CategoryService;
 import com.furnitureims.service.ItemModelService;
+import com.furnitureims.service.SettingsService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -28,6 +30,7 @@ public class ItemModelListController {
     private final ItemModelService itemModelService;
     private final CategoryService categoryService;
     private final ItemModelEditorController itemModelEditorController;
+    private final SettingsService settingsService;
     private final SceneRouter sceneRouter;
 
     @FXML private TextField searchField;
@@ -46,20 +49,26 @@ public class ItemModelListController {
     @FXML private TableColumn<ItemModelRow, Void> actionsColumn;
 
     public ItemModelListController(ItemModelService itemModelService, CategoryService categoryService,
-                                    ItemModelEditorController itemModelEditorController, SceneRouter sceneRouter) {
+                                    ItemModelEditorController itemModelEditorController,
+                                    SettingsService settingsService, SceneRouter sceneRouter) {
         this.itemModelService = itemModelService;
         this.categoryService = categoryService;
         this.itemModelEditorController = itemModelEditorController;
+        this.settingsService = settingsService;
         this.sceneRouter = sceneRouter;
     }
 
     @FXML
     private void initialize() {
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         codeColumn.setCellValueFactory(new PropertyValueFactory<>("modelCode"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("modelName"));
         categoryColumn.setCellValueFactory(new PropertyValueFactory<>("categoryName"));
         hsnColumn.setCellValueFactory(new PropertyValueFactory<>("hsnCode"));
         gstColumn.setCellValueFactory(new PropertyValueFactory<>("gstRate"));
+        boolean gstEnabled = settingsService.isGstEnabled();
+        hsnColumn.setVisible(gstEnabled);
+        gstColumn.setVisible(gstEnabled);
         priceColumn.setCellValueFactory(new PropertyValueFactory<>("defaultPrice"));
         stockColumn.setCellValueFactory(new PropertyValueFactory<>("inStockCount"));
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("activeLabel"));
@@ -91,7 +100,7 @@ public class ItemModelListController {
             {
                 editButton.setOnAction(e -> onEditClicked(rowAt()));
                 toggleButton.setOnAction(e -> onToggleActiveClicked(rowAt()));
-                viewPiecesButton.setOnAction(e -> sceneRouter.show("/fxml/catalogue/piece-register.fxml"));
+                viewPiecesButton.setOnAction(e -> sceneRouter.navigate(Route.PIECE_REGISTER));
             }
 
             private ItemModelRow rowAt() {
@@ -113,7 +122,7 @@ public class ItemModelListController {
 
     private void onEditClicked(ItemModelRow row) {
         itemModelEditorController.openForEdit(row.getId());
-        sceneRouter.show("/fxml/catalogue/item-model-editor.fxml");
+        sceneRouter.navigate(Route.ITEM_MODEL_EDITOR);
     }
 
     private void onToggleActiveClicked(ItemModelRow row) {
@@ -124,7 +133,7 @@ public class ItemModelListController {
     @FXML
     private void onNewClicked() {
         itemModelEditorController.openForNew();
-        sceneRouter.show("/fxml/catalogue/item-model-editor.fxml");
+        sceneRouter.navigate(Route.ITEM_MODEL_EDITOR);
     }
 
     @FXML
@@ -143,11 +152,7 @@ public class ItemModelListController {
 
     @FXML
     private void onCategoriesLocationsClicked() {
-        sceneRouter.show("/fxml/catalogue/categories-locations.fxml");
+        sceneRouter.navigate(Route.CATEGORIES_LOCATIONS);
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

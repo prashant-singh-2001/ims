@@ -20,9 +20,12 @@ import com.furnitureims.ui.catalogue.PieceDetailController;
 import com.furnitureims.ui.purchase.PurchaseReturnController;
 import com.furnitureims.ui.sales.InvoiceDetailController;
 import com.furnitureims.ui.sales.SalesReturnScreenController;
+import atlantafx.base.theme.PrimerLight;
+import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -79,6 +82,10 @@ class FxmlLoadSmokeTest {
         if (!latch.await(10, TimeUnit.SECONDS)) {
             fail("JavaFX toolkit did not start in time");
         }
+        // Same base theme the real app applies in FurnitureImsFxApp.applyBaseTheme(). Without
+        // this the whole suite would keep validating every screen against JavaFX's stock
+        // Modena stylesheet, and so could not catch a theme regression even in principle.
+        Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
         fxToolkitStarted = true;
     }
 
@@ -104,6 +111,14 @@ class FxmlLoadSmokeTest {
         ensureFxToolkitStarted();
 
         List<String> screens = List.of(
+                // The two entry-point screens, previously untested. setup-wizard.fxml
+                // transitively loads all four step fragments in its own initialize(), and
+                // SetupWizardController.loadStep already names the offending file in its
+                // exception - so the steps need no separate entries here, and listing them
+                // standalone would only double-load their singleton controllers.
+                "/fxml/login/login.fxml",
+                "/fxml/setup/setup-wizard.fxml",
+
                 "/fxml/shell/dashboard.fxml",
                 "/fxml/catalogue/categories-locations.fxml",
                 "/fxml/catalogue/item-model-list.fxml",
@@ -217,6 +232,13 @@ class FxmlLoadSmokeTest {
         loadOnFxThread("/fxml/sales/sales-return.fxml");
     }
 
+    /**
+     * Loads the FXML, then puts its root in a throwaway {@link Scene} with the real
+     * stylesheet attached and forces a CSS pass and one layout pass. Loading alone only
+     * proves the FXML <em>parses</em>; a restyle breaks things that surface later than
+     * that - an unparseable {@code -fx-} value, a bad looked-up colour, or a cell factory
+     * that NPEs the first time a table actually lays out its rows.
+     */
     private void loadOnFxThread(String classpathFxml) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> error = new AtomicReference<>();
@@ -227,7 +249,15 @@ class FxmlLoadSmokeTest {
                 URL location = getClass().getResource(classpathFxml);
                 FXMLLoader loader = new FXMLLoader(location);
                 loader.setControllerFactory(applicationContext::getBean);
-                result.set(loader.load());
+                Parent root = loader.load();
+
+                Scene scene = new Scene(root, 1280, 800);
+                scene.getStylesheets().add(
+                        FxmlLoadSmokeTest.class.getResource("/css/app.css").toExternalForm());
+                root.applyCss();
+                root.layout();
+
+                result.set(root);
             } catch (Throwable t) {
                 error.set(t);
             } finally {

@@ -19,13 +19,10 @@
             styleClass="app-root">
 
     <top>
-        <VBox styleClass="wizard-header">
+        <VBox styleClass="screen-actions">
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <padding><Insets top="14" right="24" bottom="6" left="24"/></padding>
-                <Label text="Piece Register" styleClass="wizard-header-title"/>
-                <Region HBox.hgrow="ALWAYS"/>
                 <Button text="Opening Stock Entry" onAction="#onOpeningStockClicked" styleClass="primary-button"/>
-                <Button text="Back" onAction="#onBackClicked"/>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="8">
                 <padding><Insets top="6" right="24" bottom="6" left="24"/></padding>
@@ -33,9 +30,9 @@
                 <ComboBox fx:id="stateFilterCombo" promptText="All states"/>
                 <ComboBox fx:id="categoryFilterCombo" promptText="All categories"/>
                 <ComboBox fx:id="locationFilterCombo" promptText="All locations"/>
-                <Label text="Acquired" textFill="WHITE"/>
+                <Label text="Acquired"/>
                 <DatePicker fx:id="acquiredFromPicker" prefWidth="140"/>
-                <Label text="to" textFill="WHITE"/>
+                <Label text="to"/>
                 <DatePicker fx:id="acquiredToPicker" prefWidth="140"/>
                 <Button text="Search" onAction="#onSearchClicked"/>
             </HBox>

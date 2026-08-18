@@ -15,7 +15,10 @@ import com.furnitureims.service.EmailService;
 import com.furnitureims.service.ItemModelService;
 import com.furnitureims.service.PieceService;
 import com.furnitureims.service.SalesInvoiceService;
+import com.furnitureims.service.SettingsService;
 import com.furnitureims.service.WhatsAppShareService;
+import com.furnitureims.ui.ConfirmsNavigation;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import com.furnitureims.ui.catalogue.PieceRow;
 import javafx.collections.FXCollections;
@@ -34,6 +37,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
@@ -60,7 +64,7 @@ import java.util.Optional;
  * still milestone M6 and intentionally absent.
  */
 @Component
-public class NewSaleController {
+public class NewSaleController implements ConfirmsNavigation {
 
     private record BillLineControls(long pieceId, String tag, TextField priceField, TextField discountField,
                                      Label taxableLabel, Label taxLabel, Label totalLabel, HBox container) {
@@ -73,6 +77,7 @@ public class NewSaleController {
     private final DocumentService documentService;
     private final WhatsAppShareService whatsAppShareService;
     private final EmailService emailService;
+    private final SettingsService settingsService;
     private final SceneRouter sceneRouter;
 
     @FXML private TextField phoneField;
@@ -84,7 +89,9 @@ public class NewSaleController {
     @FXML private TextField cityField;
     @FXML private TextField pincodeField;
     @FXML private ComboBox<IndianState> customerStateCombo;
+    @FXML private HBox placeOfSupplyBox;
     @FXML private ComboBox<IndianState> placeOfSupplyCombo;
+    @FXML private HBox gstinBox;
     @FXML private TextField gstinField;
 
     @FXML private ComboBox<ItemModel> modelSearchCombo;
@@ -99,10 +106,14 @@ public class NewSaleController {
     @FXML private VBox rowsBox;
     @FXML private CheckBox priceInclusiveCheck;
     @FXML private TextField billDiscountField;
+    @FXML private Label taxableColumnHeader;
+    @FXML private Label taxColumnHeader;
 
     @FXML private Label grossValueLabel;
     @FXML private Label lineDiscountLabel;
+    @FXML private Label taxableValueHeading;
     @FXML private Label taxableValueLabel;
+    @FXML private GridPane gstTotalsGrid;
     @FXML private Label cgstLabel;
     @FXML private Label sgstLabel;
     @FXML private Label igstLabel;
@@ -122,7 +133,7 @@ public class NewSaleController {
     public NewSaleController(CustomerService customerService, ItemModelService itemModelService,
                               PieceService pieceService, SalesInvoiceService salesInvoiceService,
                               DocumentService documentService, WhatsAppShareService whatsAppShareService,
-                              EmailService emailService, SceneRouter sceneRouter) {
+                              EmailService emailService, SettingsService settingsService, SceneRouter sceneRouter) {
         this.customerService = customerService;
         this.itemModelService = itemModelService;
         this.pieceService = pieceService;
@@ -130,6 +141,7 @@ public class NewSaleController {
         this.documentService = documentService;
         this.whatsAppShareService = whatsAppShareService;
         this.emailService = emailService;
+        this.settingsService = settingsService;
         this.sceneRouter = sceneRouter;
     }
 
@@ -174,13 +186,38 @@ public class NewSaleController {
 
         advanceModeCombo.setItems(FXCollections.observableArrayList(Payment.Mode.values()));
 
+        piecesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         pieceTagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
         pieceModelColumn.setCellValueFactory(new PropertyValueFactory<>("modelName"));
         pieceLocationColumn.setCellValueFactory(new PropertyValueFactory<>("locationName"));
         pieceCostColumn.setCellValueFactory(new PropertyValueFactory<>("landedCost"));
         pieceActionsColumn.setCellFactory(col -> addPieceActionCell());
 
+        applyGstVisibility();
         resetForNewSale();
+    }
+
+    /** M10: hides every GST-only field as one pass at screen-load time - the toggle only
+     *  changes in Settings, never mid-bill, so this runs once rather than being re-evaluated
+     *  on every recalculate. {@code gstTotalsGrid} is the CGST/SGST/IGST rows split out of
+     *  the totals callout specifically so they could be hidden as a single unit (see
+     *  new-sale.fxml); Grand Total and the always-meaningful Gross/Taxable/Round-off rows are
+     *  siblings of it, not inside it, so they stay visible either way. "Taxable value"
+     *  becomes "Subtotal" when GST is off - same number, but "taxable" is a GST term for a
+     *  bill that no longer has any tax on it. */
+    private void applyGstVisibility() {
+        boolean gstEnabled = settingsService.isGstEnabled();
+        gstinBox.setVisible(gstEnabled);
+        gstinBox.setManaged(gstEnabled);
+        placeOfSupplyBox.setVisible(gstEnabled);
+        placeOfSupplyBox.setManaged(gstEnabled);
+        taxableColumnHeader.setVisible(gstEnabled);
+        taxableColumnHeader.setManaged(gstEnabled);
+        taxColumnHeader.setVisible(gstEnabled);
+        taxColumnHeader.setManaged(gstEnabled);
+        gstTotalsGrid.setVisible(gstEnabled);
+        gstTotalsGrid.setManaged(gstEnabled);
+        taxableValueHeading.setText(gstEnabled ? "Taxable value" : "Subtotal");
     }
 
     private TableCell<PieceRow, Void> addPieceActionCell() {
@@ -258,6 +295,11 @@ public class NewSaleController {
         taxableLabel.setPrefWidth(90);
         Label taxLabel = new Label("-");
         taxLabel.setPrefWidth(90);
+        boolean gstEnabled = settingsService.isGstEnabled();
+        taxableLabel.setVisible(gstEnabled);
+        taxableLabel.setManaged(gstEnabled);
+        taxLabel.setVisible(gstEnabled);
+        taxLabel.setManaged(gstEnabled);
         Label totalLabel = new Label("-");
         totalLabel.setPrefWidth(90);
 
@@ -318,14 +360,19 @@ public class NewSaleController {
     private void recalculate() {
         try {
             IndianState placeOfSupply = placeOfSupplyCombo.getValue();
-            if (placeOfSupply == null) {
+            // M10: place of supply only matters for interstate/intrastate GST, so it's only
+            // a hard requirement while GST is on - the field is hidden on this screen when
+            // it's off (Workstream D), and SalesInvoiceService.preview never evaluates it in
+            // that mode (see its own note on why that's safe even when null).
+            if (settingsService.isGstEnabled() && placeOfSupply == null) {
                 errorLabel.setText("Select the place of supply.");
                 return;
             }
             List<SalesInvoiceService.InvoiceLineInput> inputs = collectLineInputs();
             Money billDiscount = parseOptionalMoney(billDiscountField.getText(), "Bill discount");
 
-            SalesInvoiceService.InvoicePreview preview = salesInvoiceService.preview(placeOfSupply.gstCode(),
+            SalesInvoiceService.InvoicePreview preview = salesInvoiceService.preview(
+                    placeOfSupply == null ? null : placeOfSupply.gstCode(),
                     inputs, priceInclusiveCheck.isSelected(), billDiscount);
 
             StringBuilder warnings = new StringBuilder();
@@ -365,7 +412,7 @@ public class NewSaleController {
     private void onSaveClicked() {
         try {
             IndianState placeOfSupply = placeOfSupplyCombo.getValue();
-            if (placeOfSupply == null) {
+            if (settingsService.isGstEnabled() && placeOfSupply == null) {
                 errorLabel.setText("Select the place of supply.");
                 return;
             }
@@ -380,7 +427,8 @@ public class NewSaleController {
                 return;
             }
 
-            long invoiceId = salesInvoiceService.createInvoice(customerId, placeOfSupply.gstCode(),
+            long invoiceId = salesInvoiceService.createInvoice(customerId,
+                    placeOfSupply == null ? null : placeOfSupply.gstCode(),
                     priceInclusiveCheck.isSelected(), inputs, billDiscount, LocalDate.now(),
                     advanceAmount, advanceMode, nullIfBlank(advanceReferenceField.getText()),
                     nullIfBlank(advanceNoteField.getText()));
@@ -588,8 +636,12 @@ public class NewSaleController {
         return (text == null || text.isBlank()) ? null : text.trim();
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/sales/invoice-list.fxml");
+    /** M10 (Workstream B5): a piece is only ever on the bill because the owner explicitly
+     *  clicked "Add" for it (see {@link #addBillLine}), and {@link #resetForNewSale} - run
+     *  after every successful save - is the only place {@code rows} is cleared. A non-empty
+     *  list therefore means exactly "a bill has been started here and not yet saved." */
+    @Override
+    public boolean hasUnsavedWork() {
+        return !rows.isEmpty();
     }
 }

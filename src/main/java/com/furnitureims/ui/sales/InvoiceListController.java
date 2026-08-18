@@ -3,6 +3,7 @@ package com.furnitureims.ui.sales;
 import com.furnitureims.repository.SalesInvoiceListRow;
 import com.furnitureims.repository.SalesInvoiceSearchCriteria;
 import com.furnitureims.service.SalesInvoiceService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -41,6 +42,7 @@ public class InvoiceListController {
 
     @FXML
     private void initialize() {
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         invoiceNoColumn.setCellValueFactory(new PropertyValueFactory<>("invoiceNo"));
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("invoiceDate"));
         customerColumn.setCellValueFactory(new PropertyValueFactory<>("customerName"));
@@ -59,7 +61,7 @@ public class InvoiceListController {
                 viewButton.setOnAction(e -> {
                     InvoiceRow row = getTableView().getItems().get(getIndex());
                     invoiceDetailController.openFor(row.getId());
-                    sceneRouter.show("/fxml/sales/invoice-detail.fxml");
+                    sceneRouter.navigate(Route.INVOICE_DETAIL);
                 });
             }
 
@@ -81,11 +83,7 @@ public class InvoiceListController {
 
     @FXML
     private void onNewSaleClicked() {
-        sceneRouter.show("/fxml/sales/new-sale.fxml");
+        sceneRouter.navigate(Route.NEW_SALE);
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

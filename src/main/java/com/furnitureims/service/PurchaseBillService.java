@@ -50,18 +50,21 @@ public class PurchaseBillService {
     private final ShopProfileRepository shopProfileRepository;
     private final PieceService pieceService;
     private final PaymentService paymentService;
+    private final SettingsService settingsService;
 
     public PurchaseBillService(PurchaseBillRepository purchaseBillRepository,
                                 PurchaseLineRepository purchaseLineRepository,
                                 SupplierRepository supplierRepository,
                                 ShopProfileRepository shopProfileRepository,
-                                PieceService pieceService, PaymentService paymentService) {
+                                PieceService pieceService, PaymentService paymentService,
+                                SettingsService settingsService) {
         this.purchaseBillRepository = purchaseBillRepository;
         this.purchaseLineRepository = purchaseLineRepository;
         this.supplierRepository = supplierRepository;
         this.shopProfileRepository = shopProfileRepository;
         this.pieceService = pieceService;
         this.paymentService = paymentService;
+        this.settingsService = settingsService;
     }
 
     public Optional<PurchaseBill> findById(long id) {
@@ -84,7 +87,12 @@ public class PurchaseBillService {
     }
 
     /** Computes totals without persisting anything, for the bill entry screen's live
-     *  preview before the owner commits to Save/Confirm. */
+     *  preview before the owner commits to Save/Confirm.
+     *  <p>
+     *  M10: when {@link SettingsService#isGstEnabled()} is off, {@code interstate} is forced
+     *  to {@code false} without evaluating {@code supplier.stateCode()} (short-circuiting via
+     *  {@code &&}, mirroring {@code SalesInvoiceService.preview}), and every line's tax is
+     *  forced to zero in {@link #computeLines}. */
     public PreviewTotals preview(long supplierId, List<LineInput> lineInputs, Money freight,
                                   Money loadingCharges, Money otherCharges) {
         if (lineInputs == null || lineInputs.isEmpty()) {
@@ -94,8 +102,9 @@ public class PurchaseBillService {
                 .orElseThrow(() -> new IllegalArgumentException("Supplier not found."));
         ShopProfile shop = shopProfileRepository.find()
                 .orElseThrow(() -> new IllegalStateException("Shop profile has not been set up."));
-        boolean interstate = !supplier.stateCode().equals(shop.stateCode());
-        List<ComputedLine> computed = computeLines(lineInputs, interstate);
+        boolean gstEnabled = settingsService.isGstEnabled();
+        boolean interstate = gstEnabled && !supplier.stateCode().equals(shop.stateCode());
+        List<ComputedLine> computed = computeLines(lineInputs, interstate, gstEnabled);
 
         Money taxableTotal = Money.ZERO;
         Money cgstTotal = Money.ZERO;
@@ -127,7 +136,7 @@ public class PurchaseBillService {
                            LocalDate receivedDate, Money freight, Money loadingCharges, Money otherCharges,
                            String notes, List<LineInput> lineInputs) {
         PreviewTotals totals = preview(supplierId, lineInputs, freight, loadingCharges, otherCharges);
-        List<ComputedLine> computed = computeLines(lineInputs, totals.interstate());
+        List<ComputedLine> computed = computeLines(lineInputs, totals.interstate(), settingsService.isGstEnabled());
 
         PurchaseBill toSave = new PurchaseBill(existingBillId == null ? 0 : existingBillId, supplierId,
                 requireText(supplierBillNo, "Supplier bill number"), billDate, receivedDate, totals.interstate(),
@@ -221,7 +230,7 @@ public class PurchaseBillService {
                                  Money cgst, Money sgst, Money igst, Money lineTotal) {
     }
 
-    private static List<ComputedLine> computeLines(List<LineInput> inputs, boolean interstate) {
+    private static List<ComputedLine> computeLines(List<LineInput> inputs, boolean interstate, boolean gstEnabled) {
         List<ComputedLine> result = new ArrayList<>();
         for (LineInput input : inputs) {
             if (input.quantity() < 1) {
@@ -234,9 +243,11 @@ public class PurchaseBillService {
                 throw new IllegalArgumentException("Discount cannot exceed the line's value.");
             }
 
-            Money tax = Money.ofRupees(taxableValue.rupees()
-                    .multiply(input.gstRate())
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN));
+            Money tax = gstEnabled
+                    ? Money.ofRupees(taxableValue.rupees()
+                            .multiply(input.gstRate())
+                            .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN))
+                    : Money.ZERO;
 
             long taxPaisa = tax.paisa();
             long cgstPaisa = interstate ? 0 : taxPaisa / 2;

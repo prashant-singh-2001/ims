@@ -11,7 +11,12 @@ import com.furnitureims.service.PieceService;
 import com.furnitureims.service.SalesInvoiceService;
 import com.furnitureims.service.SalesReturnService;
 import com.furnitureims.service.WhatsAppShareService;
+import com.furnitureims.ui.HasScreenTitle;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -38,7 +43,7 @@ import java.util.Map;
 /** Sales return (FR-SAL-10, FR-DOC-05; docs/03-screens.md 6.3): pick which sold pieces
  *  from an active invoice come back. */
 @Component
-public class SalesReturnScreenController {
+public class SalesReturnScreenController implements HasScreenTitle {
 
     private final SalesInvoiceService salesInvoiceService;
     private final SalesReturnService salesReturnService;
@@ -49,7 +54,9 @@ public class SalesReturnScreenController {
     private final EmailService emailService;
     private final SceneRouter sceneRouter;
 
-    @FXML private Label titleLabel;
+    /** M10: see ItemModelEditorController.screenTitle for the pattern this follows. */
+    private final StringProperty screenTitle = new SimpleStringProperty("");
+
     @FXML private VBox pieceCheckboxesBox;
     @FXML private TextField reasonField;
     @FXML private DatePicker returnDatePicker;
@@ -78,6 +85,11 @@ public class SalesReturnScreenController {
         this.invoiceId = invoiceId;
     }
 
+    @Override
+    public ReadOnlyStringProperty screenTitleProperty() {
+        return screenTitle;
+    }
+
     @FXML
     private void initialize() {
         errorLabel.setText("");
@@ -92,7 +104,7 @@ public class SalesReturnScreenController {
     private void reload() {
         SalesInvoice invoice = salesInvoiceService.findById(invoiceId)
                 .orElseThrow(() -> new IllegalStateException("Invoice not found: " + invoiceId));
-        titleLabel.setText("Return Pieces - Invoice " + invoice.invoiceNo());
+        screenTitle.set("Return Pieces - Invoice " + invoice.invoiceNo());
 
         pieceCheckboxesBox.getChildren().clear();
         checkboxToPieceId.clear();
@@ -148,7 +160,7 @@ public class SalesReturnScreenController {
             }
 
             showCreditNoteDialog(salesReturn, selected.size(), pdfNote, pdfPath);
-            sceneRouter.show("/fxml/sales/invoice-list.fxml");
+            sceneRouter.navigate(Route.INVOICE_LIST);
         } catch (IllegalArgumentException | IllegalStateException e) {
             errorLabel.setText(e.getMessage());
         }
@@ -234,8 +246,4 @@ public class SalesReturnScreenController {
         error.showAndWait();
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/sales/invoice-list.fxml");
-    }
 }

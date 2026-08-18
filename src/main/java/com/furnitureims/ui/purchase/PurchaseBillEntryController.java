@@ -8,8 +8,14 @@ import com.furnitureims.money.Money;
 import com.furnitureims.repository.ItemModelSearchCriteria;
 import com.furnitureims.service.ItemModelService;
 import com.furnitureims.service.PurchaseBillService;
+import com.furnitureims.service.SettingsService;
 import com.furnitureims.service.SupplierService;
+import com.furnitureims.ui.HasScreenTitle;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -22,6 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
@@ -41,7 +48,7 @@ import java.util.Optional;
  * a fresh bill starts with one blank row.
  */
 @Component
-public class PurchaseBillEntryController {
+public class PurchaseBillEntryController implements HasScreenTitle {
 
     private record LineRowControls(ComboBox<ItemModel> modelCombo, Spinner<Integer> quantitySpinner,
                                     TextField rateField, TextField discountField, TextField gstRateField,
@@ -51,9 +58,12 @@ public class PurchaseBillEntryController {
     private final PurchaseBillService purchaseBillService;
     private final SupplierService supplierService;
     private final ItemModelService itemModelService;
+    private final SettingsService settingsService;
     private final SceneRouter sceneRouter;
 
-    @FXML private Label titleLabel;
+    /** M10: see ItemModelEditorController.screenTitle for the pattern this follows. */
+    private final StringProperty screenTitle = new SimpleStringProperty("");
+
     @FXML private ComboBox<Supplier> supplierCombo;
     @FXML private TextField billNoField;
     @FXML private DatePicker billDatePicker;
@@ -63,7 +73,9 @@ public class PurchaseBillEntryController {
     @FXML private TextField loadingChargesField;
     @FXML private TextField otherChargesField;
     @FXML private TextArea notesArea;
+    @FXML private Label taxableValueHeading;
     @FXML private Label taxableValueLabel;
+    @FXML private GridPane gstTotalsGrid;
     @FXML private Label cgstLabel;
     @FXML private Label sgstLabel;
     @FXML private Label igstLabel;
@@ -76,10 +88,12 @@ public class PurchaseBillEntryController {
     private boolean pendingIsNew = true;
 
     public PurchaseBillEntryController(PurchaseBillService purchaseBillService, SupplierService supplierService,
-                                        ItemModelService itemModelService, SceneRouter sceneRouter) {
+                                        ItemModelService itemModelService, SettingsService settingsService,
+                                        SceneRouter sceneRouter) {
         this.purchaseBillService = purchaseBillService;
         this.supplierService = supplierService;
         this.itemModelService = itemModelService;
+        this.settingsService = settingsService;
         this.sceneRouter = sceneRouter;
     }
 
@@ -91,6 +105,11 @@ public class PurchaseBillEntryController {
     public void openForEdit(long billId) {
         editingId = billId;
         pendingIsNew = false;
+    }
+
+    @Override
+    public ReadOnlyStringProperty screenTitleProperty() {
+        return screenTitle;
     }
 
     @FXML
@@ -108,6 +127,7 @@ public class PurchaseBillEntryController {
             }
         });
         errorLabel.setText("");
+        applyGstVisibility();
 
         if (pendingIsNew) {
             resetForNew();
@@ -116,8 +136,17 @@ public class PurchaseBillEntryController {
         }
     }
 
+    /** M10: see NewSaleController.applyGstVisibility - same reasoning, same one-pass-at-load
+     *  approach since the toggle only changes in Settings, never mid-bill. */
+    private void applyGstVisibility() {
+        boolean gstEnabled = settingsService.isGstEnabled();
+        gstTotalsGrid.setVisible(gstEnabled);
+        gstTotalsGrid.setManaged(gstEnabled);
+        taxableValueHeading.setText(gstEnabled ? "Taxable value" : "Subtotal");
+    }
+
     private void resetForNew() {
-        titleLabel.setText("New Purchase Bill");
+        screenTitle.set("New Purchase Bill");
         supplierCombo.setValue(null);
         billNoField.clear();
         billDatePicker.setValue(LocalDate.now());
@@ -138,7 +167,7 @@ public class PurchaseBillEntryController {
         if (bill.status() != PurchaseBill.Status.DRAFT) {
             errorLabel.setText("Only a draft bill can be edited.");
         }
-        titleLabel.setText("Edit Purchase Bill (Draft) - " + bill.supplierBillNo());
+        screenTitle.set("Edit Purchase Bill (Draft) - " + bill.supplierBillNo());
         supplierService.findById(bill.supplierId()).ifPresent(supplierCombo::setValue);
         billNoField.setText(bill.supplierBillNo());
         billDatePicker.setValue(bill.billDate());
@@ -201,6 +230,9 @@ public class PurchaseBillEntryController {
         TextField gstRateField = new TextField();
         gstRateField.setPromptText("GST %");
         gstRateField.setPrefWidth(70);
+        boolean gstEnabled = settingsService.isGstEnabled();
+        gstRateField.setVisible(gstEnabled);
+        gstRateField.setManaged(gstEnabled);
 
         Button removeButton = new Button("Remove");
 
@@ -264,7 +296,7 @@ public class PurchaseBillEntryController {
             long billId = save();
             editingId = billId;
             pendingIsNew = false;
-            titleLabel.setText("Edit Purchase Bill (Draft) - " + billNoField.getText().trim());
+            screenTitle.set("Edit Purchase Bill (Draft) - " + billNoField.getText().trim());
             errorLabel.setText("Saved as draft.");
         } catch (IllegalArgumentException | IllegalStateException e) {
             errorLabel.setText(e.getMessage());
@@ -289,7 +321,7 @@ public class PurchaseBillEntryController {
 
             long billId = save();
             purchaseBillService.confirmReceipt(billId);
-            sceneRouter.show("/fxml/purchase/purchase-bill-list.fxml");
+            sceneRouter.navigate(Route.PURCHASE_BILL_LIST);
         } catch (IllegalArgumentException | IllegalStateException e) {
             errorLabel.setText(e.getMessage());
         }
@@ -326,7 +358,13 @@ public class PurchaseBillEntryController {
             }
             Money rate = parseMoney(row.rateField().getText(), "Rate");
             Money discount = parseOptionalMoney(row.discountField().getText(), "Discount");
-            BigDecimal gstRate = parseDecimal(row.gstRateField().getText(), "GST rate");
+            // M10: GST rate is only a hard requirement while GST is on - off, a blank field
+            // is the 0 sentinel rather than a rejected save (PurchaseBillService.preview
+            // ignores it either way once GST is off, but this keeps LineInput.gstRate()
+            // non-null regardless).
+            BigDecimal gstRate = settingsService.isGstEnabled()
+                    ? parseDecimal(row.gstRateField().getText(), "GST rate")
+                    : parseOptionalDecimal(row.gstRateField().getText(), "GST rate");
             inputs.add(new PurchaseBillService.LineInput(model.id(), row.quantitySpinner().getValue(), rate,
                     discount, gstRate));
         }
@@ -369,8 +407,15 @@ public class PurchaseBillEntryController {
         }
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/purchase/purchase-bill-list.fxml");
+    private static BigDecimal parseOptionalDecimal(String text, String label) {
+        if (text == null || text.isBlank()) {
+            return BigDecimal.ZERO;
+        }
+        try {
+            return new BigDecimal(text.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(label + " must be a number.");
+        }
     }
+
 }

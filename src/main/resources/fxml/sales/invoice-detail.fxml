@@ -18,17 +18,14 @@
             styleClass="app-root">
 
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
             <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label fx:id="titleLabel" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
             <Button fx:id="returnButton" text="Return Pieces" onAction="#onReturnClicked"/>
             <Button fx:id="cancelButton" text="Cancel Invoice" onAction="#onCancelClicked"/>
             <Button text="Generate PDF" onAction="#onGeneratePdfClicked"/>
             <Button fx:id="openPdfButton" text="Open PDF" onAction="#onOpenPdfClicked"/>
             <Button fx:id="whatsAppButton" text="WhatsApp" onAction="#onWhatsAppClicked"/>
             <Button fx:id="emailButton" text="Email" onAction="#onEmailClicked"/>
-            <Button text="Back to List" onAction="#onBackClicked"/>
         </HBox>
     </top>
 
@@ -43,23 +40,24 @@
                     <ColumnConstraints minWidth="120"/>
                     <ColumnConstraints minWidth="150"/>
                 </columnConstraints>
-                <Label text="Customer" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label text="Customer" styleClass="field-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                 <Label fx:id="customerLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                <Label text="Place of supply" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                <Label fx:id="placeOfSupplyHeading" text="Place of supply" styleClass="field-label"
+                       GridPane.rowIndex="0" GridPane.columnIndex="2"/>
                 <Label fx:id="placeOfSupplyLabel" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
 
-                <Label text="Status" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label text="Status" styleClass="field-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                 <Label fx:id="statusLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                <Label text="Grand total" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                <Label text="Grand total" styleClass="field-label" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
                 <Label fx:id="grandTotalLabel" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
 
-                <Label text="Balance" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Label text="Balance" styleClass="field-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                 <Label fx:id="balanceLabel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
             </GridPane>
 
             <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
 
-            <Label text="Items" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+            <Label text="Items" styleClass="section-heading"/>
             <TableView fx:id="linesTable" VBox.vgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="tagColumn" text="Tag" prefWidth="90"/>

@@ -7,6 +7,7 @@ import com.furnitureims.repository.PaymentSearchCriteria;
 import com.furnitureims.service.CustomerService;
 import com.furnitureims.service.PaymentService;
 import com.furnitureims.service.SupplierService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -61,6 +62,7 @@ public class PaymentListController {
 
     @FXML
     private void initialize() {
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         directionColumn.setCellValueFactory(new PropertyValueFactory<>("direction"));
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
         partyColumn.setCellValueFactory(new PropertyValueFactory<>("partyName"));
@@ -168,16 +170,12 @@ public class PaymentListController {
 
     @FXML
     private void onCustomerReceiptClicked() {
-        sceneRouter.show("/fxml/payment/customer-receipt.fxml");
+        sceneRouter.navigate(Route.CUSTOMER_RECEIPT);
     }
 
     @FXML
     private void onSupplierPaymentClicked() {
-        sceneRouter.show("/fxml/payment/supplier-payment.fxml");
+        sceneRouter.navigate(Route.SUPPLIER_PAYMENT);
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

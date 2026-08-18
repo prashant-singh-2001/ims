@@ -19,24 +19,21 @@
             styleClass="app-root">
 
     <top>
-        <VBox styleClass="wizard-header">
+        <VBox styleClass="screen-actions">
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <padding><Insets top="14" right="24" bottom="10" left="24"/></padding>
-                <Label text="Payments" styleClass="wizard-header-title"/>
-                <Region HBox.hgrow="ALWAYS"/>
                 <Button text="Customer Receipt" onAction="#onCustomerReceiptClicked" styleClass="primary-button"/>
                 <Button text="Supplier Payment" onAction="#onSupplierPaymentClicked" styleClass="primary-button"/>
-                <Button text="Back" onAction="#onBackClicked"/>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <padding><Insets top="0" right="24" bottom="14" left="24"/></padding>
                 <ComboBox fx:id="partyTypeFilterCombo" promptText="All parties"/>
                 <ComboBox fx:id="modeFilterCombo" promptText="All modes"/>
-                <Label text="From" style="-fx-text-fill: white;"/>
+                <Label text="From"/>
                 <DatePicker fx:id="dateFromPicker" prefWidth="140"/>
-                <Label text="To" style="-fx-text-fill: white;"/>
+                <Label text="To"/>
                 <DatePicker fx:id="dateToPicker" prefWidth="140"/>
-                <CheckBox fx:id="showDeletedCheck" text="Show deleted" style="-fx-text-fill: white;"/>
+                <CheckBox fx:id="showDeletedCheck" text="Show deleted"/>
                 <Button text="Search" onAction="#onSearchClicked"/>
             </HBox>
         </VBox>

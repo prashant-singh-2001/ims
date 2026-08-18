@@ -5,6 +5,7 @@ import com.furnitureims.domain.PurchaseLine;
 import com.furnitureims.repository.PurchaseBillListRow;
 import com.furnitureims.repository.PurchaseBillSearchCriteria;
 import com.furnitureims.service.PurchaseBillService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -53,6 +54,7 @@ public class PurchaseBillListController {
 
     @FXML
     private void initialize() {
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         billNoColumn.setCellValueFactory(new PropertyValueFactory<>("billNo"));
         supplierColumn.setCellValueFactory(new PropertyValueFactory<>("supplierName"));
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("billDate"));
@@ -104,7 +106,7 @@ public class PurchaseBillListController {
 
     private void onEdit(PurchaseBillRow row) {
         purchaseBillEntryController.openForEdit(row.getId());
-        sceneRouter.show("/fxml/purchase/purchase-bill-entry.fxml");
+        sceneRouter.navigate(Route.PURCHASE_BILL_ENTRY);
     }
 
     private void onConfirm(PurchaseBillRow row) {
@@ -146,13 +148,13 @@ public class PurchaseBillListController {
 
     private void onReturn(PurchaseBillRow row) {
         purchaseReturnController.openFor(row.getId());
-        sceneRouter.show("/fxml/purchase/purchase-return.fxml");
+        sceneRouter.navigate(Route.PURCHASE_RETURN);
     }
 
     @FXML
     private void onNewClicked() {
         purchaseBillEntryController.openForNew();
-        sceneRouter.show("/fxml/purchase/purchase-bill-entry.fxml");
+        sceneRouter.navigate(Route.PURCHASE_BILL_ENTRY);
     }
 
     private void reload() {
@@ -165,11 +167,7 @@ public class PurchaseBillListController {
 
     @FXML
     private void onSuppliersClicked() {
-        sceneRouter.show("/fxml/purchase/supplier-list.fxml");
+        sceneRouter.navigate(Route.SUPPLIER_LIST);
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

@@ -1,7 +1,9 @@
 package com.furnitureims.ui.purchase;
 
 import com.furnitureims.domain.Supplier;
+import com.furnitureims.service.SettingsService;
 import com.furnitureims.service.SupplierService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -21,6 +23,7 @@ public class SupplierListController {
 
     private final SupplierService supplierService;
     private final SupplierEditorController supplierEditorController;
+    private final SettingsService settingsService;
     private final SceneRouter sceneRouter;
 
     @FXML private TableView<SupplierRow> table;
@@ -33,16 +36,20 @@ public class SupplierListController {
     @FXML private TableColumn<SupplierRow, Void> actionsColumn;
 
     public SupplierListController(SupplierService supplierService,
-                                   SupplierEditorController supplierEditorController, SceneRouter sceneRouter) {
+                                   SupplierEditorController supplierEditorController,
+                                   SettingsService settingsService, SceneRouter sceneRouter) {
         this.supplierService = supplierService;
         this.supplierEditorController = supplierEditorController;
+        this.settingsService = settingsService;
         this.sceneRouter = sceneRouter;
     }
 
     @FXML
     private void initialize() {
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         gstinColumn.setCellValueFactory(new PropertyValueFactory<>("gstin"));
+        gstinColumn.setVisible(settingsService.isGstEnabled());
         stateColumn.setCellValueFactory(new PropertyValueFactory<>("stateName"));
         phoneColumn.setCellValueFactory(new PropertyValueFactory<>("phone"));
         duesColumn.setCellValueFactory(new PropertyValueFactory<>("dues"));
@@ -80,7 +87,7 @@ public class SupplierListController {
 
     private void onEdit(SupplierRow row) {
         supplierEditorController.openForEdit(row.getSupplier().id());
-        sceneRouter.show("/fxml/purchase/supplier-editor.fxml");
+        sceneRouter.navigate(Route.SUPPLIER_EDITOR);
     }
 
     private void onToggleActive(SupplierRow row) {
@@ -91,7 +98,7 @@ public class SupplierListController {
     @FXML
     private void onNewClicked() {
         supplierEditorController.openForNew();
-        sceneRouter.show("/fxml/purchase/supplier-editor.fxml");
+        sceneRouter.navigate(Route.SUPPLIER_EDITOR);
     }
 
     private void reload() {
@@ -102,8 +109,4 @@ public class SupplierListController {
         table.setItems(FXCollections.observableArrayList(rows));
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

@@ -16,26 +16,17 @@
             fx:controller="com.furnitureims.ui.purchase.PurchaseReturnController"
             styleClass="app-root">
 
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label fx:id="titleLabel" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Back to List" onAction="#onBackClicked"/>
-        </HBox>
-    </top>
-
     <center>
         <ScrollPane fitToWidth="true">
             <VBox spacing="12">
                 <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
-                <Label text="Pieces still in stock from this bill" style="-fx-font-weight: bold;"/>
+                <Label text="Pieces still in stock from this bill" styleClass="field-label"/>
                 <VBox fx:id="pieceCheckboxesBox" spacing="6"/>
 
-                <Label text="Reason *" style="-fx-font-weight: bold;"/>
+                <Label text="Reason *" styleClass="field-label"/>
                 <TextField fx:id="reasonField"/>
 
-                <Label text="Return date" style="-fx-font-weight: bold;"/>
+                <Label text="Return date" styleClass="field-label"/>
                 <DatePicker fx:id="returnDatePicker"/>
 
                 <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>

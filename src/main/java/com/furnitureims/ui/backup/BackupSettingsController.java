@@ -6,6 +6,7 @@ import com.furnitureims.service.BackupService;
 import com.furnitureims.service.GoogleDriveService;
 import com.furnitureims.service.RestoreService;
 import com.furnitureims.service.SettingsService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -98,6 +99,7 @@ public class BackupSettingsController {
 
     @FXML
     private void initialize() {
+        archiveTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         weeklyDayCombo.setItems(FXCollections.observableArrayList(DayOfWeek.values()));
 
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("startedAt"));
@@ -450,8 +452,4 @@ public class BackupSettingsController {
         return (text == null || text.isBlank()) ? null : text.trim();
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

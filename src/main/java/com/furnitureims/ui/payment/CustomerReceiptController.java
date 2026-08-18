@@ -5,6 +5,7 @@ import com.furnitureims.domain.Payment;
 import com.furnitureims.money.Money;
 import com.furnitureims.service.CustomerService;
 import com.furnitureims.service.PaymentService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -210,11 +211,7 @@ public class CustomerReceiptController {
 
     @FXML
     private void onPaymentListClicked() {
-        sceneRouter.show("/fxml/payment/payment-list.fxml");
+        sceneRouter.navigate(Route.PAYMENT_LIST);
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

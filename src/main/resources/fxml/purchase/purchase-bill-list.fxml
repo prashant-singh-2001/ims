@@ -16,14 +16,11 @@
             styleClass="app-root">
 
     <top>
-        <VBox styleClass="wizard-header">
+        <VBox styleClass="screen-actions">
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <padding><Insets top="14" right="24" bottom="6" left="24"/></padding>
-                <Label text="Purchase Bills" styleClass="wizard-header-title"/>
-                <Region HBox.hgrow="ALWAYS"/>
                 <Button text="Suppliers" onAction="#onSuppliersClicked"/>
                 <Button text="New Purchase Bill" onAction="#onNewClicked" styleClass="primary-button"/>
-                <Button text="Back" onAction="#onBackClicked"/>
             </HBox>
             <HBox alignment="CENTER_LEFT">
                 <padding><Insets top="0" right="24" bottom="14" left="24"/></padding>

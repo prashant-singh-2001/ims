@@ -354,7 +354,7 @@ class SrsAcceptanceTest {
 
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> error = new AtomicReference<>();
-        AtomicReference<String> labelStyle = new AtomicReference<>();
+        AtomicReference<List<String>> labelStyleClasses = new AtomicReference<>();
         AtomicReference<String> labelText = new AtomicReference<>();
 
         Platform.runLater(() -> {
@@ -374,7 +374,7 @@ class SrsAcceptanceTest {
                 var field = controller.getClass().getDeclaredField("backupStatusLabel");
                 field.setAccessible(true);
                 Label backupStatusLabel = (Label) field.get(controller);
-                labelStyle.set(backupStatusLabel.getStyle());
+                labelStyleClasses.set(List.copyOf(backupStatusLabel.getStyleClass()));
                 labelText.set(backupStatusLabel.getText());
             } catch (Throwable t) {
                 error.set(t);
@@ -390,9 +390,13 @@ class SrsAcceptanceTest {
             throw new AssertionError("Failed to load dashboard.fxml", error.get());
         }
 
-        assertTrue(labelStyle.get().contains("#b3261e"),
+        // Asserts the style *class* rather than a colour value: since M10 the status colour
+        // comes from the theme via .backup-overdue, so pinning a hex here would break on
+        // every palette change while testing nothing about the 48-hour rule itself.
+        assertTrue(labelStyleClasses.get().contains("backup-overdue"),
                 "60 hours since the last successful backup is well past the 48-hour warning "
-                        + "threshold - the tile must show its red/overdue colour, not green or amber");
+                        + "threshold - the tile must be marked overdue, not ok or warn. Classes were: "
+                        + labelStyleClasses.get());
         assertTrue(labelText.get().contains("SUCCESS"), "the status text should still say what the last "
                 + "attempt's own outcome was");
     }

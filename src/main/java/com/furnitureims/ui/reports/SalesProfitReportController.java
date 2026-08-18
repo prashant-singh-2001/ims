@@ -1,6 +1,7 @@
 package com.furnitureims.ui.reports;
 
 import com.furnitureims.service.ReportService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import com.furnitureims.util.CsvWriter;
 import javafx.collections.FXCollections;
@@ -35,7 +36,9 @@ public class SalesProfitReportController {
     @FXML private Label errorLabel;
 
     @FXML private Label summaryInvoiceCountLabel;
+    @FXML private Label taxableValueHeading;
     @FXML private Label summaryTaxableValueLabel;
+    @FXML private Label taxHeading;
     @FXML private Label summaryTaxLabel;
     @FXML private Label summaryTotalSalesLabel;
     @FXML private Label summaryCostLabel;
@@ -82,6 +85,7 @@ public class SalesProfitReportController {
     }
 
     private static void setupColumns(TableView<SalesProfitRow> table, String labelHeader) {
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         TableColumn<SalesProfitRow, String> labelCol = new TableColumn<>(labelHeader);
         labelCol.setCellValueFactory(new PropertyValueFactory<>("label"));
         labelCol.setPrefWidth(140);
@@ -179,6 +183,16 @@ public class SalesProfitReportController {
         summaryTaxableValueLabel.setText(summary.taxableValue().toDisplayString());
         summaryTaxLabel.setText(summary.tax().toDisplayString());
         summaryTotalSalesLabel.setText(summary.totalSales().toDisplayString());
+
+        // M10: driven by whether this date range actually had any tax, not the live
+        // Settings toggle - a range spanning a GST-on period must keep showing it even if
+        // GST has since been turned off (same reasoning as InvoiceDetailController).
+        boolean hadTax = summary.tax().isPositive();
+        taxableValueHeading.setText(hadTax ? "Taxable value" : "Subtotal");
+        taxHeading.setVisible(hadTax);
+        taxHeading.setManaged(hadTax);
+        summaryTaxLabel.setVisible(hadTax);
+        summaryTaxLabel.setManaged(hadTax);
         summaryCostLabel.setText(summary.cost().toDisplayString());
         summaryProfitLabel.setText(summary.profit().toDisplayString());
         summaryMarginLabel.setText(summary.marginPercent().toPlainString() + "%");
@@ -229,8 +243,4 @@ public class SalesProfitReportController {
         errorLabel.setText("Exported to " + file.getName());
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

@@ -25,6 +25,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>25.0.2</javafx.version>
         <sqlite-jdbc.version>3.53.2.1</sqlite-jdbc.version>
+        <atlantafx.version>2.0.1</atlantafx.version>
         <openpdf.version>3.0.5</openpdf.version>
         <jna.version>5.15.0</jna.version>
         <google-api-client.version>2.7.0</google-api-client.version>
@@ -115,6 +116,19 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
             <classifier>${javafx.platform}</classifier>
+        </dependency>
+
+        <!-- The base look for every JavaFX control (M10). Replaces JavaFX's stock "Modena"
+             user-agent stylesheet wholesale via Application.setUserAgentStylesheet, which is
+             what makes it style the Alert/Dialog instances created in Java too - those build
+             their own Scene on show and so never picked up our scene-level app.css. MIT
+             licensed, platform-independent (no classifier), and pure CSS: it adds no native
+             code and needs no extra jlink module in scripts/package-windows.ps1. Our own
+             app.css stays layered on top for app-specific pieces only. -->
+        <dependency>
+            <groupId>io.github.mkpaz</groupId>
+            <artifactId>atlantafx-base</artifactId>
+            <version>${atlantafx.version}</version>
         </dependency>
 
         <dependency>

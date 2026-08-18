@@ -1,5 +1,6 @@
 package com.furnitureims.ui.setup;
 
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -100,7 +101,7 @@ public class SetupWizardController {
         current.commit();
 
         if (currentIndex == steps.size() - 1) {
-            sceneRouter.show("/fxml/login/login.fxml");
+            sceneRouter.navigate(Route.LOGIN);
         } else {
             showStep(currentIndex + 1);
         }

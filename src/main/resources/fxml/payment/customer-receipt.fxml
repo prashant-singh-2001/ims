@@ -20,12 +20,9 @@
             styleClass="app-root">
 
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
             <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label text="Customer Receipt" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
             <Button text="Payment List" onAction="#onPaymentListClicked"/>
-            <Button text="Back" onAction="#onBackClicked"/>
         </HBox>
     </top>
 
@@ -34,7 +31,7 @@
             <VBox spacing="16">
                 <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
-                <Label text="Customer" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label text="Customer" styleClass="section-heading"/>
                 <HBox spacing="8" alignment="CENTER_LEFT">
                     <TextField fx:id="customerSearchField" promptText="Search by name or phone" HBox.hgrow="ALWAYS"/>
                     <Button text="Search" onAction="#onSearchClicked"/>
@@ -42,10 +39,10 @@
                 <ComboBox fx:id="customerCombo" maxWidth="Infinity" promptText="Select a customer"/>
                 <Label fx:id="customerDuesLabel" styleClass="wizard-step-subtitle"/>
 
-                <Label text="Unpaid invoices" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label text="Unpaid invoices" styleClass="section-heading"/>
                 <VBox fx:id="invoicesBox" spacing="6"/>
 
-                <Label text="Payment" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label text="Payment" styleClass="section-heading"/>
                 <GridPane hgap="12" vgap="10">
                     <columnConstraints>
                         <ColumnConstraints minWidth="120"/>

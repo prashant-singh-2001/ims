@@ -17,13 +17,10 @@
             styleClass="app-root">
 
     <top>
-        <VBox styleClass="wizard-header">
+        <VBox styleClass="screen-actions">
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <padding><Insets top="14" right="24" bottom="6" left="24"/></padding>
-                <Label text="Stock on Hand and Valuation" styleClass="wizard-header-title"/>
-                <Region HBox.hgrow="ALWAYS"/>
                 <Button text="Export CSV" onAction="#onExportCsvClicked"/>
-                <Button text="Back" onAction="#onBackClicked"/>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="8">
                 <padding><Insets top="0" right="24" bottom="14" left="24"/></padding>
@@ -40,30 +37,30 @@
         <VBox spacing="16">
             <padding><Insets top="16" right="24" bottom="16" left="24"/></padding>
 
-            <Label text="Aging" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+            <Label text="Aging" styleClass="section-heading"/>
             <HBox spacing="16">
                 <VBox spacing="4" styleClass="wizard-callout">
-                    <Label text="0-30 days" style="-fx-font-weight: bold;"/>
+                    <Label text="0-30 days" styleClass="field-label"/>
                     <Label fx:id="age0To30Label"/>
                 </VBox>
                 <VBox spacing="4" styleClass="wizard-callout">
-                    <Label text="31-60 days" style="-fx-font-weight: bold;"/>
+                    <Label text="31-60 days" styleClass="field-label"/>
                     <Label fx:id="age31To60Label"/>
                 </VBox>
                 <VBox spacing="4" styleClass="wizard-callout">
-                    <Label text="61-90 days" style="-fx-font-weight: bold;"/>
+                    <Label text="61-90 days" styleClass="field-label"/>
                     <Label fx:id="age61To90Label"/>
                 </VBox>
-                <VBox spacing="4" styleClass="wizard-callout" style="-fx-background-color: #fde2e1; -fx-border-color: #b3261e;">
-                    <Label text="90+ days (dead stock)" style="-fx-font-weight: bold; -fx-text-fill: #b3261e;"/>
+                <VBox spacing="4" styleClass="alert-surface">
+                    <Label text="90+ days (dead stock)" styleClass="text-danger"/>
                     <Label fx:id="age90PlusLabel"/>
                 </VBox>
             </HBox>
 
             <HBox spacing="30" alignment="CENTER_LEFT">
-                <Label text="Grand total value:" style="-fx-font-weight: bold;"/>
+                <Label text="Grand total value:" styleClass="field-label"/>
                 <Label fx:id="grandTotalLabel"/>
-                <Label text="Total pieces:" style="-fx-font-weight: bold;"/>
+                <Label text="Total pieces:" styleClass="field-label"/>
                 <Label fx:id="totalPieceCountLabel"/>
             </HBox>
 

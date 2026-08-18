@@ -17,15 +17,6 @@
             fx:controller="com.furnitureims.ui.catalogue.PieceDetailController"
             styleClass="app-root">
 
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label text="Piece Detail" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Back to Register" onAction="#onBackClicked"/>
-        </HBox>
-    </top>
-
     <center>
         <VBox spacing="16">
             <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
@@ -35,28 +26,28 @@
                     <ColumnConstraints minWidth="140"/>
                     <ColumnConstraints hgrow="ALWAYS"/>
                 </columnConstraints>
-                <Label text="Tag" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label text="Tag" styleClass="field-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                 <Label fx:id="tagLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-                <Label text="Model" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label text="Model" styleClass="field-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                 <Label fx:id="modelLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-                <Label text="State" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Label text="State" styleClass="field-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                 <Label fx:id="stateLabel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-                <Label text="Location" style="-fx-font-weight: bold;" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <Label text="Location" styleClass="field-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                 <Label fx:id="locationLabel" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-                <Label text="Landed cost" style="-fx-font-weight: bold;" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <Label text="Landed cost" styleClass="field-label" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
                 <Label fx:id="costLabel" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
-                <Label text="Days held" style="-fx-font-weight: bold;" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                <Label text="Days held" styleClass="field-label" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
                 <Label fx:id="daysLabel" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
 
-                <Label text="Source" style="-fx-font-weight: bold;" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                <Label text="Source" styleClass="field-label" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
                 <Label fx:id="sourceLabel" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 
-                <Label text="Rename tag" style="-fx-font-weight: bold;" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+                <Label text="Rename tag" styleClass="field-label" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
                 <HBox spacing="8" GridPane.rowIndex="7" GridPane.columnIndex="1">
                     <TextField fx:id="renameTagField"/>
                     <Button text="Rename" onAction="#onRenameTagClicked"/>
@@ -65,7 +56,7 @@
 
             <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
 
-            <Label text="History" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="History" styleClass="section-heading"/>
             <ListView fx:id="historyList" VBox.vgrow="ALWAYS"/>
         </VBox>
     </center>

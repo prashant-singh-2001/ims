@@ -3,6 +3,7 @@ package com.furnitureims.ui.settings;
 import com.furnitureims.domain.AuditLog;
 import com.furnitureims.repository.AuditLogRepository;
 import com.furnitureims.repository.AuditLogSearchCriteria;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import com.furnitureims.util.CsvWriter;
 import javafx.collections.FXCollections;
@@ -52,6 +53,7 @@ public class AuditLogController {
 
     @FXML
     private void initialize() {
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         actionFilterCombo.getItems().add(null);
         actionFilterCombo.getItems().addAll(auditLogRepository.distinctActions());
         actionFilterCombo.setConverter(new javafx.util.StringConverter<>() {
@@ -139,11 +141,6 @@ public class AuditLogController {
         }
         CsvWriter.write(Path.of(file.getPath()), headers, rows);
         statusLabel.setText("Exported " + fullRange.size() + " entries to " + file.getName());
-    }
-
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/settings/settings.fxml");
     }
 
     private static String nullToEmpty(String s) {

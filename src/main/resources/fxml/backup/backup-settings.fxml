@@ -22,37 +22,28 @@
             fx:controller="com.furnitureims.ui.backup.BackupSettingsController"
             styleClass="app-root">
 
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label text="Backup and Restore" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Back" onAction="#onBackClicked"/>
-        </HBox>
-    </top>
-
     <center>
         <ScrollPane fitToWidth="true">
             <VBox spacing="18">
                 <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
-                <Label text="Status" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label text="Status" styleClass="section-heading"/>
                 <GridPane hgap="24" vgap="6" styleClass="wizard-callout">
                     <columnConstraints>
                         <ColumnConstraints minWidth="140"/>
                         <ColumnConstraints hgrow="ALWAYS" minWidth="260"/>
                     </columnConstraints>
-                    <Label text="Last backup" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <Label text="Last backup" styleClass="field-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                     <Label fx:id="lastBackupLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                    <Label text="Next scheduled" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <Label text="Next scheduled" styleClass="field-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                     <Label fx:id="nextScheduledLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                    <Label text="Google account" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <Label text="Google account" styleClass="field-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                     <Label fx:id="googleAccountLabel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                    <Label text="Drive archives" style="-fx-font-weight: bold;" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                    <Label text="Drive archives" styleClass="field-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                     <Label fx:id="archiveStatsLabel" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
                 </GridPane>
 
-                <Label text="Actions" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label text="Actions" styleClass="section-heading"/>
                 <HBox spacing="12" alignment="CENTER_LEFT">
                     <Button text="Backup Now" onAction="#onBackupNowClicked" styleClass="primary-button"/>
                     <Button text="Connect Google Account" onAction="#onConnectGoogleClicked"/>
@@ -65,7 +56,7 @@
                 </HBox>
                 <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
 
-                <Label text="Schedule and Settings" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label text="Schedule and Settings" styleClass="section-heading"/>
                 <GridPane hgap="12" vgap="10">
                     <columnConstraints>
                         <ColumnConstraints minWidth="140"/>
@@ -99,7 +90,7 @@
                     <Label fx:id="settingsStatusLabel" styleClass="wizard-step-subtitle"/>
                 </HBox>
 
-                <Label text="Archives" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
+                <Label text="Archives" styleClass="section-heading"/>
                 <TableView fx:id="archiveTable" prefHeight="260">
                     <columns>
                         <TableColumn fx:id="dateColumn" text="Date" prefWidth="150"/>

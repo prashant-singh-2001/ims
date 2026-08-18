@@ -22,15 +22,6 @@
             fx:controller="com.furnitureims.ui.catalogue.ItemModelEditorController"
             styleClass="app-root">
 
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label fx:id="titleLabel" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Back to List" onAction="#onBackClicked"/>
-        </HBox>
-    </top>
-
     <center>
         <TabPane tabClosingPolicy="UNAVAILABLE">
             <Tab text="Details">
@@ -51,11 +42,11 @@
                         <Label text="Category *" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                         <ComboBox fx:id="categoryCombo" GridPane.rowIndex="2" GridPane.columnIndex="1" maxWidth="Infinity"/>
 
-                        <Label text="HSN code *" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <Label fx:id="hsnCodeLabel" text="HSN code *" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                         <TextField fx:id="hsnCodeField" GridPane.rowIndex="3" GridPane.columnIndex="1"
                                    promptText="e.g. 9403"/>
 
-                        <Label text="GST rate % *" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <Label fx:id="gstRateLabel" text="GST rate % *" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
                         <TextField fx:id="gstRateField" GridPane.rowIndex="4" GridPane.columnIndex="1"
                                    promptText="e.g. 18"/>
 

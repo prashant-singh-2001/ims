@@ -15,12 +15,9 @@
             styleClass="app-root">
 
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
             <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label text="Invoices" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
             <Button text="New Sale" onAction="#onNewSaleClicked" styleClass="primary-button"/>
-            <Button text="Back" onAction="#onBackClicked"/>
         </HBox>
     </top>
 

@@ -16,21 +16,12 @@
             fx:controller="com.furnitureims.ui.catalogue.CategoriesLocationsController"
             styleClass="app-root">
 
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label text="Categories &amp; Locations" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Back" onAction="#onBackClicked"/>
-        </HBox>
-    </top>
-
     <center>
         <HBox spacing="24">
             <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
             <VBox spacing="10" HBox.hgrow="ALWAYS">
-                <Label text="Categories" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                <Label text="Categories" styleClass="section-heading"/>
                 <TableView fx:id="categoryTable" VBox.vgrow="ALWAYS">
                     <columns>
                         <TableColumn fx:id="categoryNameColumn" text="Name" prefWidth="220"/>
@@ -46,7 +37,7 @@
             </VBox>
 
             <VBox spacing="10" HBox.hgrow="ALWAYS">
-                <Label text="Storage Locations" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                <Label text="Storage Locations" styleClass="section-heading"/>
                 <TableView fx:id="locationTable" VBox.vgrow="ALWAYS">
                     <columns>
                         <TableColumn fx:id="locationNameColumn" text="Name" prefWidth="220"/>

@@ -9,7 +9,12 @@ import com.furnitureims.service.EmailService;
 import com.furnitureims.service.PieceService;
 import com.furnitureims.service.SalesInvoiceService;
 import com.furnitureims.service.WhatsAppShareService;
+import com.furnitureims.ui.HasScreenTitle;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -33,7 +38,7 @@ import java.util.Optional;
  * cancellation, never rewritten.
  */
 @Component
-public class InvoiceDetailController {
+public class InvoiceDetailController implements HasScreenTitle {
 
     private final SalesInvoiceService salesInvoiceService;
     private final CustomerService customerService;
@@ -44,8 +49,11 @@ public class InvoiceDetailController {
     private final EmailService emailService;
     private final SceneRouter sceneRouter;
 
-    @FXML private Label titleLabel;
+    /** M10: see ItemModelEditorController.screenTitle for the pattern this follows. */
+    private final StringProperty screenTitle = new SimpleStringProperty("");
+
     @FXML private Label customerLabel;
+    @FXML private Label placeOfSupplyHeading;
     @FXML private Label placeOfSupplyLabel;
     @FXML private Label statusLabel;
     @FXML private Label grandTotalLabel;
@@ -86,8 +94,14 @@ public class InvoiceDetailController {
         this.invoiceId = invoiceId;
     }
 
+    @Override
+    public ReadOnlyStringProperty screenTitleProperty() {
+        return screenTitle;
+    }
+
     @FXML
     private void initialize() {
+        linesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
         descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
         priceColumn.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
@@ -104,9 +118,25 @@ public class InvoiceDetailController {
                 .orElseThrow(() -> new IllegalStateException("Invoice not found: " + invoiceId));
         Customer customer = customerService.findById(invoice.customerId()).orElse(null);
 
-        titleLabel.setText("Invoice " + invoice.invoiceNo());
+        screenTitle.set("Invoice " + invoice.invoiceNo());
         customerLabel.setText(customer == null ? "-" : customer.name() + " (" + customer.phone() + ")");
         placeOfSupplyLabel.setText(invoice.placeOfSupplyStateCode() + (invoice.interstate() ? " (interstate)" : " (intrastate)"));
+
+        // M10: driven by whether THIS invoice actually carries any tax, not the live
+        // Settings toggle - an invoice billed while GST was on must keep showing its real
+        // place of supply and tax columns even after the shop later turns GST off, since
+        // that is what was actually charged and is what the owner's own printed/emailed PDF
+        // for it already says (DocumentService applies the identical "zero tax = no GST
+        // section" rule for the same reason).
+        boolean hadTax = invoice.cgstAmount().isPositive() || invoice.sgstAmount().isPositive()
+                || invoice.igstAmount().isPositive();
+        placeOfSupplyHeading.setVisible(hadTax);
+        placeOfSupplyHeading.setManaged(hadTax);
+        placeOfSupplyLabel.setVisible(hadTax);
+        placeOfSupplyLabel.setManaged(hadTax);
+        taxableColumn.setVisible(hadTax);
+        taxColumn.setVisible(hadTax);
+
         statusLabel.setText(invoice.status().name()
                 + (invoice.cancelReason() == null ? "" : " - " + invoice.cancelReason()));
         grandTotalLabel.setText(invoice.grandTotal().toDisplayString());
@@ -149,7 +179,7 @@ public class InvoiceDetailController {
     @FXML
     private void onReturnClicked() {
         salesReturnScreenController.openFor(invoiceId);
-        sceneRouter.show("/fxml/sales/sales-return.fxml");
+        sceneRouter.navigate(Route.SALES_RETURN);
     }
 
     /** FR-DOC-02: also the button to press if a PDF was never generated in the first
@@ -210,8 +240,4 @@ public class InvoiceDetailController {
         }
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/sales/invoice-list.fxml");
-    }
 }

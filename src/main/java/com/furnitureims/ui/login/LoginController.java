@@ -3,6 +3,7 @@ package com.furnitureims.ui.login;
 import com.furnitureims.domain.AppUser;
 import com.furnitureims.service.AppSession;
 import com.furnitureims.service.AuthService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -86,7 +87,7 @@ public class LoginController {
             sceneRouter.hideLockOverlay();
             idleLockManager.notifyUnlocked();
         } else {
-            sceneRouter.show("/fxml/shell/dashboard.fxml");
+            sceneRouter.navigate(Route.DASHBOARD);
             idleLockManager.start();
         }
     }

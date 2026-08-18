@@ -42,7 +42,7 @@
 
     <VBox fx:id="recoveryCodePane" spacing="12" styleClass="wizard-callout">
         <Label text="Your account is set up. Write down this recovery code now:"
-               wrapText="true" style="-fx-font-weight: bold;"/>
+               wrapText="true" styleClass="field-label"/>
         <Label fx:id="recoveryCodeLabel" styleClass="wizard-recovery-code"/>
         <Label text="This is the only way back in if the login password is ever forgotten. Keep it somewhere off this PC - it will not be shown again after this screen."
                wrapText="true" styleClass="wizard-warning-text"/>

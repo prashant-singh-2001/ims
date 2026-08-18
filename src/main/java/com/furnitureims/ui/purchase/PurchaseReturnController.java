@@ -14,7 +14,12 @@ import com.furnitureims.service.PurchaseBillService;
 import com.furnitureims.service.PurchaseReturnService;
 import com.furnitureims.service.SupplierService;
 import com.furnitureims.service.WhatsAppShareService;
+import com.furnitureims.ui.HasScreenTitle;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -40,7 +45,7 @@ import java.util.Map;
 /** Purchase return (FR-PUR-07, FR-DOC-05; docs/03-screens.md 5.4): pick which
  *  still-IN_STOCK pieces from a received bill go back to the supplier. */
 @Component
-public class PurchaseReturnController {
+public class PurchaseReturnController implements HasScreenTitle {
 
     private final PurchaseBillService purchaseBillService;
     private final PurchaseReturnService purchaseReturnService;
@@ -52,7 +57,9 @@ public class PurchaseReturnController {
     private final EmailService emailService;
     private final SceneRouter sceneRouter;
 
-    @FXML private Label titleLabel;
+    /** M10: see ItemModelEditorController.screenTitle for the pattern this follows. */
+    private final StringProperty screenTitle = new SimpleStringProperty("");
+
     @FXML private VBox pieceCheckboxesBox;
     @FXML private TextField reasonField;
     @FXML private DatePicker returnDatePicker;
@@ -81,6 +88,11 @@ public class PurchaseReturnController {
         this.billId = billId;
     }
 
+    @Override
+    public ReadOnlyStringProperty screenTitleProperty() {
+        return screenTitle;
+    }
+
     @FXML
     private void initialize() {
         errorLabel.setText("");
@@ -91,7 +103,7 @@ public class PurchaseReturnController {
     private void reload() {
         PurchaseBill bill = purchaseBillService.findById(billId)
                 .orElseThrow(() -> new IllegalStateException("Purchase bill not found: " + billId));
-        titleLabel.setText("Return Pieces - Bill " + bill.supplierBillNo());
+        screenTitle.set("Return Pieces - Bill " + bill.supplierBillNo());
 
         pieceCheckboxesBox.getChildren().clear();
         checkboxToPieceId.clear();
@@ -149,7 +161,7 @@ public class PurchaseReturnController {
             }
 
             showDebitNoteDialog(purchaseReturn, selected.size(), pdfNote, pdfPath);
-            sceneRouter.show("/fxml/purchase/purchase-bill-list.fxml");
+            sceneRouter.navigate(Route.PURCHASE_BILL_LIST);
         } catch (IllegalArgumentException | IllegalStateException e) {
             errorLabel.setText(e.getMessage());
         }
@@ -235,8 +247,4 @@ public class PurchaseReturnController {
         error.showAndWait();
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/purchase/purchase-bill-list.fxml");
-    }
 }

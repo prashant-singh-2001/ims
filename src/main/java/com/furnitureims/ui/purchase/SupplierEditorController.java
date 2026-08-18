@@ -3,9 +3,15 @@ package com.furnitureims.ui.purchase;
 import com.furnitureims.domain.IndianState;
 import com.furnitureims.domain.Supplier;
 import com.furnitureims.money.Money;
+import com.furnitureims.service.SettingsService;
 import com.furnitureims.service.SupplierService;
+import com.furnitureims.ui.HasScreenTitle;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import com.furnitureims.util.GstinValidator;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
@@ -13,6 +19,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -23,19 +30,25 @@ import java.math.BigDecimal;
  * the setup wizard - a mismatch is shown but never prevents saving.
  */
 @Component
-public class SupplierEditorController {
+public class SupplierEditorController implements HasScreenTitle {
 
     private final SupplierService supplierService;
+    private final SettingsService settingsService;
     private final SceneRouter sceneRouter;
 
-    @FXML private Label titleLabel;
+    /** M10: see ItemModelEditorController.screenTitle for the pattern this follows. */
+    private final StringProperty screenTitle = new SimpleStringProperty("");
+
     @FXML private TextField nameField;
+    @FXML private Label gstinLabel;
+    @FXML private VBox gstinBox;
     @FXML private TextField gstinField;
     @FXML private Label gstinWarningLabel;
     @FXML private TextField addressLine1Field;
     @FXML private TextField addressLine2Field;
     @FXML private TextField cityField;
     @FXML private TextField pincodeField;
+    @FXML private Label stateLabel;
     @FXML private ComboBox<IndianState> stateCombo;
     @FXML private TextField phoneField;
     @FXML private TextField emailField;
@@ -48,8 +61,10 @@ public class SupplierEditorController {
     private Long editingId;
     private boolean pendingIsNew = true;
 
-    public SupplierEditorController(SupplierService supplierService, SceneRouter sceneRouter) {
+    public SupplierEditorController(SupplierService supplierService, SettingsService settingsService,
+                                     SceneRouter sceneRouter) {
         this.supplierService = supplierService;
+        this.settingsService = settingsService;
         this.sceneRouter = sceneRouter;
     }
 
@@ -63,6 +78,11 @@ public class SupplierEditorController {
         pendingIsNew = false;
     }
 
+    @Override
+    public ReadOnlyStringProperty screenTitleProperty() {
+        return screenTitle;
+    }
+
     @FXML
     private void initialize() {
         stateCombo.setItems(FXCollections.observableArrayList(IndianState.values()));
@@ -70,12 +90,27 @@ public class SupplierEditorController {
         gstinWarningLabel.setText("");
         gstinField.textProperty().addListener((obs, was, isNow) -> updateGstinWarning());
         stateCombo.valueProperty().addListener((obs, was, isNow) -> updateGstinWarning());
+        applyGstVisibility();
 
         if (pendingIsNew) {
             resetForNew();
         } else {
             loadForEdit(editingId);
         }
+    }
+
+    /** M10: GSTIN is GST-only and hides entirely. State stays visible either way - it is
+     *  ordinary address data that also happens to decide CGST/SGST vs IGST when GST is on -
+     *  only its required-ness and copy change (see SupplierService.applyStateSentinelIfNeeded
+     *  for why it is no longer a hard requirement once GST is off). */
+    private void applyGstVisibility() {
+        boolean gstEnabled = settingsService.isGstEnabled();
+        gstinLabel.setVisible(gstEnabled);
+        gstinLabel.setManaged(gstEnabled);
+        gstinBox.setVisible(gstEnabled);
+        gstinBox.setManaged(gstEnabled);
+        stateLabel.setText(gstEnabled ? "State *" : "State");
+        stateCombo.setPromptText(gstEnabled ? "Decides CGST/SGST vs IGST on purchases" : "Optional");
     }
 
     private void updateGstinWarning() {
@@ -97,7 +132,7 @@ public class SupplierEditorController {
     }
 
     private void resetForNew() {
-        titleLabel.setText("New Supplier");
+        screenTitle.set("New Supplier");
         nameField.clear();
         gstinField.clear();
         addressLine1Field.clear();
@@ -116,7 +151,7 @@ public class SupplierEditorController {
     private void loadForEdit(long id) {
         Supplier s = supplierService.findById(id)
                 .orElseThrow(() -> new IllegalStateException("Supplier not found: " + id));
-        titleLabel.setText("Edit Supplier - " + s.name());
+        screenTitle.set("Edit Supplier - " + s.name());
         nameField.setText(s.name());
         gstinField.setText(s.gstin());
         addressLine1Field.setText(s.addressLine1());
@@ -138,7 +173,11 @@ public class SupplierEditorController {
     private void onSaveClicked() {
         try {
             IndianState state = stateCombo.getValue();
-            if (state == null) {
+            // M10: state is only a hard requirement while GST is on - it's what decides
+            // CGST/SGST vs IGST. Left blank with GST off, SupplierService.
+            // applyStateSentinelIfNeeded fills in the shop's own state instead of this
+            // method rejecting the save itself.
+            if (settingsService.isGstEnabled() && state == null) {
                 throw new IllegalArgumentException("Please select the supplier's state.");
             }
             Money openingBalance = Money.ZERO;
@@ -155,7 +194,8 @@ public class SupplierEditorController {
                     requireText(nameField.getText(), "Supplier name"), nullIfBlank(gstinField.getText()),
                     nullIfBlank(addressLine1Field.getText()), nullIfBlank(addressLine2Field.getText()),
                     nullIfBlank(cityField.getText()), nullIfBlank(pincodeField.getText()),
-                    state.displayName(), state.gstCode(), nullIfBlank(phoneField.getText()),
+                    state == null ? null : state.displayName(), state == null ? null : state.gstCode(),
+                    nullIfBlank(phoneField.getText()),
                     nullIfBlank(emailField.getText()), nullIfBlank(contactPersonField.getText()),
                     openingBalance, activeCheck.isSelected(), nullIfBlank(notesArea.getText()));
 
@@ -164,15 +204,10 @@ public class SupplierEditorController {
             } else {
                 supplierService.update(supplier);
             }
-            sceneRouter.show("/fxml/purchase/supplier-list.fxml");
+            sceneRouter.navigate(Route.SUPPLIER_LIST);
         } catch (IllegalArgumentException e) {
             errorLabel.setText(e.getMessage());
         }
-    }
-
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/purchase/supplier-list.fxml");
     }
 
     private static String requireText(String text, String label) {

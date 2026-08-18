@@ -6,13 +6,14 @@ import com.furnitureims.repository.BackupHistoryRepository;
 import com.furnitureims.repository.ShopProfileRepository;
 import com.furnitureims.service.AppSession;
 import com.furnitureims.service.ReportService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
-import com.furnitureims.ui.login.IdleLockManager;
 import com.furnitureims.ui.purchase.PurchaseBillEntryController;
 import com.furnitureims.ui.reports.DuesReportController;
 import com.furnitureims.ui.reports.SalesProfitReportController;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -34,9 +35,12 @@ import java.util.Optional;
 @Component
 public class DashboardController {
 
+    static final String STATUS_OK = "backup-ok";
+    static final String STATUS_WARN = "backup-warn";
+    static final String STATUS_OVERDUE = "backup-overdue";
+
     private final AppSession appSession;
     private final ShopProfileRepository shopProfileRepository;
-    private final IdleLockManager idleLockManager;
     private final ReportService reportService;
     private final BackupHistoryRepository backupHistoryRepository;
     private final PurchaseBillEntryController purchaseBillEntryController;
@@ -49,20 +53,20 @@ public class DashboardController {
     @FXML private Label todaySalesLabel;
     @FXML private Label monthSalesLabel;
     @FXML private Label stockValueLabel;
+    @FXML private VBox piecesInStockTile;
     @FXML private Label piecesInStockLabel;
     @FXML private Label receivableLabel;
     @FXML private Label payableLabel;
     @FXML private Label backupStatusLabel;
 
     public DashboardController(AppSession appSession, ShopProfileRepository shopProfileRepository,
-                                IdleLockManager idleLockManager, ReportService reportService,
+                                ReportService reportService,
                                 BackupHistoryRepository backupHistoryRepository,
                                 PurchaseBillEntryController purchaseBillEntryController,
                                 SalesProfitReportController salesProfitReportController,
                                 DuesReportController duesReportController, SceneRouter sceneRouter) {
         this.appSession = appSession;
         this.shopProfileRepository = shopProfileRepository;
-        this.idleLockManager = idleLockManager;
         this.reportService = reportService;
         this.backupHistoryRepository = backupHistoryRepository;
         this.purchaseBillEntryController = purchaseBillEntryController;
@@ -86,6 +90,7 @@ public class DashboardController {
         stockValueLabel.setText(summary.stockValue().toDisplayString());
         piecesInStockLabel.setText(summary.piecesInStock() + " pieces (" + summary.piecesAged90Plus()
                 + " aged 90+ days)");
+        applyStockAgingStyle(summary.piecesAged90Plus());
         receivableLabel.setText(summary.receivable().toDisplayString() + " (" + summary.overdueInvoiceCount()
                 + " invoice" + (summary.overdueInvoiceCount() == 1 ? "" : "s") + " outstanding)");
         payableLabel.setText(summary.payable().toDisplayString());
@@ -96,7 +101,7 @@ public class DashboardController {
         List<BackupHistory> all = backupHistoryRepository.findAllOrderedByStartedDesc();
         if (all.isEmpty()) {
             backupStatusLabel.setText("No backups yet");
-            applyBackupStatusColor("#b3261e");
+            applyBackupStatusStyle(STATUS_OVERDUE);
             return;
         }
 
@@ -108,133 +113,84 @@ public class DashboardController {
                         || b.status() == BackupHistory.Status.UPLOAD_PENDING)
                 .findFirst();
         if (lastGood.isEmpty()) {
-            applyBackupStatusColor("#b3261e");
+            applyBackupStatusStyle(STATUS_OVERDUE);
             return;
         }
 
         long hoursSinceGood = Duration.between(lastGood.get().startedAt(), LocalDateTime.now()).toHours();
         if (hoursSinceGood <= 24) {
-            applyBackupStatusColor("#1a7f37");
+            applyBackupStatusStyle(STATUS_OK);
         } else if (hoursSinceGood <= 48) {
-            applyBackupStatusColor("#a16a00");
+            applyBackupStatusStyle(STATUS_WARN);
         } else {
-            applyBackupStatusColor("#b3261e");
+            applyBackupStatusStyle(STATUS_OVERDUE);
         }
     }
 
-    private void applyBackupStatusColor(String hex) {
-        backupStatusLabel.setStyle("-fx-text-fill: " + hex + "; -fx-font-weight: bold;");
+    /** Style classes rather than the hardcoded hex colours this used before M10: they follow
+     *  the theme, and a test can assert the *meaning* ("overdue") instead of a colour value
+     *  that changes whenever the palette does. */
+    private void applyBackupStatusStyle(String statusClass) {
+        backupStatusLabel.getStyleClass().setAll("metric-tile-label", statusClass);
     }
 
-    @FXML
-    private void onLockNowClicked() {
-        idleLockManager.lockNow();
+    /** Inventory-first (M10): the Pieces in Stock tile becomes an attention-seeking
+     *  {@code .alert-surface} - the same class the stock report uses for its aged-stock
+     *  callout - whenever there is aged stock to look at, instead of always reading as a
+     *  plain, equally-weighted KPI. */
+    private void applyStockAgingStyle(int agedCount) {
+        piecesInStockTile.getStyleClass().setAll(agedCount > 0 ? "alert-surface" : "metric-tile");
     }
 
     @FXML
     private void onTodaySalesTileClicked() {
         LocalDate today = LocalDate.now();
         salesProfitReportController.openWithDateRange(today, today);
-        sceneRouter.show("/fxml/reports/sales-profit-report.fxml");
+        sceneRouter.navigate(Route.SALES_PROFIT_REPORT);
     }
 
     @FXML
     private void onMonthSalesTileClicked() {
         LocalDate today = LocalDate.now();
         salesProfitReportController.openWithDateRange(today.withDayOfMonth(1), today);
-        sceneRouter.show("/fxml/reports/sales-profit-report.fxml");
+        sceneRouter.navigate(Route.SALES_PROFIT_REPORT);
     }
 
     @FXML
     private void onStockValueTileClicked() {
-        sceneRouter.show("/fxml/reports/stock-report.fxml");
+        sceneRouter.navigate(Route.STOCK_REPORT);
     }
 
     @FXML
     private void onReceivableTileClicked() {
         duesReportController.openWithTab(0);
-        sceneRouter.show("/fxml/reports/dues-report.fxml");
+        sceneRouter.navigate(Route.DUES_REPORT);
     }
 
     @FXML
     private void onPayableTileClicked() {
         duesReportController.openWithTab(1);
-        sceneRouter.show("/fxml/reports/dues-report.fxml");
+        sceneRouter.navigate(Route.DUES_REPORT);
     }
 
     @FXML
     private void onBackupStatusTileClicked() {
-        sceneRouter.show("/fxml/backup/backup-settings.fxml");
+        sceneRouter.navigate(Route.BACKUP_SETTINGS);
     }
 
     @FXML
     private void onNewSaleClicked() {
-        sceneRouter.show("/fxml/sales/new-sale.fxml");
+        sceneRouter.navigate(Route.NEW_SALE);
     }
 
     @FXML
     private void onNewPurchaseBillClicked() {
         purchaseBillEntryController.openForNew();
-        sceneRouter.show("/fxml/purchase/purchase-bill-entry.fxml");
+        sceneRouter.navigate(Route.PURCHASE_BILL_ENTRY);
     }
 
     @FXML
     private void onPaymentsClicked() {
-        sceneRouter.show("/fxml/payment/payment-list.fxml");
-    }
-
-    @FXML
-    private void onBackupNowClicked() {
-        sceneRouter.show("/fxml/backup/backup-settings.fxml");
-    }
-
-    @FXML
-    private void onStockReportClicked() {
-        sceneRouter.show("/fxml/reports/stock-report.fxml");
-    }
-
-    @FXML
-    private void onSalesProfitReportClicked() {
-        sceneRouter.show("/fxml/reports/sales-profit-report.fxml");
-    }
-
-    @FXML
-    private void onDuesReportClicked() {
-        sceneRouter.show("/fxml/reports/dues-report.fxml");
-    }
-
-    @FXML
-    private void onItemModelsClicked() {
-        sceneRouter.show("/fxml/catalogue/item-model-list.fxml");
-    }
-
-    @FXML
-    private void onPieceRegisterClicked() {
-        sceneRouter.show("/fxml/catalogue/piece-register.fxml");
-    }
-
-    @FXML
-    private void onCategoriesLocationsClicked() {
-        sceneRouter.show("/fxml/catalogue/categories-locations.fxml");
-    }
-
-    @FXML
-    private void onSuppliersClicked() {
-        sceneRouter.show("/fxml/purchase/supplier-list.fxml");
-    }
-
-    @FXML
-    private void onPurchaseBillsClicked() {
-        sceneRouter.show("/fxml/purchase/purchase-bill-list.fxml");
-    }
-
-    @FXML
-    private void onInvoicesClicked() {
-        sceneRouter.show("/fxml/sales/invoice-list.fxml");
-    }
-
-    @FXML
-    private void onSettingsClicked() {
-        sceneRouter.show("/fxml/settings/settings.fxml");
+        sceneRouter.navigate(Route.PAYMENT_LIST);
     }
 }

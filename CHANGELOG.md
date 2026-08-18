@@ -11,6 +11,40 @@ traceability), not by release date.
 
 ## [Unreleased]
 
+### M10 — UI modernization and optional GST
+
+- Adopted AtlantaFX (Primer Light) as the base theme in place of stock
+  JavaFX Modena, with a token-based `app.css` design system replacing the
+  old 11-rule stylesheet; the window now starts maximized.
+- Replaced the 26 screens' individually hand-copied headers with a
+  persistent shell: a sidebar (Stock leads, matching the inventory-first
+  goal) and a top bar with a back chevron and Lock Now, navigated through a
+  compile-time-checked `Route` enum instead of ~60 hardcoded FXML path
+  strings.
+- Dashboard restructured stock-first: stock value, pieces in stock, and
+  aging now lead; today's sales and money-in/out moved below.
+- GST made optional (FR-SYS-05): a Settings toggle, asked up front in the
+  setup wizard; every GST-specific validation (HSN, GST rate, supplier
+  state, GSTIN) becomes conditional; sales and purchase previews branch to
+  a zero-tax path; GST-off writes sentinel values (blank HSN, 0% rate, the
+  shop's own state code) rather than requiring a schema migration, since
+  several affected columns are `NOT NULL` with no default.
+- GST-only fields and totals hidden as a unit across New Sale, Purchase
+  Bill Entry, the item model and supplier screens, invoice detail, and the
+  sales/profit report; generated PDFs print a plain "INVOICE" with no
+  GSTIN/HSN/tax section when GST is off — driven per-document by whether
+  that specific invoice actually carries tax, so a document billed while
+  GST was on is never retroactively rewritten by a later toggle change.
+- Fixed a real data-leak-through-the-lock-screen bug found along the way:
+  the idle lock scrim was 92% opaque, not fully opaque.
+- Added a confirmation prompt before leaving New Sale with an unsaved
+  bill, now that the sidebar offers several one-click ways off the screen
+  instead of one; added `Ctrl+1`…`Ctrl+6` sidebar shortcuts so tabbing
+  through a form can never land in navigation.
+- Replaced 111 inline `style=` attributes with the new design system's CSS
+  classes; table columns switched to fill the maximized window instead of
+  leaving dead space.
+
 ### M9 — Hardening and acceptance
 
 - Audit log now covers every consequential action FR-SYS-03 names — invoice

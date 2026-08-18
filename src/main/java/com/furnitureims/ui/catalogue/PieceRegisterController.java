@@ -7,6 +7,7 @@ import com.furnitureims.repository.PieceSearchCriteria;
 import com.furnitureims.service.CategoryService;
 import com.furnitureims.service.PieceService;
 import com.furnitureims.service.StorageLocationService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -81,6 +82,7 @@ public class PieceRegisterController {
 
     @FXML
     private void initialize() {
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
         modelColumn.setCellValueFactory(new PropertyValueFactory<>("modelName"));
         categoryColumn.setCellValueFactory(new PropertyValueFactory<>("categoryName"));
@@ -190,7 +192,7 @@ public class PieceRegisterController {
 
     private void onView(PieceRow row) {
         pieceDetailController.openFor(row.getId());
-        sceneRouter.show("/fxml/catalogue/piece-detail.fxml");
+        sceneRouter.navigate(Route.PIECE_DETAIL);
     }
 
     private void onChangeLocation(List<PieceRow> rows) {
@@ -266,11 +268,7 @@ public class PieceRegisterController {
 
     @FXML
     private void onOpeningStockClicked() {
-        sceneRouter.show("/fxml/catalogue/opening-stock-entry.fxml");
+        sceneRouter.navigate(Route.OPENING_STOCK_ENTRY);
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

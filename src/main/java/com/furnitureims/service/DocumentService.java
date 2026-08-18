@@ -138,24 +138,37 @@ public class DocumentService {
         Money balance = paymentService.invoiceBalance(invoiceId);
         Money paid = invoice.grandTotal().minus(balance);
 
+        // M10: driven by whether THIS invoice actually carries tax, not the live GST
+        // toggle - an invoice billed while GST was on must keep printing exactly as it did
+        // the day it was issued, even if the shop later turns GST off (same reasoning as
+        // InvoiceDetailController - regenerating an old PDF must never rewrite history).
+        boolean hadTax = invoice.cgstAmount().isPositive() || invoice.sgstAmount().isPositive()
+                || invoice.igstAmount().isPositive();
+
         try (FileOutputStream out = new FileOutputStream(target.toFile())) {
             Document document = new Document(PageSize.A4, 30, 30, 30, 30);
             PdfWriter.getInstance(document, out);
             document.open();
 
-            document.add(titleParagraph(shop.registrationType() == ShopProfile.RegistrationType.COMPOSITION
-                    ? "BILL OF SUPPLY" : "TAX INVOICE"));
+            document.add(titleParagraph(!hadTax ? "INVOICE"
+                    : shop.registrationType() == ShopProfile.RegistrationType.COMPOSITION
+                            ? "BILL OF SUPPLY" : "TAX INVOICE"));
             document.add(shopAndDocHeader(shop, "Invoice No", invoice.invoiceNo(), invoice.invoiceDate(),
-                    "Place of Supply: " + placeOfSupplyText(invoice.placeOfSupplyStateCode())));
+                    hadTax ? "Place of Supply: " + placeOfSupplyText(invoice.placeOfSupplyStateCode()) : null,
+                    hadTax));
             document.add(customerBlock("Bill To", customer.name(), customer.addressLine1(), customer.addressLine2(),
-                    customer.city(), customer.pincode(), customer.stateName(), customer.gstin()));
-            document.add(reverseChargeLine());
+                    customer.city(), customer.pincode(), customer.stateName(), customer.gstin(), hadTax));
+            if (hadTax) {
+                document.add(reverseChargeLine());
+            }
 
             List<GroupedSalesLine> grouped = groupSalesLines(lines);
-            document.add(lineItemsTable(grouped));
-            document.add(taxSummaryTable(taxByHsnRate(lines), invoice.interstate()));
+            document.add(lineItemsTable(grouped, hadTax));
+            if (hadTax) {
+                document.add(taxSummaryTable(taxByHsnRate(lines), invoice.interstate()));
+            }
             document.add(invoiceTotalsTable(invoice.taxableValue(), invoice.cgstAmount(), invoice.sgstAmount(),
-                    invoice.igstAmount(), invoice.roundOff(), invoice.grandTotal(), paid, balance));
+                    invoice.igstAmount(), invoice.roundOff(), invoice.grandTotal(), paid, balance, hadTax));
             document.add(amountInWordsParagraph(invoice.grandTotal()));
             document.add(declarationAndSignature(shop));
 
@@ -186,6 +199,11 @@ public class DocumentService {
         Path target = appPaths.invoices().resolve(fy).resolve(sanitizeForFilename(salesReturn.creditNoteNo()) + ".pdf");
         createParentDirs(target);
 
+        // M10: see the identical note in generateInvoicePdf - driven by this specific
+        // return's own tax, not the live toggle.
+        boolean hadTax = salesReturn.cgstAmount().isPositive() || salesReturn.sgstAmount().isPositive()
+                || salesReturn.igstAmount().isPositive();
+
         try (FileOutputStream out = new FileOutputStream(target.toFile())) {
             Document document = new Document(PageSize.A4, 30, 30, 30, 30);
             PdfWriter.getInstance(document, out);
@@ -193,14 +211,15 @@ public class DocumentService {
 
             document.add(titleParagraph("CREDIT NOTE"));
             document.add(shopAndDocHeader(shop, "Credit Note No", salesReturn.creditNoteNo(), salesReturn.returnDate(),
-                    "Against Invoice: " + invoice.invoiceNo() + " dated " + invoice.invoiceDate().format(DATE_FMT)));
+                    "Against Invoice: " + invoice.invoiceNo() + " dated " + invoice.invoiceDate().format(DATE_FMT),
+                    hadTax));
             document.add(customerBlock("Issued To", customer.name(), customer.addressLine1(), customer.addressLine2(),
-                    customer.city(), customer.pincode(), customer.stateName(), customer.gstin()));
+                    customer.city(), customer.pincode(), customer.stateName(), customer.gstin(), hadTax));
             document.add(reasonParagraph(salesReturn.reason()));
 
-            document.add(salesReturnLineItemsTable(lines));
+            document.add(salesReturnLineItemsTable(lines, hadTax));
             document.add(noteTotalsTable(salesReturn.taxableValue(), salesReturn.cgstAmount(),
-                    salesReturn.sgstAmount(), salesReturn.igstAmount(), salesReturn.totalAmount()));
+                    salesReturn.sgstAmount(), salesReturn.igstAmount(), salesReturn.totalAmount(), hadTax));
             document.add(amountInWordsParagraph(salesReturn.totalAmount()));
             document.add(declarationAndSignature(shop));
 
@@ -232,6 +251,11 @@ public class DocumentService {
                 .resolve(sanitizeForFilename(purchaseReturn.debitNoteNo()) + ".pdf");
         createParentDirs(target);
 
+        // M10: see the identical note in generateInvoicePdf - driven by this specific
+        // return's own tax, not the live toggle.
+        boolean hadTax = purchaseReturn.cgstAmount().isPositive() || purchaseReturn.sgstAmount().isPositive()
+                || purchaseReturn.igstAmount().isPositive();
+
         try (FileOutputStream out = new FileOutputStream(target.toFile())) {
             Document document = new Document(PageSize.A4, 30, 30, 30, 30);
             PdfWriter.getInstance(document, out);
@@ -240,14 +264,15 @@ public class DocumentService {
             document.add(titleParagraph("DEBIT NOTE"));
             document.add(shopAndDocHeader(shop, "Debit Note No", purchaseReturn.debitNoteNo(),
                     purchaseReturn.returnDate(),
-                    "Against Bill: " + bill.supplierBillNo() + " dated " + bill.billDate().format(DATE_FMT)));
+                    "Against Bill: " + bill.supplierBillNo() + " dated " + bill.billDate().format(DATE_FMT),
+                    hadTax));
             document.add(customerBlock("Issued To", supplier.name(), supplier.addressLine1(), supplier.addressLine2(),
-                    supplier.city(), supplier.pincode(), supplier.stateName(), supplier.gstin()));
+                    supplier.city(), supplier.pincode(), supplier.stateName(), supplier.gstin(), hadTax));
             document.add(reasonParagraph(purchaseReturn.reason()));
 
-            document.add(purchaseReturnLineItemsTable(lines));
+            document.add(purchaseReturnLineItemsTable(lines, hadTax));
             document.add(noteTotalsTable(purchaseReturn.taxableValue(), purchaseReturn.cgstAmount(),
-                    purchaseReturn.sgstAmount(), purchaseReturn.igstAmount(), purchaseReturn.totalAmount()));
+                    purchaseReturn.sgstAmount(), purchaseReturn.igstAmount(), purchaseReturn.totalAmount(), hadTax));
             document.add(amountInWordsParagraph(purchaseReturn.totalAmount()));
             document.add(declarationAndSignature(shop));
 
@@ -277,7 +302,7 @@ public class DocumentService {
     }
 
     private PdfPTable shopAndDocHeader(ShopProfile shop, String docNoLabel, String docNo, LocalDate docDate,
-                                        String thirdLine) {
+                                        String thirdLine, boolean showGst) {
         PdfPTable table = new PdfPTable(2);
         table.setWidthPercentage(100);
         try {
@@ -305,7 +330,9 @@ public class DocumentService {
         if (!address.isBlank()) {
             shopCell.addElement(new Paragraph(address, NORMAL_FONT));
         }
-        shopCell.addElement(new Paragraph("GSTIN: " + nullToDash(shop.gstin()), NORMAL_FONT));
+        if (showGst) {
+            shopCell.addElement(new Paragraph("GSTIN: " + nullToDash(shop.gstin()), NORMAL_FONT));
+        }
         shopCell.addElement(new Paragraph("State: " + nullToDash(shop.stateName())
                 + (shop.stateCode() == null ? "" : " (" + shop.stateCode() + ")"), NORMAL_FONT));
         table.addCell(shopCell);
@@ -314,7 +341,9 @@ public class DocumentService {
         docCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         docCell.addElement(rightAligned(docNoLabel + ": " + docNo, BOLD_FONT));
         docCell.addElement(rightAligned("Date: " + docDate.format(DATE_FMT), NORMAL_FONT));
-        docCell.addElement(rightAligned(thirdLine, NORMAL_FONT));
+        if (thirdLine != null) {
+            docCell.addElement(rightAligned(thirdLine, NORMAL_FONT));
+        }
         table.addCell(docCell);
 
         return table;
@@ -335,7 +364,7 @@ public class DocumentService {
     }
 
     private static PdfPTable customerBlock(String label, String name, String addr1, String addr2, String city,
-                                            String pincode, String stateName, String gstin) {
+                                            String pincode, String stateName, String gstin, boolean showGst) {
         PdfPTable table = new PdfPTable(1);
         table.setWidthPercentage(100);
         table.setSpacingAfter(8);
@@ -351,8 +380,10 @@ public class DocumentService {
         if (stateName != null && !stateName.isBlank()) {
             cell.addElement(new Paragraph("State: " + stateName, NORMAL_FONT));
         }
-        cell.addElement(new Paragraph("GSTIN: " + (gstin == null || gstin.isBlank() ? "Unregistered" : gstin),
-                NORMAL_FONT));
+        if (showGst) {
+            cell.addElement(new Paragraph("GSTIN: " + (gstin == null || gstin.isBlank() ? "Unregistered" : gstin),
+                    NORMAL_FONT));
+        }
         table.addCell(cell);
         return table;
     }
@@ -405,14 +436,21 @@ public class DocumentService {
         return result;
     }
 
-    private PdfPTable lineItemsTable(List<GroupedSalesLine> grouped) {
-        String[] headers = {"#", "Description", "HSN", "Qty", "Unit", "Rate", "Discount", "Taxable Value", "GST %",
-                "Tax", "Total"};
+    /** @param showGst when false, drops HSN/GST%/Tax entirely - and Taxable Value too, since
+     *                 with zero tax it is identical to Total and would just be a redundant
+     *                 second copy of the same figure (M10). */
+    private PdfPTable lineItemsTable(List<GroupedSalesLine> grouped, boolean showGst) {
+        String[] headers = showGst
+                ? new String[]{"#", "Description", "HSN", "Qty", "Unit", "Rate", "Discount", "Taxable Value", "GST %",
+                        "Tax", "Total"}
+                : new String[]{"#", "Description", "Qty", "Unit", "Rate", "Discount", "Total"};
         PdfPTable table = new PdfPTable(headers.length);
         table.setWidthPercentage(100);
         table.setSpacingAfter(8);
         try {
-            table.setWidths(new float[]{0.4f, 2.2f, 0.8f, 0.5f, 0.6f, 0.9f, 0.8f, 1.0f, 0.6f, 0.9f, 1.0f});
+            table.setWidths(showGst
+                    ? new float[]{0.4f, 2.2f, 0.8f, 0.5f, 0.6f, 0.9f, 0.8f, 1.0f, 0.6f, 0.9f, 1.0f}
+                    : new float[]{0.4f, 3.0f, 0.6f, 0.7f, 1.0f, 1.0f, 1.2f});
         } catch (DocumentException ignored) {
         }
         for (String h : headers) {
@@ -424,14 +462,18 @@ public class DocumentService {
         for (GroupedSalesLine g : grouped) {
             table.addCell(bodyCell(String.valueOf(i++), Element.ALIGN_CENTER));
             table.addCell(bodyCell(g.description(), Element.ALIGN_LEFT));
-            table.addCell(bodyCell(g.hsn(), Element.ALIGN_CENTER));
+            if (showGst) {
+                table.addCell(bodyCell(g.hsn(), Element.ALIGN_CENTER));
+            }
             table.addCell(bodyCell(String.valueOf(g.quantity()), Element.ALIGN_CENTER));
             table.addCell(bodyCell("Nos", Element.ALIGN_CENTER));
             table.addCell(bodyCell(g.unitPrice().toDisplayString(), Element.ALIGN_RIGHT));
             table.addCell(bodyCell(g.discount().isZero() ? "-" : g.discount().toDisplayString(), Element.ALIGN_RIGHT));
-            table.addCell(bodyCell(g.taxableValue().toDisplayString(), Element.ALIGN_RIGHT));
-            table.addCell(bodyCell(stripZeros(g.gstRate()) + "%", Element.ALIGN_CENTER));
-            table.addCell(bodyCell(g.tax().toDisplayString(), Element.ALIGN_RIGHT));
+            if (showGst) {
+                table.addCell(bodyCell(g.taxableValue().toDisplayString(), Element.ALIGN_RIGHT));
+                table.addCell(bodyCell(stripZeros(g.gstRate()) + "%", Element.ALIGN_CENTER));
+                table.addCell(bodyCell(g.tax().toDisplayString(), Element.ALIGN_RIGHT));
+            }
             table.addCell(bodyCell(g.lineTotal().toDisplayString(), Element.ALIGN_RIGHT));
 
             if (showTags && g.quantity() > 1 && !g.pieceTags().isEmpty()) {
@@ -446,8 +488,8 @@ public class DocumentService {
 
     // ---- Return line items (one row per physical piece - no grouping needed) -------------
 
-    private PdfPTable salesReturnLineItemsTable(List<SalesReturnLine> lines) {
-        PdfPTable table = returnTableSkeleton();
+    private PdfPTable salesReturnLineItemsTable(List<SalesReturnLine> lines, boolean showGst) {
+        PdfPTable table = returnTableSkeleton(showGst);
         for (SalesReturnLine line : lines) {
             String tag = pieceService.findById(line.pieceId()).map(p -> p.tag()).orElse("?");
             String description = salesLineRepository.findByPieceId(line.pieceId())
@@ -455,13 +497,13 @@ public class DocumentService {
             String hsn = salesLineRepository.findByPieceId(line.pieceId())
                     .map(SalesLine::hsnSnapshot).orElse("");
             Money tax = line.cgstAmount().plus(line.sgstAmount()).plus(line.igstAmount());
-            addReturnRow(table, tag, description, hsn, line.taxableValue(), tax, line.lineTotal());
+            addReturnRow(table, tag, description, hsn, line.taxableValue(), tax, line.lineTotal(), showGst);
         }
         return table;
     }
 
-    private PdfPTable purchaseReturnLineItemsTable(List<PurchaseReturnLine> lines) {
-        PdfPTable table = returnTableSkeleton();
+    private PdfPTable purchaseReturnLineItemsTable(List<PurchaseReturnLine> lines, boolean showGst) {
+        PdfPTable table = returnTableSkeleton(showGst);
         for (PurchaseReturnLine line : lines) {
             String tag = pieceService.findById(line.pieceId()).map(p -> p.tag()).orElse("?");
             String description = pieceService.findById(line.pieceId())
@@ -471,13 +513,17 @@ public class DocumentService {
                     .flatMap(p -> itemModelService.findById(p.itemModelId()))
                     .map(m -> m.hsnCode()).orElse("");
             Money tax = line.cgstAmount().plus(line.sgstAmount()).plus(line.igstAmount());
-            addReturnRow(table, tag, description, hsn, line.taxableValue(), tax, line.lineTotal());
+            addReturnRow(table, tag, description, hsn, line.taxableValue(), tax, line.lineTotal(), showGst);
         }
         return table;
     }
 
-    private static PdfPTable returnTableSkeleton() {
-        String[] headers = {"Piece Tag", "Description", "HSN", "Taxable Value", "Tax", "Total"};
+    /** @param showGst when false, drops HSN/Taxable Value/Tax - Taxable Value is redundant
+     *                 with Total once tax is zero (M10, same reasoning as lineItemsTable). */
+    private static PdfPTable returnTableSkeleton(boolean showGst) {
+        String[] headers = showGst
+                ? new String[]{"Piece Tag", "Description", "HSN", "Taxable Value", "Tax", "Total"}
+                : new String[]{"Piece Tag", "Description", "Total"};
         PdfPTable table = new PdfPTable(headers.length);
         table.setWidthPercentage(100);
         table.setSpacingAfter(8);
@@ -488,12 +534,14 @@ public class DocumentService {
     }
 
     private static void addReturnRow(PdfPTable table, String tag, String description, String hsn, Money taxable,
-                                      Money tax, Money total) {
+                                      Money tax, Money total, boolean showGst) {
         table.addCell(bodyCell(tag, Element.ALIGN_CENTER));
         table.addCell(bodyCell(description, Element.ALIGN_LEFT));
-        table.addCell(bodyCell(hsn, Element.ALIGN_CENTER));
-        table.addCell(bodyCell(taxable.toDisplayString(), Element.ALIGN_RIGHT));
-        table.addCell(bodyCell(tax.toDisplayString(), Element.ALIGN_RIGHT));
+        if (showGst) {
+            table.addCell(bodyCell(hsn, Element.ALIGN_CENTER));
+            table.addCell(bodyCell(taxable.toDisplayString(), Element.ALIGN_RIGHT));
+            table.addCell(bodyCell(tax.toDisplayString(), Element.ALIGN_RIGHT));
+        }
         table.addCell(bodyCell(total.toDisplayString(), Element.ALIGN_RIGHT));
     }
 
@@ -551,9 +599,9 @@ public class DocumentService {
     // ---- Totals ---------------------------------------------------------------------------
 
     private static PdfPTable invoiceTotalsTable(Money taxable, Money cgst, Money sgst, Money igst, Money roundOff,
-                                                 Money grandTotal, Money paid, Money balance) {
+                                                 Money grandTotal, Money paid, Money balance, boolean showGst) {
         PdfPTable table = totalsSkeleton();
-        addTotalRow(table, "Taxable Value", taxable, false);
+        addTotalRow(table, showGst ? "Taxable Value" : "Subtotal", taxable, false);
         if (cgst.isPositive() || sgst.isPositive()) {
             addTotalRow(table, "CGST", cgst, false);
             addTotalRow(table, "SGST", sgst, false);
@@ -568,9 +616,10 @@ public class DocumentService {
         return table;
     }
 
-    private static PdfPTable noteTotalsTable(Money taxable, Money cgst, Money sgst, Money igst, Money total) {
+    private static PdfPTable noteTotalsTable(Money taxable, Money cgst, Money sgst, Money igst, Money total,
+                                              boolean showGst) {
         PdfPTable table = totalsSkeleton();
-        addTotalRow(table, "Taxable Value", taxable, false);
+        addTotalRow(table, showGst ? "Taxable Value" : "Subtotal", taxable, false);
         if (cgst.isPositive() || sgst.isPositive()) {
             addTotalRow(table, "CGST", cgst, false);
             addTotalRow(table, "SGST", sgst, false);

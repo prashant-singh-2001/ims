@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
@@ -43,14 +44,21 @@
 
         <Label text="State *" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
         <ComboBox fx:id="stateCombo" GridPane.rowIndex="5" GridPane.columnIndex="1" maxWidth="Infinity"
-                  promptText="Select the shop's state - decides CGST/SGST vs IGST"/>
+                  promptText="Select the shop's state"/>
 
-        <Label text="GSTIN *" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-        <TextField fx:id="gstinField" GridPane.rowIndex="6" GridPane.columnIndex="1"
+        <Label text="GST registered?" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+        <CheckBox fx:id="gstRegisteredCheck" text="This shop is GST-registered" selected="true"
+                  GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+        <!-- M10: GST-only - hidden together when the shop above says it isn't registered.
+             State (above) stays required either way - it's an address field this app also
+             prints on documents, GST or not. -->
+        <Label fx:id="gstinLabel" text="GSTIN *" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+        <TextField fx:id="gstinField" GridPane.rowIndex="7" GridPane.columnIndex="1"
                    promptText="22AAAAA0000A1Z5"/>
 
-        <Label text="GST registration *" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
-        <HBox spacing="16" GridPane.rowIndex="7" GridPane.columnIndex="1">
+        <Label fx:id="registrationTypeLabel" text="GST registration *" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+        <HBox fx:id="registrationTypeBox" spacing="16" GridPane.rowIndex="8" GridPane.columnIndex="1">
             <fx:define>
                 <ToggleGroup fx:id="registrationTypeGroup"/>
             </fx:define>
@@ -58,10 +66,10 @@
             <RadioButton fx:id="compositionRadio" text="Composition" toggleGroup="$registrationTypeGroup"/>
         </HBox>
 
-        <Label text="Phone *" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
-        <TextField fx:id="phoneField" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+        <Label text="Phone *" GridPane.rowIndex="9" GridPane.columnIndex="0"/>
+        <TextField fx:id="phoneField" GridPane.rowIndex="9" GridPane.columnIndex="1"/>
 
-        <Label text="Email" GridPane.rowIndex="9" GridPane.columnIndex="0"/>
-        <TextField fx:id="emailField" GridPane.rowIndex="9" GridPane.columnIndex="1"/>
+        <Label text="Email" GridPane.rowIndex="10" GridPane.columnIndex="0"/>
+        <TextField fx:id="emailField" GridPane.rowIndex="10" GridPane.columnIndex="1"/>
     </GridPane>
 </VBox>

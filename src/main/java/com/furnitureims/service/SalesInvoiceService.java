@@ -65,12 +65,13 @@ public class SalesInvoiceService {
     private final SequenceCounterRepository sequenceCounterRepository;
     private final PaymentService paymentService;
     private final AuditLogService auditLogService;
+    private final SettingsService settingsService;
 
     public SalesInvoiceService(SalesInvoiceRepository salesInvoiceRepository, SalesLineRepository salesLineRepository,
                                 CustomerRepository customerRepository, ShopProfileRepository shopProfileRepository,
                                 ItemModelRepository itemModelRepository, PieceService pieceService,
                                 SequenceCounterRepository sequenceCounterRepository, PaymentService paymentService,
-                                AuditLogService auditLogService) {
+                                AuditLogService auditLogService, SettingsService settingsService) {
         this.salesInvoiceRepository = salesInvoiceRepository;
         this.salesLineRepository = salesLineRepository;
         this.customerRepository = customerRepository;
@@ -80,6 +81,7 @@ public class SalesInvoiceService {
         this.sequenceCounterRepository = sequenceCounterRepository;
         this.paymentService = paymentService;
         this.auditLogService = auditLogService;
+        this.settingsService = settingsService;
     }
 
     public Optional<SalesInvoice> findById(long id) {
@@ -105,7 +107,13 @@ public class SalesInvoiceService {
      *  repeatedly as the owner edits the bill. Pieces already sold, discounts that exceed
      *  a line's value, and a bill discount larger than the whole bill are all rejected
      *  here, before {@link #createInvoice} would otherwise draw an invoice number for
-     *  nothing. */
+     *  nothing.
+     *  <p>
+     *  M10: when {@link SettingsService#isGstEnabled()} is off, every line's tax is forced
+     *  to zero and {@code interstate} is forced to {@code false} below - deliberately without
+     *  ever evaluating {@code placeOfSupplyStateCode}, via {@code &&} short-circuiting, so a
+     *  null place-of-supply (that field is hidden from the billing screen when GST is off)
+     *  can never NPE here. */
     public InvoicePreview preview(String placeOfSupplyStateCode, List<InvoiceLineInput> lineInputs,
                                    boolean priceInclusive, Money billDiscount) {
         if (lineInputs == null || lineInputs.isEmpty()) {
@@ -113,7 +121,8 @@ public class SalesInvoiceService {
         }
         ShopProfile shop = shopProfileRepository.find()
                 .orElseThrow(() -> new IllegalStateException("Shop profile has not been set up."));
-        boolean interstate = !placeOfSupplyStateCode.equals(shop.stateCode());
+        boolean gstEnabled = settingsService.isGstEnabled();
+        boolean interstate = gstEnabled && !placeOfSupplyStateCode.equals(shop.stateCode());
         Money discount = billDiscount == null ? Money.ZERO : billDiscount;
 
         record RawLine(InvoiceLineInput input, Piece piece, ItemModel model, Money baseExclusive,
@@ -137,7 +146,7 @@ public class SalesInvoiceService {
             Money lineDiscount = input.discountAmount() == null ? Money.ZERO : input.discountAmount();
 
             Money baseExclusive;
-            if (priceInclusive) {
+            if (gstEnabled && priceInclusive) {
                 BigDecimal divisor = BigDecimal.ONE.add(
                         model.gstRate().divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_EVEN));
                 baseExclusive = Money.ofRupees(unitPrice.rupees().divide(divisor, 2, RoundingMode.HALF_EVEN));
@@ -178,9 +187,11 @@ public class SalesInvoiceService {
         for (int i = 0; i < raw.size(); i++) {
             RawLine r = raw.get(i);
             Money finalTaxable = r.afterLineDiscount().minus(billDiscountShares[i]);
-            Money tax = Money.ofRupees(finalTaxable.rupees()
-                    .multiply(r.model().gstRate())
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN));
+            Money tax = gstEnabled
+                    ? Money.ofRupees(finalTaxable.rupees()
+                            .multiply(r.model().gstRate())
+                            .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN))
+                    : Money.ZERO;
 
             long taxPaisa = tax.paisa();
             long cgstPaisa = interstate ? 0 : taxPaisa / 2;
@@ -237,11 +248,24 @@ public class SalesInvoiceService {
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found."));
         InvoicePreview preview = preview(placeOfSupplyStateCode, lineInputs, priceInclusive, billDiscount);
 
+        // M10: sales_invoice.place_of_supply_state_code is NOT NULL with no default. The
+        // billing screen hides this field when GST is off, so a null/blank value here is
+        // filled with the shop's own state code rather than rejected - preview() above
+        // never touches this value anyway once GST is off (see its own note).
+        boolean gstEnabled = settingsService.isGstEnabled();
+        String resolvedPlaceOfSupplyStateCode = placeOfSupplyStateCode;
+        if (!gstEnabled && (resolvedPlaceOfSupplyStateCode == null || resolvedPlaceOfSupplyStateCode.isBlank())) {
+            resolvedPlaceOfSupplyStateCode = shopProfileRepository.find()
+                    .orElseThrow(() -> new IllegalStateException("Shop profile has not been set up."))
+                    .stateCode();
+        }
+
         String fy = FinancialYear.of(invoiceDate);
         long seq = sequenceCounterRepository.next("INVOICE", fy);
         String invoiceNo = "INV/" + fy + "/" + String.format("%04d", seq);
 
-        SalesInvoice toSave = new SalesInvoice(0, invoiceNo, fy, invoiceDate, customer.id(), placeOfSupplyStateCode,
+        SalesInvoice toSave = new SalesInvoice(0, invoiceNo, fy, invoiceDate, customer.id(),
+                resolvedPlaceOfSupplyStateCode,
                 preview.interstate(), priceInclusive, preview.grossValue(), preview.lineDiscountTotal(),
                 billDiscount == null ? Money.ZERO : billDiscount, preview.taxableValue(), preview.cgstAmount(),
                 preview.sgstAmount(), preview.igstAmount(), preview.roundOff(), preview.grandTotal(),
@@ -254,8 +278,14 @@ public class SalesInvoiceService {
             ItemModel model = itemModelRepository.findById(piece.itemModelId())
                     .orElseThrow(() -> new IllegalStateException("Item model not found."));
 
+            // M10: sales_line.hsn_snapshot/gst_rate mirror the sentinel a GST-off item model
+            // is itself saved with (ItemModelService.applyGstSentinelIfDisabled) - a model
+            // that was created back when GST was on still has its real historical HSN/rate
+            // stored, but a sale made while the toggle is off must not let that leak onto a
+            // line that otherwise carries zero tax throughout.
             salesLineRepository.create(new SalesLine(0, invoiceId, piece.id(), model.id(), model.modelName(),
-                    model.hsnCode(), model.gstRate(), line.unitPriceEntered(), line.discountAmount(),
+                    gstEnabled ? model.hsnCode() : "", gstEnabled ? model.gstRate() : BigDecimal.ZERO,
+                    line.unitPriceEntered(), line.discountAmount(),
                     line.taxableValue(), line.cgst(), line.sgst(), line.igst(), line.lineTotal(),
                     piece.landedCost()));
 

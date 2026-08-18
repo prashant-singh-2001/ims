@@ -17,29 +17,20 @@
             fx:controller="com.furnitureims.ui.sales.SalesReturnScreenController"
             styleClass="app-root">
 
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label fx:id="titleLabel" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Back to List" onAction="#onBackClicked"/>
-        </HBox>
-    </top>
-
     <center>
         <ScrollPane fitToWidth="true">
             <VBox spacing="12">
                 <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
-                <Label text="Pieces sold on this invoice" style="-fx-font-weight: bold;"/>
+                <Label text="Pieces sold on this invoice" styleClass="field-label"/>
                 <VBox fx:id="pieceCheckboxesBox" spacing="6"/>
 
-                <Label text="Reason *" style="-fx-font-weight: bold;"/>
+                <Label text="Reason *" styleClass="field-label"/>
                 <TextField fx:id="reasonField"/>
 
-                <Label text="Return date" style="-fx-font-weight: bold;"/>
+                <Label text="Return date" styleClass="field-label"/>
                 <DatePicker fx:id="returnDatePicker"/>
 
-                <Label text="Refund" style="-fx-font-weight: bold;"/>
+                <Label text="Refund" styleClass="field-label"/>
                 <HBox spacing="16">
                     <RadioButton fx:id="adjustAgainstDueRadio" text="Adjust against outstanding balance"/>
                     <RadioButton fx:id="cashRefundRadio" text="Cash refund"/>

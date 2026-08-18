@@ -19,20 +19,17 @@
             styleClass="app-root">
 
     <top>
-        <VBox styleClass="wizard-header">
+        <VBox styleClass="screen-actions">
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <padding><Insets top="14" right="24" bottom="6" left="24"/></padding>
-                <Label text="Item Models" styleClass="wizard-header-title"/>
-                <Region HBox.hgrow="ALWAYS"/>
                 <Button text="Categories &amp; Locations" onAction="#onCategoriesLocationsClicked"/>
                 <Button text="New Model" onAction="#onNewClicked" styleClass="primary-button"/>
-                <Button text="Back" onAction="#onBackClicked"/>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <padding><Insets top="6" right="24" bottom="14" left="24"/></padding>
                 <TextField fx:id="searchField" promptText="Search name, code, material, colour" prefWidth="280"/>
                 <ComboBox fx:id="categoryFilterCombo" promptText="All categories"/>
-                <CheckBox fx:id="activeOnlyCheck" text="Active only" textFill="WHITE"/>
+                <CheckBox fx:id="activeOnlyCheck" text="Active only"/>
                 <Button text="Search" onAction="#onSearchClicked"/>
             </HBox>
         </VBox>

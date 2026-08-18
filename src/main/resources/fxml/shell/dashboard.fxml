@@ -4,94 +4,61 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx"
+<ScrollPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.furnitureims.ui.shell.DashboardController"
-            styleClass="app-root">
+            styleClass="app-root" fitToWidth="true">
+    <VBox spacing="20">
+        <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
 
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label fx:id="welcomeLabel" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Lock Now" onAction="#onLockNowClicked"/>
-        </HBox>
-    </top>
+        <Label fx:id="welcomeLabel" styleClass="text-muted"/>
 
-    <center>
-        <ScrollPane fitToWidth="true">
-            <VBox spacing="20">
-                <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
-
-                <Label text="Today" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
-                <HBox spacing="12">
-                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onTodaySalesTileClicked">
-                        <Label text="Today's Sales" style="-fx-font-weight: bold;"/>
-                        <Label fx:id="todaySalesLabel"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onMonthSalesTileClicked">
-                        <Label text="This Month's Sales" style="-fx-font-weight: bold;"/>
-                        <Label fx:id="monthSalesLabel"/>
-                    </VBox>
-                </HBox>
-
-                <Label text="Stock and Money" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
-                <HBox spacing="12">
-                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onStockValueTileClicked">
-                        <Label text="Stock Value" style="-fx-font-weight: bold;"/>
-                        <Label fx:id="stockValueLabel"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onStockValueTileClicked">
-                        <Label text="Pieces in Stock" style="-fx-font-weight: bold;"/>
-                        <Label fx:id="piecesInStockLabel"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onReceivableTileClicked">
-                        <Label text="Receivable" style="-fx-font-weight: bold;"/>
-                        <Label fx:id="receivableLabel"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onPayableTileClicked">
-                        <Label text="Payable" style="-fx-font-weight: bold;"/>
-                        <Label fx:id="payableLabel"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="wizard-callout" onMouseClicked="#onBackupStatusTileClicked">
-                        <Label text="Backup Status" style="-fx-font-weight: bold;"/>
-                        <Label fx:id="backupStatusLabel" styleClass="wizard-step-subtitle"/>
-                    </VBox>
-                </HBox>
-
-                <Label text="Quick Actions" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
-                <HBox spacing="12">
-                    <Button text="New Sale" onAction="#onNewSaleClicked" styleClass="primary-button"/>
-                    <Button text="New Purchase Bill" onAction="#onNewPurchaseBillClicked" styleClass="primary-button"/>
-                    <Button text="Payments" onAction="#onPaymentsClicked" styleClass="primary-button"/>
-                    <Button text="Backup Now" onAction="#onBackupNowClicked" styleClass="primary-button"/>
-                </HBox>
-
-                <Label text="Reports" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
-                <HBox spacing="12">
-                    <Button text="Stock Report" onAction="#onStockReportClicked"/>
-                    <Button text="Sales and Profit Report" onAction="#onSalesProfitReportClicked"/>
-                    <Button text="Dues and Aging Report" onAction="#onDuesReportClicked"/>
-                </HBox>
-
-                <Label text="Browse" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
-                <HBox spacing="12">
-                    <Button text="Item Models" onAction="#onItemModelsClicked"/>
-                    <Button text="Piece Register" onAction="#onPieceRegisterClicked"/>
-                    <Button text="Categories &amp; Locations" onAction="#onCategoriesLocationsClicked"/>
-                </HBox>
-                <HBox spacing="12">
-                    <Button text="Suppliers" onAction="#onSuppliersClicked"/>
-                    <Button text="Purchase Bills" onAction="#onPurchaseBillsClicked"/>
-                    <Button text="Invoices" onAction="#onInvoicesClicked"/>
-                    <Button text="Settings" onAction="#onSettingsClicked"/>
-                </HBox>
+        <!-- Stock leads: this is an inventory management system first (M10). -->
+        <Label text="Stock" styleClass="section-heading"/>
+        <HBox spacing="12">
+            <VBox spacing="4" styleClass="metric-tile" onMouseClicked="#onStockValueTileClicked">
+                <Label text="Stock Value" styleClass="metric-tile-label"/>
+                <Label fx:id="stockValueLabel" styleClass="metric-tile-value"/>
             </VBox>
-        </ScrollPane>
-    </center>
-</BorderPane>
+            <VBox fx:id="piecesInStockTile" spacing="4" styleClass="metric-tile" onMouseClicked="#onStockValueTileClicked">
+                <Label text="Pieces in Stock" styleClass="metric-tile-label"/>
+                <Label fx:id="piecesInStockLabel" styleClass="metric-tile-value"/>
+            </VBox>
+        </HBox>
+
+        <Label text="Quick Actions" styleClass="section-heading"/>
+        <HBox spacing="12">
+            <Button text="New Sale" onAction="#onNewSaleClicked" styleClass="primary-button"/>
+            <Button text="New Purchase Bill" onAction="#onNewPurchaseBillClicked" styleClass="primary-button"/>
+            <Button text="Payments" onAction="#onPaymentsClicked" styleClass="primary-button"/>
+        </HBox>
+
+        <!-- Sales and money: secondary, below stock (M10). -->
+        <Label text="Sales and Money" styleClass="section-heading"/>
+        <HBox spacing="12">
+            <VBox spacing="4" styleClass="metric-tile" onMouseClicked="#onTodaySalesTileClicked">
+                <Label text="Today's Sales" styleClass="metric-tile-label"/>
+                <Label fx:id="todaySalesLabel" styleClass="metric-tile-value"/>
+            </VBox>
+            <VBox spacing="4" styleClass="metric-tile" onMouseClicked="#onMonthSalesTileClicked">
+                <Label text="This Month's Sales" styleClass="metric-tile-label"/>
+                <Label fx:id="monthSalesLabel" styleClass="metric-tile-value"/>
+            </VBox>
+            <VBox spacing="4" styleClass="metric-tile" onMouseClicked="#onReceivableTileClicked">
+                <Label text="Receivable" styleClass="metric-tile-label"/>
+                <Label fx:id="receivableLabel" styleClass="metric-tile-value"/>
+            </VBox>
+            <VBox spacing="4" styleClass="metric-tile" onMouseClicked="#onPayableTileClicked">
+                <Label text="Payable" styleClass="metric-tile-label"/>
+                <Label fx:id="payableLabel" styleClass="metric-tile-value"/>
+            </VBox>
+            <VBox spacing="4" styleClass="metric-tile" onMouseClicked="#onBackupStatusTileClicked">
+                <Label text="Backup Status" styleClass="metric-tile-label"/>
+                <Label fx:id="backupStatusLabel"/>
+            </VBox>
+        </HBox>
+    </VBox>
+</ScrollPane>

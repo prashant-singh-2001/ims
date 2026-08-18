@@ -5,11 +5,13 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -23,35 +25,70 @@
             styleClass="app-root">
 
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
             <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label text="Settings" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
             <Button text="Backup and Restore" onAction="#onBackupSettingsClicked"/>
             <Button text="Audit Log" onAction="#onAuditLogClicked"/>
-            <Button text="Back" onAction="#onBackClicked"/>
         </HBox>
     </top>
 
     <center>
         <TabPane tabClosingPolicy="UNAVAILABLE">
 
+            <Tab text="Tax">
+                <ScrollPane fitToWidth="true">
+                    <VBox spacing="12">
+                        <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+                        <CheckBox fx:id="gstEnabledCheck" text="This shop is GST-registered"/>
+                        <Label text="When off, every bill is plain - no CGST/SGST/IGST, no HSN code, no GSTIN and no place of supply anywhere the owner or a customer sees."
+                               wrapText="true" styleClass="wizard-step-subtitle"/>
+
+                        <GridPane fx:id="gstDetailsGrid" hgap="12" vgap="10">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="130"/>
+                                <ColumnConstraints hgrow="ALWAYS" minWidth="220"/>
+                            </columnConstraints>
+                            <Label text="Shop state" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <Label fx:id="shopStateLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                            <Label text="GSTIN *" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <TextField fx:id="gstinField" promptText="22AAAAA0000A1Z5"
+                                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                            <Label text="GST registration" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                            <HBox spacing="16" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                                <fx:define>
+                                    <ToggleGroup fx:id="registrationTypeGroup"/>
+                                </fx:define>
+                                <RadioButton fx:id="regularRadio" text="Regular" toggleGroup="$registrationTypeGroup"/>
+                                <RadioButton fx:id="compositionRadio" text="Composition" toggleGroup="$registrationTypeGroup"/>
+                            </HBox>
+                        </GridPane>
+
+                        <Label fx:id="taxStatusLabel" styleClass="wizard-step-subtitle"/>
+                        <Button text="Save Tax Settings" onAction="#onSaveTaxSettingsClicked"
+                                styleClass="primary-button"/>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
             <Tab text="Invoice">
                 <ScrollPane fitToWidth="true">
                     <VBox spacing="12">
                         <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
-                        <Label text="Declaration text" style="-fx-font-weight: bold;"/>
+                        <Label text="Declaration text" styleClass="field-label"/>
                         <TextArea fx:id="declarationArea" prefRowCount="3" wrapText="true"
                                   promptText="Printed near the signature block on every invoice, credit note and debit note."/>
 
-                        <Label text="Signature line" style="-fx-font-weight: bold;"/>
+                        <Label text="Signature line" styleClass="field-label"/>
                         <TextField fx:id="signatureField" promptText="e.g. Authorized Signatory"/>
 
                         <CheckBox fx:id="showPieceTagsCheck"
                                   text="List individual piece tags beneath a grouped invoice line"/>
 
-                        <Label text="Shop logo" style="-fx-font-weight: bold;"/>
+                        <Label text="Shop logo" styleClass="field-label"/>
                         <HBox spacing="10" alignment="CENTER_LEFT">
                             <Button text="Upload Logo" onAction="#onUploadLogoClicked"/>
                             <Label fx:id="logoStatusLabel" styleClass="wizard-step-subtitle"/>
@@ -94,10 +131,10 @@
                                       GridPane.rowIndex="2" GridPane.columnIndex="2" GridPane.columnSpan="2"/>
                         </GridPane>
 
-                        <Label text="Subject template" style="-fx-font-weight: bold;"/>
+                        <Label text="Subject template" styleClass="field-label"/>
                         <TextField fx:id="emailSubjectField"/>
 
-                        <Label text="Body template" style="-fx-font-weight: bold;"/>
+                        <Label text="Body template" styleClass="field-label"/>
                         <TextArea fx:id="emailBodyArea" prefRowCount="5" wrapText="true"/>
                         <Label text="Placeholders: {customerName} {invoiceNo} {invoiceDate} {grandTotal} {shopName}"
                                styleClass="wizard-step-subtitle"/>
@@ -106,7 +143,7 @@
                         <Button text="Save Email Settings" onAction="#onSaveEmailSettingsClicked"
                                 styleClass="primary-button"/>
 
-                        <Label text="Send a test email" style="-fx-font-weight: bold;"/>
+                        <Label text="Send a test email" styleClass="field-label"/>
                         <HBox spacing="10" alignment="CENTER_LEFT">
                             <TextField fx:id="testEmailToField" promptText="test@example.com" HBox.hgrow="ALWAYS"/>
                             <Button text="Send Test Email" onAction="#onSendTestEmailClicked"/>
@@ -120,7 +157,7 @@
                     <VBox spacing="12">
                         <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
-                        <Label text="Message template" style="-fx-font-weight: bold;"/>
+                        <Label text="Message template" styleClass="field-label"/>
                         <TextArea fx:id="whatsAppTemplateArea" prefRowCount="5" wrapText="true"/>
                         <Label text="Placeholders: {customerName} {invoiceNo} {invoiceDate} {grandTotal} {shopName}"
                                styleClass="wizard-step-subtitle"/>

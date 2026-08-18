@@ -20,19 +20,16 @@
             styleClass="app-root">
 
     <top>
-        <VBox styleClass="wizard-header">
+        <VBox styleClass="screen-actions">
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <padding><Insets top="14" right="24" bottom="6" left="24"/></padding>
-                <Label text="Sales and Profit" styleClass="wizard-header-title"/>
-                <Region HBox.hgrow="ALWAYS"/>
                 <Button text="Export CSV" onAction="#onExportCsvClicked"/>
-                <Button text="Back" onAction="#onBackClicked"/>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="8">
                 <padding><Insets top="0" right="24" bottom="6" left="24"/></padding>
-                <Label text="From" textFill="WHITE"/>
+                <Label text="From"/>
                 <DatePicker fx:id="fromDatePicker" prefWidth="140"/>
-                <Label text="To" textFill="WHITE"/>
+                <Label text="To"/>
                 <DatePicker fx:id="toDatePicker" prefWidth="140"/>
                 <Button text="Search" onAction="#onSearchClicked"/>
                 <Button text="Today" onAction="#onTodayPresetClicked"/>
@@ -58,22 +55,23 @@
                     <ColumnConstraints minWidth="110"/>
                     <ColumnConstraints minWidth="110"/>
                 </columnConstraints>
-                <Label text="Invoices" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label text="Invoices" styleClass="field-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                 <Label fx:id="summaryInvoiceCountLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                <Label text="Taxable value" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                <Label fx:id="taxableValueHeading" text="Taxable value" styleClass="field-label"
+                       GridPane.rowIndex="0" GridPane.columnIndex="2"/>
                 <Label fx:id="summaryTaxableValueLabel" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
 
-                <Label text="Tax" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label fx:id="taxHeading" text="Tax" styleClass="field-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                 <Label fx:id="summaryTaxLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                <Label text="Total sales" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                <Label text="Total sales" styleClass="field-label" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
                 <Label fx:id="summaryTotalSalesLabel" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
 
-                <Label text="Cost of goods sold" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Label text="Cost of goods sold" styleClass="field-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                 <Label fx:id="summaryCostLabel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                <Label text="Gross profit" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+                <Label text="Gross profit" styleClass="field-label" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
                 <Label fx:id="summaryProfitLabel" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
 
-                <Label text="Margin %" style="-fx-font-weight: bold;" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <Label text="Margin %" styleClass="field-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                 <Label fx:id="summaryMarginLabel" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
             </GridPane>
 

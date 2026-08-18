@@ -14,24 +14,18 @@
             fx:controller="com.furnitureims.ui.catalogue.OpeningStockEntryController"
             styleClass="app-root">
 
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="wizard-header">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
-            <Label text="Opening Stock Entry" styleClass="wizard-header-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Back to Register" onAction="#onBackClicked"/>
-        </HBox>
-    </top>
-
     <center>
         <VBox spacing="12">
             <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
-            <Label text="One row per model. Each row creates that many individually tagged, individually costed pieces."
+            <Label text="One row per model. Each row creates that many individually tagged, individually costed pieces. Use &quot;+ New Item&quot; to add stock for something not in the catalogue yet - it creates the item model for you."
                    wrapText="true" styleClass="wizard-step-subtitle"/>
             <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
                 <VBox fx:id="rowsBox" spacing="8"/>
             </ScrollPane>
-            <Button text="+ Add Row" onAction="#onAddRowClicked"/>
+            <HBox spacing="10">
+                <Button text="+ Add Row" onAction="#onAddRowClicked"/>
+                <Button text="+ New Item" onAction="#onAddNewItemRowClicked"/>
+            </HBox>
         </VBox>
     </center>
 

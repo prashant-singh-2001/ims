@@ -2,6 +2,7 @@ package com.furnitureims.ui.reports;
 
 import com.furnitureims.money.Money;
 import com.furnitureims.service.ReportService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import com.furnitureims.util.CsvWriter;
 import javafx.collections.FXCollections;
@@ -55,6 +56,8 @@ public class DuesReportController {
 
     @FXML
     private void initialize() {
+        customerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        supplierTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         bucketFilterCombo.getItems().add(null);
         bucketFilterCombo.getItems().addAll(ReportService.AgingBucket.values());
         bucketFilterCombo.setConverter(new javafx.util.StringConverter<>() {
@@ -218,8 +221,4 @@ public class DuesReportController {
         return s == null ? "" : s;
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

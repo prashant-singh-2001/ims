@@ -6,6 +6,7 @@ import com.furnitureims.domain.StockMovement;
 import com.furnitureims.service.ItemModelService;
 import com.furnitureims.service.PieceService;
 import com.furnitureims.service.StorageLocationService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -110,8 +111,4 @@ public class PieceDetailController {
         }
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/catalogue/piece-register.fxml");
-    }
 }

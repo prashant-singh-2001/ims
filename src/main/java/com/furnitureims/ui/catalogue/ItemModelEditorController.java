@@ -6,10 +6,15 @@ import com.furnitureims.domain.ItemPhoto;
 import com.furnitureims.money.Money;
 import com.furnitureims.service.CategoryService;
 import com.furnitureims.service.ItemModelService;
+import com.furnitureims.service.SettingsService;
+import com.furnitureims.ui.HasScreenTitle;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -40,19 +45,26 @@ import java.util.List;
  * a fresh FXML load re-invokes {@code initialize()} on the same Spring-managed instance.
  */
 @Component
-public class ItemModelEditorController {
+public class ItemModelEditorController implements HasScreenTitle {
 
     private final ItemModelService itemModelService;
     private final CategoryService categoryService;
+    private final SettingsService settingsService;
     private final SceneRouter sceneRouter;
 
-    @FXML private Label titleLabel;
+    /** M10: the shell top bar's title for this screen - see {@link HasScreenTitle}. Not
+     *  FXML-bound (there is no title Label in this screen's own FXML any more); this
+     *  controller owns the text directly and the shell binds to it after each navigation. */
+    private final StringProperty screenTitle = new SimpleStringProperty("");
+
     @FXML private Label errorLabel;
 
     @FXML private TextField modelCodeField;
     @FXML private TextField modelNameField;
     @FXML private ComboBox<Category> categoryCombo;
+    @FXML private Label hsnCodeLabel;
     @FXML private TextField hsnCodeField;
+    @FXML private Label gstRateLabel;
     @FXML private TextField gstRateField;
     @FXML private TextField defaultPriceField;
     @FXML private CheckBox activeCheck;
@@ -73,9 +85,10 @@ public class ItemModelEditorController {
     private boolean pendingIsNew = true;
 
     public ItemModelEditorController(ItemModelService itemModelService, CategoryService categoryService,
-                                      SceneRouter sceneRouter) {
+                                      SettingsService settingsService, SceneRouter sceneRouter) {
         this.itemModelService = itemModelService;
         this.categoryService = categoryService;
+        this.settingsService = settingsService;
         this.sceneRouter = sceneRouter;
     }
 
@@ -87,6 +100,11 @@ public class ItemModelEditorController {
     public void openForEdit(long itemModelId) {
         pendingOpenId = itemModelId;
         pendingIsNew = false;
+    }
+
+    @Override
+    public ReadOnlyStringProperty screenTitleProperty() {
+        return screenTitle;
     }
 
     @FXML
@@ -105,6 +123,7 @@ public class ItemModelEditorController {
         });
 
         errorLabel.setText("");
+        applyGstVisibility();
         if (pendingIsNew) {
             resetForNew();
         } else {
@@ -112,9 +131,23 @@ public class ItemModelEditorController {
         }
     }
 
+    /** M10: see NewSaleController.applyGstVisibility for the reasoning - one pass at load
+     *  time, since the toggle only ever changes from Settings. */
+    private void applyGstVisibility() {
+        boolean gstEnabled = settingsService.isGstEnabled();
+        hsnCodeLabel.setVisible(gstEnabled);
+        hsnCodeLabel.setManaged(gstEnabled);
+        hsnCodeField.setVisible(gstEnabled);
+        hsnCodeField.setManaged(gstEnabled);
+        gstRateLabel.setVisible(gstEnabled);
+        gstRateLabel.setManaged(gstEnabled);
+        gstRateField.setVisible(gstEnabled);
+        gstRateField.setManaged(gstEnabled);
+    }
+
     private void resetForNew() {
         editingId = null;
-        titleLabel.setText("New Item Model");
+        screenTitle.set("New Item Model");
         modelCodeField.clear();
         modelNameField.clear();
         categoryCombo.setValue(null);
@@ -137,7 +170,7 @@ public class ItemModelEditorController {
         ItemModel model = itemModelService.findById(id)
                 .orElseThrow(() -> new IllegalStateException("Item model not found: " + id));
         editingId = id;
-        titleLabel.setText("Edit Item Model - " + model.modelCode());
+        screenTitle.set("Edit Item Model - " + model.modelCode());
         modelCodeField.setText(model.modelCode());
         modelNameField.setText(model.modelName());
         categoryService.findById(model.categoryId()).ifPresent(categoryCombo::setValue);
@@ -163,7 +196,7 @@ public class ItemModelEditorController {
                 ItemModel draft = buildModelFromForm(0);
                 long newId = itemModelService.create(draft);
                 editingId = newId;
-                titleLabel.setText("Edit Item Model - " + draft.modelCode());
+                screenTitle.set("Edit Item Model - " + draft.modelCode());
                 photosTab.setDisable(false);
                 refreshPhotos();
                 errorLabel.setText("Saved. You can now add photos below.");
@@ -181,7 +214,17 @@ public class ItemModelEditorController {
         if (category == null) {
             throw new IllegalArgumentException("Please select a category.");
         }
-        BigDecimal gstRate = parseRequiredDecimal(gstRateField.getText(), "GST rate");
+        // M10: HSN/GST rate are only a hard requirement while GST is on - off, a blank field
+        // flows through as null and ItemModelService.applyGstSentinelIfDisabled fills in the
+        // sentinel, rather than this method rejecting the save itself before the service
+        // ever gets a chance to.
+        boolean gstEnabled = settingsService.isGstEnabled();
+        BigDecimal gstRate = gstEnabled
+                ? parseRequiredDecimal(gstRateField.getText(), "GST rate")
+                : parseOptionalDecimal(gstRateField.getText(), "GST rate");
+        String hsnCode = gstEnabled
+                ? requireText(hsnCodeField.getText(), "HSN code")
+                : nullIfBlank(hsnCodeField.getText());
         BigDecimal length = parseOptionalDecimal(lengthField.getText(), "Length");
         BigDecimal width = parseOptionalDecimal(widthField.getText(), "Width");
         BigDecimal height = parseOptionalDecimal(heightField.getText(), "Height");
@@ -190,7 +233,7 @@ public class ItemModelEditorController {
 
         return new ItemModel(id, requireText(modelCodeField.getText(), "Model code"),
                 requireText(modelNameField.getText(), "Model name"), category.id(),
-                requireText(hsnCodeField.getText(), "HSN code"), gstRate, length, width, height,
+                hsnCode, gstRate, length, width, height,
                 nullIfBlank(materialField.getText()), nullIfBlank(finishField.getText()),
                 nullIfBlank(colourField.getText()), defaultPrice, activeCheck.isSelected(),
                 nullIfBlank(notesArea.getText()));
@@ -229,8 +272,7 @@ public class ItemModelEditorController {
 
         VBox card = new VBox(6, imageView, primaryButton, removeButton);
         card.setAlignment(Pos.CENTER);
-        card.setPadding(new Insets(8));
-        card.setStyle("-fx-border-color: #ccc; -fx-border-radius: 4; -fx-background-color: white;");
+        card.getStyleClass().add("photo-card");
         return card;
     }
 
@@ -254,11 +296,6 @@ public class ItemModelEditorController {
         } catch (IllegalStateException e) {
             errorLabel.setText(e.getMessage());
         }
-    }
-
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/catalogue/item-model-list.fxml");
     }
 
     private static BigDecimal parseRequiredDecimal(String text, String label) {

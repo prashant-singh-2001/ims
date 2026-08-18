@@ -4,6 +4,7 @@ import com.furnitureims.domain.Category;
 import com.furnitureims.domain.StorageLocation;
 import com.furnitureims.service.CategoryService;
 import com.furnitureims.service.StorageLocationService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -56,6 +57,8 @@ public class CategoriesLocationsController {
 
     @FXML
     private void initialize() {
+        categoryTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        locationTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         categoryNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         categoryActiveColumn.setCellValueFactory(new PropertyValueFactory<>("active"));
         categoryActiveColumn.setCellFactory(CheckBoxTableCell.forTableColumn(categoryActiveColumn));
@@ -166,8 +169,4 @@ public class CategoriesLocationsController {
         return dialog.showAndWait();
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

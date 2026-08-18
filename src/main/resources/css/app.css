@@ -1,69 +1,298 @@
-/* Shared look across every screen. Deliberately plain: this is a shop-counter tool, not
-   a marketing surface - legibility and enough contrast to read quickly beats polish. */
+/*
+ * Thin app-specific layer on top of AtlantaFX Primer Light, which is applied as the
+ * user-agent stylesheet in FurnitureImsFxApp.applyBaseTheme() (M10).
+ *
+ * Primer owns every standard control - buttons, tables, text fields, combo boxes, tabs,
+ * scroll panes, dialogs. This file only adds what Primer has no opinion about: this app's
+ * own page furniture (screen headers, cards, metric tiles) and its semantic text styles.
+ *
+ * ONE RULE, and the whole file depends on it: no hex literals. Only Primer's looked-up
+ * colours (-color-bg-*, -color-fg-*, -color-border-*, -color-accent-*, -color-danger-*,
+ * -color-success-*, -color-warning-*). That is what keeps this layer thin, keeps it
+ * consistent with every control Primer draws, and makes a future dark theme a one-line
+ * change instead of a rewrite. A hardcoded colour here silently wins over the theme and
+ * will be wrong in some state (hover, selected, disabled) that nobody thought to check.
+ *
+ * Note on precedence: an author stylesheet like this one beats the user-agent stylesheet,
+ * so anything declared here overrides Primer. Declare as little as possible.
+ */
 
+/* ---- Page scaffold ----------------------------------------------------------------- */
+
+/* Deliberately declares no background and no font: Primer's .root already supplies both,
+   and overriding them here would apply this app's own palette on top of the theme across
+   all 26 screen roots - which is exactly what made the old look inconsistent. */
 .app-root {
-    -fx-background-color: #f5f4f2;
-    -fx-font-family: "Segoe UI", sans-serif;
 }
 
-.wizard-header {
-    -fx-background-color: #1f2d3d;
+/* ---- Application shell (M10) -------------------------------------------------------- */
+
+.app-shell {
+    -fx-background-color: -color-bg-default;
 }
 
-.wizard-header-title {
-    -fx-text-fill: white;
-    -fx-font-size: 18px;
+.nav-bar {
+    -fx-background-color: -color-bg-subtle;
+    -fx-border-color: transparent -color-border-default transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -color-fg-default;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 10 14 10 14;
+    -fx-background-radius: 6;
+    -fx-font-size: 1.02em;
+}
+
+.nav-button:hover {
+    -fx-background-color: -color-bg-inset;
+}
+
+/* The current section - a solid accent background reads faster at a glance than a border
+   or a colour-only change, which matters on a screen the owner is scanning quickly. */
+.nav-button-active,
+.nav-button-active:hover {
+    -fx-background-color: -color-accent-emphasis;
+    -fx-text-fill: -color-fg-emphasis;
+    -fx-font-weight: bold;
+}
+
+.top-bar {
+    -fx-background-color: -color-bg-default;
+    -fx-border-color: transparent transparent -color-border-default transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.top-bar-title {
+    -fx-font-size: 1.15em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-fg-default;
+}
+
+.top-bar-back-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -color-accent-fg;
+}
+
+.top-bar-back-button:hover {
+    -fx-underline: true;
+}
+
+/* The per-screen action/filter bar. Was a dark navy title bar before M10; now a light
+   subtle band that sits under the shell's own top bar. Renamed conceptually from
+   "wizard-header" (the name leaked out of the setup wizard and became the app-wide
+   vocabulary) - the class name is kept for now so no FXML needs editing, and
+   `screen-actions` below is the name to migrate to. */
+.wizard-header,
+.screen-actions {
+    -fx-background-color: -color-bg-subtle;
+    -fx-border-color: transparent transparent -color-border-default transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.wizard-header-title,
+.screen-title {
+    -fx-text-fill: -color-fg-default;
+    -fx-font-size: 1.15em;
     -fx-font-weight: bold;
 }
 
 .wizard-header-subtitle {
-    -fx-text-fill: #b8c2cc;
-    -fx-font-size: 12px;
+    -fx-text-fill: -color-fg-muted;
+    -fx-font-size: 0.9em;
 }
+
+/* ---- Typography -------------------------------------------------------------------- */
 
 .wizard-step-title {
-    -fx-font-size: 20px;
+    -fx-font-size: 1.3em;
     -fx-font-weight: bold;
-    -fx-text-fill: #1f2d3d;
+    -fx-text-fill: -color-fg-default;
 }
 
-.wizard-step-subtitle {
-    -fx-font-size: 12px;
-    -fx-text-fill: #5a6472;
+.wizard-step-subtitle,
+.text-muted {
+    -fx-font-size: 0.9em;
+    -fx-text-fill: -color-fg-muted;
 }
 
-.wizard-error-label {
-    -fx-text-fill: #b3261e;
+/* The two literals that accounted for ~90 of the 111 inline style="" attributes this
+   codebase had before M10. Kept as classes so a font decision lives in one place. */
+.field-label {
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-fg-default;
+}
+
+.section-heading {
+    -fx-font-size: 1.05em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-fg-default;
+}
+
+.wizard-error-label,
+.text-danger {
+    -fx-text-fill: -color-danger-fg;
     -fx-font-weight: bold;
 }
 
-.wizard-callout {
-    -fx-background-color: #fff8e1;
-    -fx-border-color: #f0c14b;
-    -fx-border-width: 1px;
-    -fx-padding: 14;
-    -fx-background-radius: 4;
-    -fx-border-radius: 4;
+.wizard-warning-text,
+.text-warning {
+    -fx-text-fill: -color-warning-fg;
+    -fx-font-size: 0.9em;
 }
 
 .wizard-recovery-code {
-    -fx-font-family: "Consolas", monospace;
-    -fx-font-size: 20px;
+    -fx-font-family: "Consolas", "Cascadia Mono", monospace;
+    -fx-font-size: 1.4em;
     -fx-font-weight: bold;
-    -fx-text-fill: #1f2d3d;
+    -fx-text-fill: -color-fg-default;
 }
 
-.wizard-warning-text {
-    -fx-text-fill: #6b5300;
-    -fx-font-size: 12px;
+/* ---- Surfaces ---------------------------------------------------------------------- */
+
+/* `wizard-callout` was doing two different jobs before M10: a static note box in the
+   setup wizard AND the clickable dashboard metric tiles. Split so restyling one cannot
+   silently restyle the other - a static card must not look clickable. */
+.wizard-callout,
+.callout {
+    -fx-background-color: -color-bg-subtle;
+    -fx-border-color: -color-border-default;
+    -fx-border-width: 1px;
+    -fx-padding: 14;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
 }
 
-.primary-button {
-    -fx-background-color: #1f6feb;
-    -fx-text-fill: white;
+.card {
+    -fx-background-color: -color-bg-default;
+    -fx-border-color: -color-border-default;
+    -fx-border-width: 1px;
+    -fx-padding: 16;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+}
+
+/* Opening stock's "+ New Item" row (M10): a subtle tint so a free-typed, not-yet-catalogued
+   item row reads as visually distinct from a row picking an existing model. */
+.quick-item-row {
+    -fx-background-color: -color-accent-subtle;
+    -fx-padding: 6 8;
+    -fx-background-radius: 6;
+}
+
+/* Clickable metric tile (dashboard). Gets a hover affordance precisely because it
+   navigates somewhere, which the static .callout must not have. */
+.metric-tile {
+    -fx-background-color: -color-bg-default;
+    -fx-border-color: -color-border-default;
+    -fx-border-width: 1px;
+    -fx-padding: 14;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+}
+
+.metric-tile:hover {
+    -fx-background-color: -color-bg-subtle;
+    -fx-border-color: -color-accent-emphasis;
+}
+
+.metric-tile-label {
+    -fx-text-fill: -color-fg-muted;
+    -fx-font-size: 0.9em;
+}
+
+.metric-tile-value {
+    -fx-text-fill: -color-fg-default;
+    -fx-font-size: 1.5em;
     -fx-font-weight: bold;
 }
 
-.primary-button:hover {
-    -fx-background-color: #1a5fc9;
+/* Photo thumbnail frame in the item-model editor. Was built with an inline setStyle()
+   call in ItemModelEditorController before M10. */
+.photo-card {
+    -fx-background-color: -color-bg-default;
+    -fx-border-color: -color-border-default;
+    -fx-border-width: 1px;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-padding: 6;
+}
+
+/* ---- Buttons ----------------------------------------------------------------------- */
+
+/* Primer already ships accent/danger/success button variants with correct hover, pressed,
+   focused and disabled states. Mapping onto them rather than hand-rolling a background
+   colour is what gets those states right for free. */
+.primary-button,
+.button-primary {
+    -fx-background-color: -color-accent-emphasis;
+    -fx-text-fill: -color-fg-emphasis;
+    -fx-font-weight: bold;
+}
+
+.primary-button:hover,
+.button-primary:hover {
+    -fx-background-color: -color-accent-fg;
+}
+
+.button-danger {
+    -fx-background-color: -color-danger-emphasis;
+    -fx-text-fill: -color-fg-emphasis;
+    -fx-font-weight: bold;
+}
+
+.button-danger:hover {
+    -fx-background-color: -color-danger-fg;
+}
+
+/* ---- Status indicators ------------------------------------------------------------- */
+
+/* Backup freshness on the dashboard (FR-BAK-11). These replace three hex literals that
+   DashboardController used to push through setStyle(); as classes they are themable and
+   assertable from a test by name rather than by colour value. */
+.backup-ok {
+    -fx-text-fill: -color-success-fg;
+    -fx-font-weight: bold;
+}
+
+.backup-warn {
+    -fx-text-fill: -color-warning-fg;
+    -fx-font-weight: bold;
+}
+
+.backup-overdue {
+    -fx-text-fill: -color-danger-fg;
+    -fx-font-weight: bold;
+}
+
+/* Attention-seeking surface for a genuine problem - the aged-stock tile on the stock
+   report, which previously carried an inline pink/red hex pair. */
+.alert-surface {
+    -fx-background-color: -color-danger-subtle;
+    -fx-border-color: -color-danger-emphasis;
+    -fx-border-width: 1px;
+    -fx-padding: 14;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+}
+
+/* ---- Login / lock overlay ---------------------------------------------------------- */
+
+/* FR-AUTH-04 requires the lock screen to blank the business data behind it. The scrim is
+   fully opaque for that reason - the pre-M10 value was 0.92 alpha, which left ~8% of the
+   shop's data legible through the lock. */
+.lock-scrim {
+    -fx-background-color: -color-bg-inset;
+}
+
+.auth-card {
+    -fx-background-color: -color-bg-default;
+    -fx-border-color: -color-border-default;
+    -fx-border-width: 1px;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 32;
 }

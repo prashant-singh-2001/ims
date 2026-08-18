@@ -5,6 +5,7 @@ import com.furnitureims.domain.StorageLocation;
 import com.furnitureims.service.CategoryService;
 import com.furnitureims.service.ReportService;
 import com.furnitureims.service.StorageLocationService;
+import com.furnitureims.ui.Route;
 import com.furnitureims.ui.SceneRouter;
 import com.furnitureims.ui.catalogue.PieceRegisterController;
 import com.furnitureims.util.CsvWriter;
@@ -71,6 +72,7 @@ public class StockReportController {
 
     @FXML
     private void initialize() {
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         categoryFilterCombo.getItems().add(null);
         categoryFilterCombo.getItems().addAll(categoryService.listActive());
         categoryFilterCombo.setConverter(nameConverter(Category::name, "All categories"));
@@ -128,7 +130,7 @@ public class StockReportController {
                 viewButton.setOnAction(e -> {
                     StockReportRow row = getTableView().getItems().get(getIndex());
                     pieceRegisterController.openWithFilters(row.getCategoryId(), row.getModelCode());
-                    sceneRouter.show("/fxml/catalogue/piece-register.fxml");
+                    sceneRouter.navigate(Route.PIECE_REGISTER);
                 });
             }
 
@@ -185,8 +187,4 @@ public class StockReportController {
         errorLabel.setText("Exported to " + file.getName());
     }
 
-    @FXML
-    private void onBackClicked() {
-        sceneRouter.show("/fxml/shell/dashboard.fxml");
-    }
 }

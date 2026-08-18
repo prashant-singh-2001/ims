@@ -50,6 +50,27 @@ public class SettingsService {
         auditSettingChanged(IDLE_LOCK_MINUTES_KEY, Integer.toString(minutes));
     }
 
+    // ---- Tax / GST (M10) ----------------------------------------------------------------
+
+    private static final String GST_ENABLED_KEY = "tax.gst_enabled";
+
+    /** M10: whether this shop is GST-registered. Defaults to on - the only value that keeps
+     *  every pre-M10 computation in {@code SalesInvoiceService.preview} and
+     *  {@code PurchaseBillService.preview} byte-identical for installations that predate this
+     *  toggle. A shop that turns it off gets plain bills with zero tax everywhere instead of a
+     *  schema change: the GST-specific columns this touches (HSN code, GST rate, place of
+     *  supply, GSTIN, state code) are all {@code NOT NULL} with no default and SQLite cannot
+     *  drop that constraint without rebuilding several foreign-key-referenced tables, so
+     *  GST-off writes sentinel values into them instead of relaxing the schema. */
+    public boolean isGstEnabled() {
+        return Boolean.parseBoolean(settings.getOrDefault(GST_ENABLED_KEY, "true"));
+    }
+
+    public void setGstEnabled(boolean enabled) {
+        settings.set(GST_ENABLED_KEY, Boolean.toString(enabled));
+        auditSettingChanged(GST_ENABLED_KEY, Boolean.toString(enabled));
+    }
+
     // ---- Documents (FR-DOC-01..06) -----------------------------------------------------
 
     private static final String SHOW_PIECE_TAGS_KEY = "document.show_piece_tags";
