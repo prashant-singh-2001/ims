@@ -4,6 +4,7 @@
 ![Windows 10%2F11](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
 ![License: Proprietary](https://img.shields.io/badge/license-proprietary-red)
 ![Status: In development](https://img.shields.io/badge/status-in%20development-yellow)
+![Release: v0.1.0](https://img.shields.io/badge/release-v0.1.0-blue)
 
 A Windows desktop application for a furniture retail shop: piece-level inventory
 tracking, GST-compliant sales invoicing, purchase and payment management, and
@@ -108,8 +109,11 @@ to build a runnable folder instead, which needs no WiX Toolset — useful for a
 quick local check of the packaging pipeline itself). See the script's own
 header comment for exactly what each stage does and why.
 
-There is no published pre-built release yet — building from source is
-currently the only way to get a runnable copy.
+A pre-built installer is published on the
+[Releases page](https://github.com/prashant-singh-2001/furniture-ims/releases/tag/v0.1.0)
+(`.exe`, built automatically by `.github/workflows/release.yml` on every tag
+push) — building from source is only needed for development or if you want a
+newer commit than the latest tag.
 
 ### One-time setup for Google Drive backup
 
@@ -129,7 +133,7 @@ provision itself. The five steps are in
 
 ## Testing
 
-57 automated tests across 11 test classes — real SQLite temp databases and
+87 automated tests across 15 test classes — real SQLite temp databases and
 real FXML loading on the JavaFX Application Thread, not mocks, for exactly the
 kind of wiring and arithmetic bugs a mock would paper over. One test class
 seeds 20,000+ pieces and invoices directly to verify report and search
@@ -144,8 +148,18 @@ mvn clean test
 v1, as scoped in [`docs/04-roadmap.md`](docs/04-roadmap.md), is complete:
 catalogue, purchases, GST sales, payments, documents, reports, encrypted
 backup/restore, and hardening (audit log, performance verification, the
-installer, and the full SRS acceptance run). The project version
-(`0.1.0-SNAPSHOT`) reflects that no tagged release has been cut yet.
+installer, and the full SRS acceptance run).
+
+Two post-v1 milestones have since shipped: **M10** re-themed the app on
+AtlantaFX with a persistent navigation shell and made GST registration
+optional (a shop that isn't GST-registered can turn tax off entirely), and
+**M11** added per-piece condition photos on the piece detail screen,
+independent of each item model's own catalogue photos. `v0.1.0` is the first
+tagged release, built and published automatically by
+[`.github/workflows/release.yml`](.github/workflows/release.yml); every push
+and pull request against `main` also runs the full suite via
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
 v1.1 (GST period summary, CSV import, quotations) and v2/v3 are directional
 only — see the roadmap for what's deferred and why.
 
