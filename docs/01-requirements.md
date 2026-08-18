@@ -38,7 +38,7 @@ A single Windows application, running on one shop PC, that is the authoritative 
 1. every physical piece of furniture the shop owns, and what it cost;
 2. every purchase from a supplier and what is still owed on it;
 3. every sale to a customer, as a GST-compliant invoice, and what is still owed on it;
-4. a nightly, encrypted, off-site copy of all of the above in Google Drive.
+4. a nightly, encrypted, off-site copy of all of the above in Google Drive or OneDrive.
 
 The defining characteristic of this system is **piece-level tracking**. The shop does not count "4 dining chairs"; it tracks four individual chairs, each with its own tag, its own purchase cost, and its own physical location. This is what makes true profit-per-sale possible, and it shapes the entire data model.
 
@@ -55,7 +55,7 @@ The defining characteristic of this system is **piece-level tracking**. The shop
 - Invoice PDF generation, WhatsApp share and email send
 - Three reports: stock on hand & valuation; sales & profit; outstanding dues & stock aging
 - Password login with idle auto-lock
-- Scheduled encrypted backup to Google Drive, with in-app restore
+- Scheduled encrypted backup to Google Drive or OneDrive, with in-app restore
 
 ### 2.4 Explicitly out of scope for v1
 
@@ -83,7 +83,7 @@ These are **not oversights**. Each was considered and deferred:
 | **Shop Owner** | The sole user of the system. Full access to everything, including costs, margins and reports. |
 | Customer | A data subject, not a user. Never touches the software; receives a PDF invoice. |
 | Supplier | A data subject, not a user. Purchase bills are entered on their behalf. |
-| Google Drive | External system. Receives encrypted backup archives over the Drive API. |
+| Google Drive / OneDrive | External system. Receives encrypted backup archives, over the Drive API or Microsoft Graph, depending on which is the active backup destination (FR-BAK-17). |
 
 ### 2.6 Glossary
 
@@ -422,14 +422,14 @@ The system shall encrypt every archive with AES-256-GCM, using a key derived fro
 **FR-BAK-06 — Backup password handling**
 The system shall require the backup password to be entered twice at setup, shall verify it, and shall display an unmissable warning that **if this password is lost, every backup becomes permanently unrecoverable — Google cannot help, and neither can the software**. The password shall never be stored in recoverable form and shall never be uploaded.
 
-**FR-BAK-07 — Upload to Google Drive**
-The system shall upload each archive to a dedicated folder in the owner's Google Drive (default name `FurnitureShopBackups`, configurable), using Drive API v3 with the `drive.file` scope, which grants access only to files this application itself created — never to the rest of the Drive.
+**FR-BAK-07 — Upload to a cloud backup destination**
+The system shall support two interchangeable cloud destinations, one active at a time: Google Drive, uploading each archive to a dedicated folder in the owner's Drive (default name `FurnitureShopBackups`, configurable) via Drive API v3 with the `drive.file` scope; and OneDrive *(added M12)*, uploading to this application's dedicated app folder via Microsoft Graph's `Files.ReadWrite.AppFolder` scope. Both scopes grant access only to files this application itself created — never to the rest of the owner's Drive or OneDrive. Switching the active destination does not affect archives already uploaded under the other one — each `backup_history` row records which destination it actually went to, so restore always reaches the right place.
 
-**FR-BAK-08 — Google account authorisation**
-The system shall authorise via the OAuth 2.0 desktop loopback flow, opening the browser once for consent, and shall store the resulting refresh token encrypted with the Windows DPAPI under the current Windows user account. It shall detect a revoked or expired grant and prompt to re-authorise.
+**FR-BAK-08 — Cloud account authorisation**
+The system shall authorise Google Drive via the OAuth 2.0 desktop loopback flow (client ID/secret from the owner's own Google Cloud project — see section 5), and OneDrive *(added M12)* via the OAuth 2.0 authorization-code-with-PKCE flow against a single Azure app registration built into the application, so connecting OneDrive needs nothing typed in beyond signing in. Both flows open the browser once for consent and store the resulting refresh token encrypted with the Windows DPAPI under the current Windows user account. The system shall detect a revoked or expired grant and prompt to re-authorise.
 
 **FR-BAK-09 — Retention**
-The system shall keep the most recent **14 daily** and **12 weekly** archives, deleting older ones from Drive automatically, so storage does not grow without bound. Both limits shall be configurable.
+The system shall keep the most recent **14 daily** and **12 weekly** archives, deleting older ones from the active cloud destination automatically, so storage does not grow without bound. Both limits shall be configurable.
 
 **FR-BAK-10 — Manual backup**
 The system shall provide a "Backup now" action that runs the full pipeline immediately and shows progress.
@@ -441,7 +441,7 @@ The system shall show the last backup's time and outcome on the dashboard at all
 The system shall, when the internet is unavailable, still produce the encrypted archive locally, retain it, and upload it on the next successful connection. No business function other than upload, email and WhatsApp share shall depend on connectivity.
 
 **FR-BAK-13 — Restore**
-The system shall list available archives from Drive with their date, type and size, and shall restore a chosen one: download → decrypt → verify checksums → unpack to a staging folder → **take a safety copy of the current data** → swap in the restored data → restart.
+The system shall list available archives, from local disk and from whichever cloud destination each was actually uploaded to, with their date, type and size, and shall restore a chosen one: download (if not already local) → decrypt → verify checksums → unpack to a staging folder → **take a safety copy of the current data** → swap in the restored data → restart.
 
 **FR-BAK-14 — Restore safety**
 The system shall never overwrite live data in place, shall require explicit typed confirmation that restoring replaces everything currently in the system, and shall abort cleanly leaving the existing data untouched if any verification step fails.
@@ -452,6 +452,9 @@ The system shall refuse to restore an archive whose schema version is newer than
 **FR-BAK-16 — Local copy**
 The system shall additionally retain the last 3 archives on the local disk, so recovery from an accidental deletion does not require internet access.
 
+**FR-BAK-17 — Backup destination selection** *(added M12)*
+The system shall let the owner choose the active cloud destination (Google Drive or OneDrive) from Settings and from the first-run setup wizard. Selecting OneDrive shall hide the Google-specific client ID/secret/folder-name fields entirely, since OneDrive needs none of them.
+
 ---
 
 ### 3.10 SYS — Shop profile, settings, audit
@@ -460,7 +463,7 @@ The system shall additionally retain the last 3 archives on the local disk, so r
 The system shall store shop name, address, state and state code, GSTIN, phone, email, logo image, and the invoice declaration and signature text — all appearing on generated documents.
 
 **FR-SYS-02 — Settings**
-The system shall expose in one place: backup schedule, retention counts, Drive folder, Google account status, SMTP settings, WhatsApp message template, idle-lock timeout, invoice number series, financial year start, default units (cm/inch), and the category and location lists.
+The system shall expose in one place: backup schedule, retention counts, backup destination (Google Drive or OneDrive, FR-BAK-17), Drive folder name (Google only), cloud account status, SMTP settings, WhatsApp message template, idle-lock timeout, invoice number series, financial year start, default units (cm/inch), and the category and location lists.
 
 **FR-SYS-03 — Audit log**
 The system shall record every consequential action — invoice created/cancelled, piece state changed, payment recorded/deleted, cost or price overridden, restore performed, settings changed — with timestamp, action, entity, and before/after values where applicable. The log shall be viewable and exportable, and shall not be editable from within the application.
@@ -546,13 +549,14 @@ SQLite online backup → temp snapshot
   + Photos/ + Invoices/ + manifest.json
   → ZIP
   → AES-256-GCM  (key = Argon2id(backup password, random salt))
-  → upload to Drive folder via Drive API v3, scope drive.file
+  → upload to the active cloud destination (Google Drive via Drive API v3, scope drive.file;
+    or OneDrive via Microsoft Graph, scope Files.ReadWrite.AppFolder)
   → verify size + checksum
   → prune to 14 daily / 12 weekly
-  → record outcome in backup_history, surface on dashboard
+  → record outcome in backup_history (including which destination), surface on dashboard
 ```
 
-**Google setup you must do once, before this can work:**
+**Google setup you must do once, before Google Drive can work:**
 1. Create a project in Google Cloud Console.
 2. Enable the Google Drive API.
 3. Configure the OAuth consent screen (External, in Testing mode with your own account added as a test user is sufficient for a single shop).
@@ -561,7 +565,9 @@ SQLite online backup → temp snapshot
 
 This is a prerequisite, not a feature — the software cannot back up to Drive without it. A desktop app's client secret is not truly secret; the `drive.file` scope is what limits the damage, since it grants access only to files the app itself created.
 
-**Token storage** — refresh token encrypted with Windows DPAPI, scoped to the current Windows user.
+**OneDrive setup *(added M12)* — nothing the shop owner does.** Unlike Google, Microsoft treats desktop apps as *public clients*: no client secret exists to protect, so this application ships with a single Azure app registration built in (created once by the project, not per shop). Connecting OneDrive is just "Connect" → sign in with a Microsoft account → consent — no project, no console, nothing pasted in. This is the practical advantage OneDrive has over Google Drive for a shop owner with no technical background, at the cost of a smaller free tier (5 GB vs. Drive's 15 GB).
+
+**Token storage** — refresh token encrypted with Windows DPAPI, scoped to the current Windows user, for whichever destination is connected.
 
 ---
 
@@ -579,13 +585,13 @@ Each traced to the decision it came from. No item here was assumed.
 | C-06 | Both customer receivables and supplier payables tracked | Stated: advance + balance + supplier dues |
 | C-07 | No barcode, label or thermal hardware | Stated: no hardware |
 | C-08 | Invoice delivered as PDF via WhatsApp link and email | Stated: WhatsApp link + email |
-| C-09 | Backups encrypted, retained daily+weekly, restorable in app, manual trigger available | Stated: backup policy answers |
+| C-09 | Backups encrypted, retained daily+weekly, restorable in app, manual trigger available, to a choice of Google Drive or OneDrive | Stated: backup policy answers; OneDrive added M12 |
 | C-10 | Java — Spring Boot + JavaFX | Stated: Java, Spring Boot + JavaFX |
 | C-11 | Password login with idle auto-lock | Stated: login + auto-lock |
 | C-12 | No import from Excel or Tally; opening stock keyed in | Stated: start fresh |
 | C-13 | Warranty tracking excluded | Not selected among item fields |
 | C-14 | CRM, follow-up and delivery tracking deferred | Stated: optional / future |
-| A-01 | The shop PC has internet at least intermittently, and Google Drive has room for ~26 archives | Implied by choosing Drive API backup — flag if untrue |
+| A-01 | The shop PC has internet at least intermittently, and the active cloud destination (Google Drive, 15 GB free, or OneDrive, 5 GB free) has room for ~26 archives | Implied by choosing cloud backup — flag if untrue |
 | A-02 | The shop is a **regular** GST dealer, not composition | **Unconfirmed — see §7.1** |
 | A-03 | Piece cost basis excludes GST because input credit is claimable | **Unconfirmed — see §7.4** |
 

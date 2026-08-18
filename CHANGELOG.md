@@ -11,6 +11,33 @@ traceability), not by release date.
 
 ## [Unreleased]
 
+### M12 — OneDrive backup destination
+
+- OneDrive as a second backup destination (FR-BAK-17), alongside Google Drive - one active
+  at a time, switchable from Settings and from the first-run wizard's step 4. OneDrive ships
+  with a built-in Azure app registration (desktop apps are Microsoft "public clients" - no
+  client secret to protect), so connecting it is just "Connect" -> sign in -> consent, with
+  no per-shop setup step the way Google Drive still needs.
+- A `CloudBackupProvider` interface, extracted from the existing `GoogleDriveService` with no
+  behavior change, now implemented a second time by a new `OneDriveService` built entirely on
+  the JDK (`java.net.http.HttpClient`, `com.sun.net.httpserver.HttpServer` for the OAuth
+  loopback receiver, `MessageDigest` for PKCE) - no new Maven dependency. A `CloudProviders`
+  registry resolves which provider is active for new uploads, and which one a specific
+  archive actually went to for restore/prune, falling back to Google Drive for any
+  unset/unknown/legacy-null value.
+- `backup_history.drive_file_id` renamed to the provider-neutral `remote_file_id`, plus a new
+  `provider` column (V9 migration), backfilled to `GOOGLE_DRIVE` for existing rows with a
+  remote copy - so switching the active destination never orphans archives uploaded under
+  the previous one.
+- Fixed a pre-existing bug: disconnecting Google Drive threw a `NullPointerException`, because
+  clearing the stored refresh token wrote a NULL-valued settings row instead of deleting it,
+  and reading a NULL-valued row crashed on `Optional`/stream `findFirst()`. Added
+  `AppSettingRepository.delete(key)` and a defensive null-filter in `get`.
+- Packaging: added the `java.net.http` module to the jlink runtime image, needed by
+  `OneDriveService` but easy to miss since nothing in this app used `java.net.http` before now
+  - a gap that would only have surfaced as a packaged-runtime `NoClassDefFoundError`, never
+  under `mvn javafx:run`.
+
 ### M11 — Per-piece photos
 
 - Per-piece photos (FR-PIECE-10): the piece detail screen gained a Photos section — up to

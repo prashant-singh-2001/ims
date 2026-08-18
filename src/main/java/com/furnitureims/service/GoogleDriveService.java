@@ -23,7 +23,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,7 +38,7 @@ import java.util.List;
  * built fresh from it, so there is no long-lived credential cache to go stale mid-session.
  */
 @Service
-public class GoogleDriveService {
+public class GoogleDriveService implements CloudBackupProvider {
 
     private static final String APPLICATION_NAME = "Furniture Shop Inventory Management";
     private static final List<String> SCOPES = Collections.singletonList(
@@ -55,12 +54,17 @@ public class GoogleDriveService {
         this.auditLogService = auditLogService;
     }
 
-    public record UploadedFile(String id, String name, long sizeBytes) {
+    @Override
+    public String id() {
+        return "GOOGLE_DRIVE";
     }
 
-    public record RemoteArchive(String id, String name, long sizeBytes, Instant createdTime) {
+    @Override
+    public String displayName() {
+        return "Google Drive";
     }
 
+    @Override
     public boolean isConnected() {
         return settingsService.isGoogleDriveConnected();
     }
@@ -68,6 +72,7 @@ public class GoogleDriveService {
     /** Opens the browser once for consent and stores the resulting refresh token. Blocks
      *  the calling thread until the owner finishes in the browser (or the flow fails) - the
      *  UI runs this off the JavaFX Application Thread. */
+    @Override
     public void connect() throws IOException, GeneralSecurityException {
         String clientId = requireClientId();
         String clientSecret = requireClientSecret();
@@ -99,6 +104,7 @@ public class GoogleDriveService {
         auditLogService.record("SETTING_CHANGED", "GOOGLE_DRIVE", null, "Connected to Google Drive");
     }
 
+    @Override
     public void disconnect() {
         settingsService.clearGoogleRefreshToken();
         auditLogService.record("SETTING_CHANGED", "GOOGLE_DRIVE", null, "Disconnected from Google Drive");
@@ -123,6 +129,7 @@ public class GoogleDriveService {
         return created.getId();
     }
 
+    @Override
     public UploadedFile upload(Path localFile, String remoteName) throws IOException, GeneralSecurityException {
         Drive drive = driveClient();
         String folderId = resolveFolderId(drive);
@@ -135,23 +142,7 @@ public class GoogleDriveService {
                 uploaded.getSize() == null ? 0 : uploaded.getSize());
     }
 
-    public List<RemoteArchive> listArchives() throws IOException, GeneralSecurityException {
-        Drive drive = driveClient();
-        String folderId = resolveFolderId(drive);
-        FileList result = drive.files().list()
-                .setQ("'" + folderId + "' in parents and trashed = false")
-                .setFields("files(id, name, size, createdTime)")
-                .setOrderBy("createdTime desc")
-                .execute();
-        if (result.getFiles() == null) {
-            return List.of();
-        }
-        return result.getFiles().stream()
-                .map(f -> new RemoteArchive(f.getId(), f.getName(), f.getSize() == null ? 0 : f.getSize(),
-                        f.getCreatedTime() == null ? Instant.EPOCH : Instant.ofEpochMilli(f.getCreatedTime().getValue())))
-                .toList();
-    }
-
+    @Override
     public void download(String fileId, Path targetFile) throws IOException, GeneralSecurityException {
         Drive drive = driveClient();
         try (OutputStream out = Files.newOutputStream(targetFile)) {
@@ -159,6 +150,7 @@ public class GoogleDriveService {
         }
     }
 
+    @Override
     public void delete(String fileId) throws IOException, GeneralSecurityException {
         driveClient().files().delete(fileId).execute();
     }

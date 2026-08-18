@@ -178,12 +178,16 @@ public class SettingsService {
     private static final String GOOGLE_CLIENT_ID_KEY = "backup.google_client_id";
     private static final String GOOGLE_CLIENT_SECRET_KEY = "backup.google_client_secret";
     private static final String GOOGLE_REFRESH_TOKEN_DPAPI_KEY = "backup.google_refresh_token_dpapi_protected";
+    private static final String BACKUP_PROVIDER_KEY = "backup.provider";
+    private static final String ONEDRIVE_CLIENT_ID_KEY = "backup.onedrive_client_id";
+    private static final String ONEDRIVE_REFRESH_TOKEN_DPAPI_KEY = "backup.onedrive_refresh_token_dpapi_protected";
 
     private static final String DEFAULT_DAILY_TIME = "21:30";
     private static final String DEFAULT_WEEKLY_DAY = "SUNDAY";
     private static final int DEFAULT_RETENTION_DAILY = 14;
     private static final int DEFAULT_RETENTION_WEEKLY = 12;
     private static final String DEFAULT_DRIVE_FOLDER = "FurnitureShopBackups";
+    private static final String DEFAULT_BACKUP_PROVIDER = "GOOGLE_DRIVE";
 
     /** Sets both the bcrypt verifier used at setup/change time to confirm the owner typed
      *  the password correctly, and a Windows-DPAPI-protected copy of the password itself
@@ -293,6 +297,42 @@ public class SettingsService {
     }
 
     public void clearGoogleRefreshToken() {
-        settings.set(GOOGLE_REFRESH_TOKEN_DPAPI_KEY, null);
+        settings.delete(GOOGLE_REFRESH_TOKEN_DPAPI_KEY);
+    }
+
+    /** M12: which {@code CloudBackupProvider} is active - see {@code CloudProviders}. Defaults
+     *  to Google Drive so an install that predates OneDrive support is unaffected. */
+    public String backupProvider() {
+        return settings.getOrDefault(BACKUP_PROVIDER_KEY, DEFAULT_BACKUP_PROVIDER);
+    }
+
+    public void setBackupProvider(String providerId) {
+        settings.set(BACKUP_PROVIDER_KEY, providerId);
+        auditSettingChanged(BACKUP_PROVIDER_KEY, providerId);
+    }
+
+    /** M12: unlike Google, OneDrive's client ID has a built-in default (a single Azure app
+     *  registration owned by the project - see {@code OneDriveService}), since a public
+     *  client needs no secret and can safely ship inside the app. {@code defaultClientId}
+     *  lets a shop paste in its own registration instead, without needing a settings-UI
+     *  field for the common case. */
+    public String oneDriveClientId(String defaultClientId) {
+        return settings.getOrDefault(ONEDRIVE_CLIENT_ID_KEY, defaultClientId);
+    }
+
+    public boolean isOneDriveConnected() {
+        return settings.get(ONEDRIVE_REFRESH_TOKEN_DPAPI_KEY).isPresent();
+    }
+
+    public Optional<String> oneDriveRefreshToken() {
+        return settings.get(ONEDRIVE_REFRESH_TOKEN_DPAPI_KEY).map(WindowsDpapi::unprotect);
+    }
+
+    public void setOneDriveRefreshToken(String refreshToken) {
+        settings.set(ONEDRIVE_REFRESH_TOKEN_DPAPI_KEY, WindowsDpapi.protect(refreshToken));
+    }
+
+    public void clearOneDriveRefreshToken() {
+        settings.delete(ONEDRIVE_REFRESH_TOKEN_DPAPI_KEY);
     }
 }

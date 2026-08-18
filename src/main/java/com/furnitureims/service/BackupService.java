@@ -47,15 +47,15 @@ public class BackupService {
     private final AppPaths appPaths;
     private final JdbcTemplate jdbc;
     private final BackupHistoryRepository backupHistoryRepository;
-    private final GoogleDriveService googleDriveService;
+    private final CloudProviders cloudProviders;
     private final SettingsService settingsService;
 
     public BackupService(AppPaths appPaths, JdbcTemplate jdbc, BackupHistoryRepository backupHistoryRepository,
-                          GoogleDriveService googleDriveService, SettingsService settingsService) {
+                          CloudProviders cloudProviders, SettingsService settingsService) {
         this.appPaths = appPaths;
         this.jdbc = jdbc;
         this.backupHistoryRepository = backupHistoryRepository;
-        this.googleDriveService = googleDriveService;
+        this.cloudProviders = cloudProviders;
         this.settingsService = settingsService;
     }
 
@@ -94,12 +94,15 @@ public class BackupService {
             BackupEncryption.encryptFile(plainArchive, encryptedFile, backupPassword);
             long sizeBytes = Files.size(encryptedFile);
 
-            String driveFileId = null;
+            String remoteFileId = null;
+            String provider = null;
             BackupHistory.Status status;
             String errorMessage = null;
             try {
-                GoogleDriveService.UploadedFile uploaded = googleDriveService.upload(encryptedFile, archiveName);
-                driveFileId = uploaded.id();
+                CloudBackupProvider active = cloudProviders.active();
+                UploadedFile uploaded = active.upload(encryptedFile, archiveName);
+                remoteFileId = uploaded.id();
+                provider = active.id();
                 status = BackupHistory.Status.SUCCESS;
             } catch (Exception e) {
                 status = BackupHistory.Status.UPLOAD_PENDING;
@@ -109,14 +112,14 @@ public class BackupService {
 
             LocalDateTime finishedAt = LocalDateTime.now();
             long id = backupHistoryRepository.create(new BackupHistory(0, type, startedAt, finishedAt, status,
-                    archiveName, sizeBytes, sha256, driveFileId, encryptedFile.toString(), errorMessage));
+                    archiveName, sizeBytes, sha256, remoteFileId, provider, encryptedFile.toString(), errorMessage));
 
             pruneRetention();
             return new BackupOutcome(id, status, errorMessage);
         } catch (Exception e) {
             log.error("Backup failed", e);
             long id = backupHistoryRepository.create(new BackupHistory(0, type, startedAt, LocalDateTime.now(),
-                    BackupHistory.Status.FAILED, null, null, null, null, null, rootMessage(e)));
+                    BackupHistory.Status.FAILED, null, null, null, null, null, null, rootMessage(e)));
             return new BackupOutcome(id, BackupHistory.Status.FAILED, rootMessage(e));
         } finally {
             if (tempDir != null) {
@@ -133,10 +136,10 @@ public class BackupService {
                 continue;
             }
             try {
-                GoogleDriveService.UploadedFile uploaded = googleDriveService.upload(
-                        Path.of(pending.localPath()), pending.archiveName());
+                CloudBackupProvider active = cloudProviders.active();
+                UploadedFile uploaded = active.upload(Path.of(pending.localPath()), pending.archiveName());
                 backupHistoryRepository.updateOutcome(pending.id(), LocalDateTime.now(),
-                        BackupHistory.Status.SUCCESS, uploaded.id(), null);
+                        BackupHistory.Status.SUCCESS, uploaded.id(), active.id(), null);
             } catch (Exception e) {
                 log.info("Retry upload still pending for {}: {}", pending.archiveName(), rootMessage(e));
             }
@@ -232,18 +235,18 @@ public class BackupService {
                 .findByBackupTypeAndStatusOrderedByStartedDesc(type, BackupHistory.Status.SUCCESS);
         for (int i = keepCount; i < successful.size(); i++) {
             BackupHistory old = successful.get(i);
-            if (old.driveFileId() != null) {
+            if (old.remoteFileId() != null) {
                 try {
-                    googleDriveService.delete(old.driveFileId());
+                    cloudProviders.byId(old.provider()).delete(old.remoteFileId());
                 } catch (Exception e) {
-                    log.warn("Could not prune Drive archive {}: {}", old.archiveName(), rootMessage(e));
+                    log.warn("Could not prune remote archive {}: {}", old.archiveName(), rootMessage(e));
                     continue;
                 }
             }
             if (old.localPath() == null) {
                 backupHistoryRepository.delete(old.id());
             } else {
-                backupHistoryRepository.clearDriveFileId(old.id());
+                backupHistoryRepository.clearRemoteFileId(old.id());
             }
         }
     }
@@ -259,7 +262,7 @@ public class BackupService {
             } catch (IOException e) {
                 log.warn("Could not delete local archive {}: {}", old.localPath(), e.getMessage());
             }
-            if (old.driveFileId() == null) {
+            if (old.remoteFileId() == null) {
                 backupHistoryRepository.delete(old.id());
             } else {
                 backupHistoryRepository.updateLocalPath(old.id(), null);

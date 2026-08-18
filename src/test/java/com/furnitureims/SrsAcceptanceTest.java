@@ -271,12 +271,12 @@ class SrsAcceptanceTest {
         for (int i = 0; i < 16; i++) {
             backupHistoryRepository.create(new BackupHistory(0, BackupHistory.BackupType.DAILY,
                     now.minusDays(i + 1), now.minusDays(i + 1), BackupHistory.Status.SUCCESS,
-                    "seed-daily-" + i + ".zip.enc", 100L, "sha", null, null, null));
+                    "seed-daily-" + i + ".zip.enc", 100L, "sha", null, null, null, null));
         }
         for (int i = 0; i < 14; i++) {
             backupHistoryRepository.create(new BackupHistory(0, BackupHistory.BackupType.WEEKLY,
                     now.minusWeeks(i + 1), now.minusWeeks(i + 1), BackupHistory.Status.SUCCESS,
-                    "seed-weekly-" + i + ".zip.enc", 100L, "sha", null, null, null));
+                    "seed-weekly-" + i + ".zip.enc", 100L, "sha", null, null, null, null));
         }
 
         backupService.runBackup(BackupHistory.BackupType.MANUAL, "acceptance-test-password".toCharArray());
@@ -350,7 +350,7 @@ class SrsAcceptanceTest {
 
         backupHistoryRepository.create(new BackupHistory(0, BackupHistory.BackupType.DAILY,
                 LocalDateTime.now().minusHours(60), LocalDateTime.now().minusHours(60),
-                BackupHistory.Status.SUCCESS, "stale.zip.enc", 100L, "sha", null, null, null));
+                BackupHistory.Status.SUCCESS, "stale.zip.enc", 100L, "sha", null, null, null, null));
 
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> error = new AtomicReference<>();

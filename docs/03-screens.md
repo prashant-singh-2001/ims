@@ -70,7 +70,7 @@ Four steps, no skipping, no access to the application until finished.
 | 1. Shop profile | Name, address, city, pincode, state (dropdown, sets state code) — always required. **"Is your shop GST-registered?"** *(M10, FR-SYS-05)* — when yes: GSTIN and registration type (Regular / Composition), both required; when no, neither field is shown. Phone, email, logo. |
 | 2. Owner login | Username, password, confirm password; displays the generated **recovery code** with an instruction to write it down and keep it off this PC |
 | 3. Backup password | Password, confirm; the unmissable warning that a lost backup password makes every backup permanently unrecoverable |
-| 4. Google Drive | "Connect Google Drive" → browser consent → shows connected account and target folder. **Skippable**, with a warning that backups will not run until connected |
+| 4. Backup destination *(M12)* | A destination picker (Google Drive / OneDrive) followed by "Connect" → browser consent → shows connected account. OneDrive needs nothing typed in (built-in app registration); Google Drive still needs a client ID/secret from the owner's own Cloud project. **Skippable**, with a warning that backups will not run until connected |
 
 Validations: state always mandatory; when GST-registered is answered yes, GSTIN format and its state-code prefix are also validated; passwords non-trivial and confirmed.
 
@@ -252,13 +252,13 @@ Filters: bucket, minimum amount, customer/supplier.
 
 ---
 
-## 9. Backup and restore — `FR-BAK-01` … `FR-BAK-16`
+## 9. Backup and restore — `FR-BAK-01` … `FR-BAK-17`
 
-**Status panel:** last backup time, type and outcome; next scheduled run; Google account connected and target folder; count and total size of archives held in Drive.
+**Status panel:** last backup time, type and outcome; next scheduled run; cloud account connected (and, for Google Drive, its target folder); count and total size of archives held in the cloud.
 
-**Actions:** Backup now (with progress: snapshot → compress → encrypt → upload → verify → prune) · Connect / reconnect Google account · Change backup password (re-encrypts nothing retroactively — older archives keep needing the old password, and the screen says so).
+**Actions:** Backup now (with progress: snapshot → compress → encrypt → upload → verify → prune) · a **Backup destination** picker (Google Drive / OneDrive, FR-BAK-17) · Connect / Disconnect the selected destination · Change backup password (re-encrypts nothing retroactively — older archives keep needing the old password, and the screen says so).
 
-**Settings:** daily time, weekly day, retention counts, Drive folder name.
+**Settings:** daily time, weekly day, retention counts, and — only when Google Drive is the selected destination — Drive folder name and Google client ID/secret. *(M12)* Selecting OneDrive hides these three fields entirely, since OneDrive needs none of them (built-in app registration, fixed app folder).
 
 **Archive list:** date, type, size, verified status, with Restore and Delete.
 

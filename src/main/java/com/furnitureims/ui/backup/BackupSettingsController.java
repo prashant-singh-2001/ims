@@ -3,7 +3,8 @@ package com.furnitureims.ui.backup;
 import com.furnitureims.domain.BackupHistory;
 import com.furnitureims.repository.BackupHistoryRepository;
 import com.furnitureims.service.BackupService;
-import com.furnitureims.service.GoogleDriveService;
+import com.furnitureims.service.CloudBackupProvider;
+import com.furnitureims.service.CloudProviders;
 import com.furnitureims.service.RestoreService;
 import com.furnitureims.service.SettingsService;
 import com.furnitureims.ui.Route;
@@ -28,8 +29,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.Node;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.util.StringConverter;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
@@ -54,11 +57,12 @@ public class BackupSettingsController {
 
     private final BackupService backupService;
     private final RestoreService restoreService;
-    private final GoogleDriveService googleDriveService;
+    private final CloudProviders cloudProviders;
     private final SettingsService settingsService;
     private final BackupHistoryRepository backupHistoryRepository;
     private final SceneRouter sceneRouter;
 
+    @FXML private ComboBox<CloudBackupProvider> destinationCombo;
     @FXML private Label lastBackupLabel;
     @FXML private Label nextScheduledLabel;
     @FXML private Label googleAccountLabel;
@@ -68,9 +72,13 @@ public class BackupSettingsController {
     @FXML private ComboBox<DayOfWeek> weeklyDayCombo;
     @FXML private TextField retentionDailyField;
     @FXML private TextField retentionWeeklyField;
+    @FXML private Label driveFolderLabel;
     @FXML private TextField driveFolderField;
+    @FXML private Label googleClientIdLabel;
     @FXML private TextField googleClientIdField;
+    @FXML private Label googleClientSecretLabel;
     @FXML private PasswordField googleClientSecretField;
+    @FXML private Label googleCredentialHintLabel;
     @FXML private Label settingsStatusLabel;
 
     @FXML private ProgressIndicator progressIndicator;
@@ -87,11 +95,11 @@ public class BackupSettingsController {
     @FXML private TableColumn<BackupHistoryRow, Void> actionsColumn;
 
     public BackupSettingsController(BackupService backupService, RestoreService restoreService,
-                                     GoogleDriveService googleDriveService, SettingsService settingsService,
+                                     CloudProviders cloudProviders, SettingsService settingsService,
                                      BackupHistoryRepository backupHistoryRepository, SceneRouter sceneRouter) {
         this.backupService = backupService;
         this.restoreService = restoreService;
-        this.googleDriveService = googleDriveService;
+        this.cloudProviders = cloudProviders;
         this.settingsService = settingsService;
         this.backupHistoryRepository = backupHistoryRepository;
         this.sceneRouter = sceneRouter;
@@ -115,6 +123,12 @@ public class BackupSettingsController {
         progressIndicator.setVisible(false);
         progressLabel.setText("");
 
+        destinationCombo.setItems(FXCollections.observableArrayList(cloudProviders.all()));
+        destinationCombo.setConverter(providerConverter());
+        destinationCombo.setValue(cloudProviders.active());
+        destinationCombo.valueProperty().addListener((obs, old, selected) -> onDestinationChanged(selected));
+        onDestinationChanged(destinationCombo.getValue());
+
         loadSettings();
         reload();
     }
@@ -127,6 +141,37 @@ public class BackupSettingsController {
         driveFolderField.setText(settingsService.backupDriveFolderName());
         googleClientIdField.setText(settingsService.googleClientId().orElse(""));
         googleClientSecretField.setText(settingsService.googleClientSecret().orElse(""));
+    }
+
+    /** OneDrive has no per-shop client ID/secret or Drive-style folder name to configure -
+     *  ships with a built-in Azure app registration (see {@code OneDriveService}) - so
+     *  selecting it hides the fields that only mean something for Google. */
+    private void onDestinationChanged(CloudBackupProvider selected) {
+        if (selected == null) {
+            return;
+        }
+        settingsService.setBackupProvider(selected.id());
+        boolean isGoogle = "GOOGLE_DRIVE".equals(selected.id());
+        for (Node node : List.of(driveFolderLabel, driveFolderField, googleClientIdLabel,
+                googleClientIdField, googleClientSecretLabel, googleClientSecretField, googleCredentialHintLabel)) {
+            node.setVisible(isGoogle);
+            node.setManaged(isGoogle);
+        }
+        reload();
+    }
+
+    private static StringConverter<CloudBackupProvider> providerConverter() {
+        return new StringConverter<>() {
+            @Override
+            public String toString(CloudBackupProvider provider) {
+                return provider == null ? "" : provider.displayName();
+            }
+
+            @Override
+            public CloudBackupProvider fromString(String string) {
+                throw new UnsupportedOperationException("Not editable");
+            }
+        };
     }
 
     private void reload() {
@@ -142,14 +187,19 @@ public class BackupSettingsController {
                 : LocalDateTime.of(now.toLocalDate().plusDays(1), scheduledTime);
         nextScheduledLabel.setText(nextRun.toString().replace('T', ' '));
 
-        googleAccountLabel.setText(googleDriveService.isConnected()
-                ? "Connected - folder \"" + settingsService.backupDriveFolderName() + "\""
-                : "Not connected");
+        CloudBackupProvider selected = destinationCombo.getValue();
+        if (selected != null) {
+            boolean isGoogle = "GOOGLE_DRIVE".equals(selected.id());
+            googleAccountLabel.setText(selected.isConnected()
+                    ? "Connected" + (isGoogle ? " - folder \"" + settingsService.backupDriveFolderName() + "\"" : "")
+                    : "Not connected");
+        }
 
-        long driveCount = all.stream().filter(b -> b.driveFileId() != null).count();
-        long driveBytes = all.stream().filter(b -> b.driveFileId() != null && b.sizeBytes() != null)
+        long cloudCount = all.stream().filter(b -> b.remoteFileId() != null).count();
+        long cloudBytes = all.stream().filter(b -> b.remoteFileId() != null && b.sizeBytes() != null)
                 .mapToLong(BackupHistory::sizeBytes).sum();
-        archiveStatsLabel.setText(driveCount + " archive(s) on Drive, " + String.format("%.1f MB", driveBytes / (1024.0 * 1024.0)));
+        archiveStatsLabel.setText(cloudCount + " archive(s) in the cloud, "
+                + String.format("%.1f MB", cloudBytes / (1024.0 * 1024.0)));
 
         List<BackupHistoryRow> rows = all.stream().map(BackupHistoryRow::new).toList();
         archiveTable.setItems(FXCollections.observableArrayList(rows));
@@ -219,25 +269,26 @@ public class BackupSettingsController {
         });
     }
 
-    // ---- Google Drive connection -----------------------------------------------------------
+    // ---- Cloud connection -----------------------------------------------------------------
 
     @FXML
-    private void onConnectGoogleClicked() {
-        runInBackground("Opening your browser for Google sign-in...",
+    private void onConnectClicked() {
+        CloudBackupProvider selected = destinationCombo.getValue();
+        runInBackground("Opening your browser for " + selected.displayName() + " sign-in...",
                 () -> {
-                    googleDriveService.connect();
+                    selected.connect();
                     return null;
                 },
                 v -> {
                     reload();
-                    showInfo("Google Drive connected.");
+                    showInfo(selected.displayName() + " connected.");
                 },
                 this::showError);
     }
 
     @FXML
-    private void onDisconnectGoogleClicked() {
-        googleDriveService.disconnect();
+    private void onDisconnectClicked() {
+        destinationCombo.getValue().disconnect();
         reload();
     }
 
@@ -300,11 +351,11 @@ public class BackupSettingsController {
                 "Delete this backup archive (" + row.getStartedAt() + ")? This cannot be undone.");
         confirm.showAndWait().filter(bt -> bt == ButtonType.OK).ifPresent(bt -> {
             BackupHistory history = row.getHistory();
-            if (history.driveFileId() != null) {
+            if (history.remoteFileId() != null) {
                 try {
-                    googleDriveService.delete(history.driveFileId());
+                    cloudProviders.byId(history.provider()).delete(history.remoteFileId());
                 } catch (Exception e) {
-                    showError("Could not delete from Drive: " + e.getMessage());
+                    showError("Could not delete from the cloud: " + e.getMessage());
                     return;
                 }
             }

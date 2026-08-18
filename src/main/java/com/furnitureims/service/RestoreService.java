@@ -39,16 +39,16 @@ public class RestoreService {
 
     private final AppPaths appPaths;
     private final BackupHistoryRepository backupHistoryRepository;
-    private final GoogleDriveService googleDriveService;
+    private final CloudProviders cloudProviders;
     private final BackupService backupService;
     private final AuditLogService auditLogService;
 
     public RestoreService(AppPaths appPaths, BackupHistoryRepository backupHistoryRepository,
-                           GoogleDriveService googleDriveService, BackupService backupService,
+                           CloudProviders cloudProviders, BackupService backupService,
                            AuditLogService auditLogService) {
         this.appPaths = appPaths;
         this.backupHistoryRepository = backupHistoryRepository;
-        this.googleDriveService = googleDriveService;
+        this.cloudProviders = cloudProviders;
         this.backupService = backupService;
         this.auditLogService = auditLogService;
     }
@@ -72,7 +72,7 @@ public class RestoreService {
         return backupHistoryRepository.findAllOrderedByStartedDesc().stream()
                 .filter(b -> b.status() == BackupHistory.Status.SUCCESS
                         || b.status() == BackupHistory.Status.UPLOAD_PENDING)
-                .filter(b -> b.localPath() != null || b.driveFileId() != null)
+                .filter(b -> b.localPath() != null || b.remoteFileId() != null)
                 .toList();
     }
 
@@ -196,14 +196,16 @@ public class RestoreService {
         if (history.localPath() != null && Files.exists(Path.of(history.localPath()))) {
             return Path.of(history.localPath());
         }
-        if (history.driveFileId() == null) {
-            throw new RestoreVerificationException("This archive is no longer available locally or on Drive.");
+        if (history.remoteFileId() == null) {
+            throw new RestoreVerificationException("This archive is no longer available locally or in the cloud.");
         }
+        CloudBackupProvider provider = cloudProviders.byId(history.provider());
         Path downloaded = stagingDir.resolve("downloaded.zip.enc");
         try {
-            googleDriveService.download(history.driveFileId(), downloaded);
+            provider.download(history.remoteFileId(), downloaded);
         } catch (Exception e) {
-            throw new RestoreVerificationException("Could not download the archive from Google Drive.", e);
+            throw new RestoreVerificationException(
+                    "Could not download the archive from " + provider.displayName() + ".", e);
         }
         return downloaded;
     }

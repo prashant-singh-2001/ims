@@ -326,11 +326,14 @@ A stored balance column would need updating from six different code paths and wo
 | archive_name | TEXT | `fims-20260815-213000-daily.zip.enc` |
 | size_bytes | INTEGER | |
 | sha256 | TEXT | of the plaintext archive, for restore verification |
-| drive_file_id | TEXT | returned by the Drive API; used for retention pruning |
+| remote_file_id | TEXT | *(renamed from `drive_file_id` in V9, M12)* the Drive file id or Graph item id this archive was uploaded to; used for retention pruning and restore |
+| provider | TEXT | *(added V9, M12)* `GOOGLE_DRIVE` / `ONEDRIVE` — which cloud destination `remote_file_id` actually belongs to. NULL when no remote copy exists. No `CHECK` constraint, deliberately: SQLite cannot drop one later without a table rebuild, and a third provider one day should not require that. |
 | local_path | TEXT | last 3 kept locally (FR-BAK-16) |
 | error_message | TEXT | |
 
 `UPLOAD_PENDING` is what makes FR-BAK-12 work: the archive exists and is encrypted, the upload simply has not happened yet, and the scheduler retries it when connectivity returns.
+
+`provider` matters because the owner can switch the active backup destination (FR-BAK-17) after archives already exist under the previous one — `remote_file_id` alone would be ambiguous about which API to call for restore or pruning. `CloudProviders.byId(row.provider())` (falling back to Google Drive for a NULL, pre-M12 row) is what resolves the right one.
 
 ---
 

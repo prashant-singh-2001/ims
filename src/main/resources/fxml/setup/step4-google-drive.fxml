@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.ProgressIndicator?>
@@ -16,31 +17,36 @@
       fx:controller="com.furnitureims.ui.setup.Step4GoogleDriveController">
     <padding><Insets top="8" right="24" bottom="8" left="24"/></padding>
 
-    <Label text="Connect Google Drive" styleClass="wizard-step-title"/>
-    <Label text="Backups are encrypted and uploaded to a Google Drive folder this application creates for itself."
+    <Label text="Connect a Backup Destination" styleClass="wizard-step-title"/>
+    <Label text="Backups are encrypted before they ever leave this PC, then uploaded to the cloud destination you choose here."
            wrapText="true" styleClass="wizard-step-subtitle"/>
 
     <VBox spacing="10" styleClass="wizard-callout">
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="Backup destination"/>
+            <ComboBox fx:id="destinationCombo" maxWidth="Infinity"/>
+        </HBox>
         <GridPane hgap="12" vgap="10">
             <columnConstraints>
                 <ColumnConstraints minWidth="130"/>
                 <ColumnConstraints hgrow="ALWAYS" minWidth="220"/>
             </columnConstraints>
-            <Label text="Google client ID" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <Label fx:id="googleClientIdLabel" text="Google client ID" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
             <TextField fx:id="googleClientIdField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-            <Label text="Google client secret" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <Label fx:id="googleClientSecretLabel" text="Google client secret" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
             <PasswordField fx:id="googleClientSecretField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
         </GridPane>
-        <Label text="These come from your own Google Cloud project - see docs/01-requirements.md section 5. This app never ships with one built in."
+        <Label fx:id="googleCredentialHintLabel"
+               text="These come from your own Google Cloud project - see docs/01-requirements.md section 5. This app never ships with one built in."
                wrapText="true" styleClass="wizard-step-subtitle"/>
         <HBox spacing="10" alignment="CENTER_LEFT">
-            <Button fx:id="connectButton" text="Connect Google Drive" onAction="#onConnectGoogleDriveClicked"/>
+            <Button fx:id="connectButton" text="Connect" onAction="#onConnectGoogleDriveClicked"/>
             <ProgressIndicator fx:id="progressIndicator" prefWidth="20" prefHeight="20"/>
             <Label fx:id="statusLabel"/>
         </HBox>
         <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
     </VBox>
 
-    <Label text="This step is optional - you can finish setup now and connect an account later from Settings &gt; Backup. Until connected, backups are still taken and encrypted, but stay on this PC only."
+    <Label text="This step is optional - you can finish setup now and connect a destination later from Settings &gt; Backup. Until connected, backups are still taken and encrypted, but stay on this PC only."
            wrapText="true" styleClass="wizard-step-subtitle"/>
 </VBox>

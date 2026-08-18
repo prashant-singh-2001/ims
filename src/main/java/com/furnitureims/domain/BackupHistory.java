@@ -17,7 +17,8 @@ public record BackupHistory(
         String archiveName,
         Long sizeBytes,
         String sha256,
-        String driveFileId,
+        String remoteFileId,
+        String provider,
         String localPath,
         String errorMessage
 ) {

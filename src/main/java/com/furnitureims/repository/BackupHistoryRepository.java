@@ -26,7 +26,8 @@ public class BackupHistoryRepository {
             rs.getString("archive_name"),
             rs.getObject("size_bytes") == null ? null : rs.getLong("size_bytes"),
             rs.getString("sha256"),
-            rs.getString("drive_file_id"),
+            rs.getString("remote_file_id"),
+            rs.getString("provider"),
             rs.getString("local_path"),
             rs.getString("error_message")
     );
@@ -66,8 +67,8 @@ public class BackupHistoryRepository {
         jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement("""
                     INSERT INTO backup_history (backup_type, started_at, finished_at, status, archive_name,
-                            size_bytes, sha256, drive_file_id, local_path, error_message)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            size_bytes, sha256, remote_file_id, provider, local_path, error_message)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, b.backupType().name());
             ps.setString(2, b.startedAt().toString());
@@ -80,28 +81,33 @@ public class BackupHistoryRepository {
                 ps.setLong(6, b.sizeBytes());
             }
             ps.setString(7, b.sha256());
-            ps.setString(8, b.driveFileId());
-            ps.setString(9, b.localPath());
-            ps.setString(10, b.errorMessage());
+            ps.setString(8, b.remoteFileId());
+            ps.setString(9, b.provider());
+            ps.setString(10, b.localPath());
+            ps.setString(11, b.errorMessage());
             return ps;
         }, keyHolder);
         return Objects.requireNonNull(keyHolder.getKey()).longValue();
     }
 
-    public void updateOutcome(long id, LocalDateTime finishedAt, BackupHistory.Status status, String driveFileId,
-                               String errorMessage) {
+    public void updateOutcome(long id, LocalDateTime finishedAt, BackupHistory.Status status, String remoteFileId,
+                               String provider, String errorMessage) {
         jdbc.update("""
-                UPDATE backup_history SET finished_at = ?, status = ?, drive_file_id = ?, error_message = ?
+                UPDATE backup_history SET finished_at = ?, status = ?, remote_file_id = ?, provider = ?,
+                        error_message = ?
                 WHERE id = ?
-                """, finishedAt.toString(), status.name(), driveFileId, errorMessage, id);
+                """, finishedAt.toString(), status.name(), remoteFileId, provider, errorMessage, id);
     }
 
     public void updateLocalPath(long id, String localPath) {
         jdbc.update("UPDATE backup_history SET local_path = ? WHERE id = ?", localPath, id);
     }
 
-    public void clearDriveFileId(long id) {
-        jdbc.update("UPDATE backup_history SET drive_file_id = NULL WHERE id = ?", id);
+    /** Called when retention pruning removes the remote copy of an archive that still has a
+     *  local one - {@code provider} is cleared alongside it since it would otherwise describe
+     *  a copy that no longer exists. */
+    public void clearRemoteFileId(long id) {
+        jdbc.update("UPDATE backup_history SET remote_file_id = NULL, provider = NULL WHERE id = ?", id);
     }
 
     /** Retention pruning (FR-BAK-09) and the archive list's own "Delete" action both call

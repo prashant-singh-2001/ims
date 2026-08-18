@@ -37,17 +37,21 @@
                     <Label fx:id="lastBackupLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
                     <Label text="Next scheduled" styleClass="field-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                     <Label fx:id="nextScheduledLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                    <Label text="Google account" styleClass="field-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <Label text="Cloud account" styleClass="field-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                     <Label fx:id="googleAccountLabel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                    <Label text="Drive archives" styleClass="field-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                    <Label text="Cloud archives" styleClass="field-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                     <Label fx:id="archiveStatsLabel" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
                 </GridPane>
 
                 <Label text="Actions" styleClass="section-heading"/>
                 <HBox spacing="12" alignment="CENTER_LEFT">
+                    <Label text="Backup destination"/>
+                    <ComboBox fx:id="destinationCombo" maxWidth="Infinity"/>
+                </HBox>
+                <HBox spacing="12" alignment="CENTER_LEFT">
                     <Button text="Backup Now" onAction="#onBackupNowClicked" styleClass="primary-button"/>
-                    <Button text="Connect Google Account" onAction="#onConnectGoogleClicked"/>
-                    <Button text="Disconnect Google Account" onAction="#onDisconnectGoogleClicked"/>
+                    <Button text="Connect" onAction="#onConnectClicked"/>
+                    <Button text="Disconnect" onAction="#onDisconnectClicked"/>
                     <Button text="Change Backup Password" onAction="#onChangeBackupPasswordClicked"/>
                 </HBox>
                 <HBox spacing="10" alignment="CENTER_LEFT">
@@ -74,16 +78,17 @@
                     <Label text="Keep weekly archives" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
                     <TextField fx:id="retentionWeeklyField" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
 
-                    <Label text="Drive folder name" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <Label fx:id="driveFolderLabel" text="Drive folder name" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                     <TextField fx:id="driveFolderField" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
-                    <Label text="Google client ID" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                    <Label fx:id="googleClientIdLabel" text="Google client ID" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                     <TextField fx:id="googleClientIdField" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
-                    <Label text="Google client secret" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                    <Label fx:id="googleClientSecretLabel" text="Google client secret" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
                     <PasswordField fx:id="googleClientSecretField" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
                 </GridPane>
-                <Label text="The Google client ID/secret come from your own Google Cloud project - see docs/01-requirements.md section 5. This app never ships with one built in."
+                <Label fx:id="googleCredentialHintLabel"
+                       text="The Google client ID/secret come from your own Google Cloud project - see docs/01-requirements.md section 5. This app never ships with one built in."
                        wrapText="true" styleClass="wizard-step-subtitle"/>
                 <HBox spacing="10" alignment="CENTER_LEFT">
                     <Button text="Save Settings" onAction="#onSaveSettingsClicked" styleClass="primary-button"/>

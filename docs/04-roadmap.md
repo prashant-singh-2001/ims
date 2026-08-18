@@ -101,6 +101,16 @@ Mirrors the item-model photo feature closely — same on-disk-not-blob storage, 
 
 *Satisfies:* FR-PIECE-10 (new).
 
+### M12 — OneDrive backup destination *(post-v1)*
+
+Backups had reached only Google Drive, and getting there cost the shop owner a five-step Google Cloud Console setup (create project → enable Drive API → configure consent screen → create a Desktop OAuth client → paste client ID *and secret* into Settings) — the single biggest barrier to backups actually being switched on. OneDrive removes that barrier almost entirely: it ships pre-installed on Windows 10/11 (this app's only platform), and Microsoft treats desktop apps as *public clients* — no client secret — so a single app registration owned by the project ships inside the app, and every shop owner just signs into their own Microsoft account.
+
+A `CloudBackupProvider` interface was extracted from the existing `GoogleDriveService` (which leaked zero Google-SDK types into its public API, confirming the extraction was low-risk) and implemented a second time by `OneDriveService`, built entirely on the JDK — `java.net.http.HttpClient`, `com.sun.net.httpserver.HttpServer` for the OAuth loopback receiver, `java.security.MessageDigest` for PKCE — deliberately not MSAL4J or the Microsoft Graph SDK, which would have pulled Nimbus JOSE+JWT, Kiota and Reactor into the packaged runtime for four REST calls this class makes directly. One provider is active at a time (`backup.provider`, defaulting to `GOOGLE_DRIVE` for back-compat); a `CloudProviders` registry resolves "active" for new uploads and "by id" for restoring or pruning an archive uploaded under a provider that is no longer the active one — `backup_history` gained a `provider` column (V9) alongside renaming `drive_file_id` to the provider-neutral `remote_file_id`.
+
+A real pre-existing bug was found and fixed along the way: `SettingsService.clearGoogleRefreshToken()` wrote a NULL-valued settings row rather than deleting it, which made `AppSettingRepository.get()` throw `NullPointerException` on the next read — so clicking "Disconnect Google Account" threw in the running app. Fixed with `AppSettingRepository.delete(key)`, used for clearing, plus a defensive null-filter in `get`; OneDrive's disconnect would otherwise have inherited the identical defect.
+
+*Satisfies:* FR-BAK-17 (new); revises FR-BAK-07/08/09/13.
+
 ---
 
 ## 3. Indicative effort
@@ -120,6 +130,7 @@ Rough relative sizing for one developer familiar with Spring and JavaFX. **These
 | M9 Hardening | M | Medium |
 | M10 UI modernization + optional GST *(post-v1)* | L | Medium — mechanical in volume (26 screens, 111 inline styles) but the GST-off sentinel-value approach and the shell's Spring bean-cycle avoidance both needed care |
 | M11 Per-piece photos *(post-v1)* | S | Low — mechanical mirror of an already-proven M2 pattern |
+| M12 OneDrive backup destination *(post-v1)* | M | Low–Medium — mechanical against a proven pattern (`GoogleDriveService` → `CloudBackupProvider`), but hand-rolled OAuth+PKCE and a schema rename carry more risk than M11 did |
 
 M8 carries the highest risk in the project despite being conceptually simple, because it combines an external API, OAuth token lifecycle, encryption, scheduling on a machine that gets switched off, and a restore path that is only exercised on the worst day the shop will ever have. It deserves the most testing per line of code of anything here.
 

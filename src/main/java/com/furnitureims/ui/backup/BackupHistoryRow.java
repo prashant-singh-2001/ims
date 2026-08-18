@@ -45,12 +45,12 @@ public class BackupHistoryRow {
 
     public String getLocation() {
         boolean local = history.localPath() != null;
-        boolean drive = history.driveFileId() != null;
-        if (local && drive) {
-            return "Local + Drive";
+        boolean cloud = history.remoteFileId() != null;
+        if (local && cloud) {
+            return "Local + Cloud";
         }
-        if (drive) {
-            return "Drive only";
+        if (cloud) {
+            return "Cloud only";
         }
         if (local) {
             return "Local only";
@@ -61,6 +61,6 @@ public class BackupHistoryRow {
     public boolean isRestorable() {
         return (history.status() == BackupHistory.Status.SUCCESS
                 || history.status() == BackupHistory.Status.UPLOAD_PENDING)
-                && (history.localPath() != null || history.driveFileId() != null);
+                && (history.localPath() != null || history.remoteFileId() != null);
     }
 }

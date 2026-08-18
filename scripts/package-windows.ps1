@@ -21,8 +21,11 @@
        fat jar's extracted classpath, plus a few modules jdeps' static analysis cannot
        see because they are loaded reflectively or via a security-provider lookup rather
        than a direct class reference: jdk.crypto.ec (elliptic-curve TLS cipher suites -
-       without it, HTTPS to accounts.google.com and most SMTP-over-TLS servers fails),
-       java.naming, java.xml, java.logging, jdk.charsets and jdk.localedata. If a future
+       without it, HTTPS to accounts.google.com, login.microsoftonline.com/graph.microsoft.com
+       (M12's OneDriveService) and most SMTP-over-TLS servers fails), java.net.http
+       (OneDriveService's HttpClient - jdeps only sees this via a fat-jar-classpath scan,
+       and it is easy to miss by hand since nothing else in this app used java.net.http
+       before M12), java.naming, java.xml, java.logging, jdk.charsets and jdk.localedata. If a future
        dependency change needs a module not listed here, the app will fail fast at
        startup with a NoClassDefFoundError naming the missing class - re-run jdeps
        against the newly extracted jar (see the block below, commented out) and add
@@ -109,8 +112,8 @@ if (Test-Path $runtimeDir) { Remove-Item $runtimeDir -Recurse -Force }
 # additions noted in the script header above.
 $modules = @(
     "java.base", "java.compiler", "java.desktop", "java.instrument", "java.logging",
-    "java.management", "java.naming", "java.prefs", "java.scripting", "java.security.jgss",
-    "java.sql", "java.sql.rowset", "java.xml",
+    "java.management", "java.naming", "java.net.http", "java.prefs", "java.scripting",
+    "java.security.jgss", "java.sql", "java.sql.rowset", "java.xml",
     "jdk.charsets", "jdk.crypto.cryptoki", "jdk.crypto.ec", "jdk.httpserver", "jdk.jfr",
     "jdk.localedata", "jdk.unsupported"
 ) -join ","
