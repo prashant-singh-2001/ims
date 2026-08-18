@@ -27,7 +27,7 @@
         <sqlite-jdbc.version>3.53.2.1</sqlite-jdbc.version>
         <atlantafx.version>2.1.0</atlantafx.version>
         <openpdf.version>3.0.5</openpdf.version>
-        <jna.version>5.15.0</jna.version>
+        <jna.version>5.19.1</jna.version>
         <google-api-client.version>2.7.0</google-api-client.version>
         <google-oauth-client.version>1.39.0</google-oauth-client.version>
         <google-api-services-drive.version>v3-rev20240914-2.0.0</google-api-services-drive.version>
