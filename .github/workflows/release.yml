@@ -68,7 +68,7 @@ jobs:
           "name=$($exe.Name)" >> $env:GITHUB_OUTPUT
 
       - name: Upload installer as a workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: furniture-ims-windows-installer
           path: ${{ steps.installer.outputs.path }}
