@@ -25,5 +25,4 @@ application-local.yml
 *.env
 
 
-/docs/
 /logs/
