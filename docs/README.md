@@ -4,8 +4,8 @@ Windows desktop software for a furniture retail shop: piece-level stock tracking
 
 For an overview, build instructions, and the tech stack, see the [repository root README](../README.md). This folder is the detailed specification the build was verified against.
 
-**Status:** v1 (milestones M1–M9, see [04-roadmap.md](04-roadmap.md)) is built and verified, and two post-v1 milestones have since shipped on top of it — M10 (AtlantaFX restyle, persistent navigation shell, optional GST) and M11 (per-piece condition photos). 87 automated tests, full SRS acceptance run. `v0.1.0` is the first tagged release. Five requirements points from the original gathering pass are still open (below), one now partially resolved by M10; v1 proceeded on the documented defaults for each in the meantime.
-**Last updated:** 18 August 2026
+**Status:** v1 (milestones M1–M9, see [04-roadmap.md](04-roadmap.md)) is built and verified, and four post-v1 milestones have since shipped on top of it — M10 (AtlantaFX restyle, persistent navigation shell, optional GST), M11 (per-piece condition photos), M12 (OneDrive as a second backup destination alongside Google Drive), and M13 (Bookings tab tracking per-item delivery status). 99 automated tests, full SRS acceptance run. `v0.3.0` is the current tagged release. Five requirements points from the original gathering pass are still open (below), one now partially resolved by M10; v1 proceeded on the documented defaults for each in the meantime.
+**Last updated:** 19 August 2026
 
 ---
 
@@ -16,7 +16,7 @@ For an overview, build instructions, and the tech stack, see the [repository roo
 | [01-requirements.md](01-requirements.md) | The SRS. Scope, actors, ~90 numbered requirements, non-functional requirements, technical direction, open points, and the 20 acceptance tests that define "done". | Deciding what gets built, and settling any argument about whether something is in scope. |
 | [02-data-model.md](02-data-model.md) | Tables, columns, keys, indexes, the piece lifecycle state machine, and the exact landed-cost arithmetic. | Before writing the first migration, and whenever a schema question comes up. |
 | [03-screens.md](03-screens.md) | Navigation map and every screen — fields, actions, validations, and the requirement IDs each satisfies. | Building the UI, and checking nothing was missed. |
-| [04-roadmap.md](04-roadmap.md) | Build order in nine v1 milestones plus two post-v1 milestones (M10 restyle/GST-optional, M11 piece photos), indicative effort and risk, invariants no later phase may break, and what waits for v1.1, v2 and v3. | Planning the sequence of work. |
+| [04-roadmap.md](04-roadmap.md) | Build order in nine v1 milestones plus four post-v1 milestones (M10 restyle/GST-optional, M11 piece photos, M12 OneDrive backup, M13 Bookings/delivery tracking), indicative effort and risk, invariants no later phase may break, and what waits for v1.1, v2 and v3. | Planning the sequence of work. |
 
 ---
 
@@ -58,4 +58,4 @@ v1 was built on the documented default for each of these; none has blocked devel
 
 ## One thing you need to set up
 
-Google Drive backup cannot work until a Google Cloud project exists with the Drive API enabled and a **Desktop app** OAuth client created. The five steps are listed in [SRS §5](01-requirements.md#5-technical-direction). This is a prerequisite for the software, not a feature of it.
+Google Drive backup cannot work until a Google Cloud project exists with the Drive API enabled and a **Desktop app** OAuth client created. The five steps are listed in [SRS §5](01-requirements.md#5-technical-direction). This is a prerequisite for the software, not a feature of it. **OneDrive needs none of this** (M12) — the app carries its own OAuth app registration, so a shop can connect it with just a sign-in.

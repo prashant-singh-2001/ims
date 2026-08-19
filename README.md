@@ -4,11 +4,11 @@
 ![Windows 10%2F11](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
 ![License: Proprietary](https://img.shields.io/badge/license-proprietary-red)
 ![Status: In development](https://img.shields.io/badge/status-in%20development-yellow)
-![Release: v0.1.0](https://img.shields.io/badge/release-v0.1.0-blue)
+![Release: v0.3.0](https://img.shields.io/badge/release-v0.3.0-blue)
 
 A Windows desktop application for a furniture retail shop: piece-level inventory
 tracking, GST-compliant sales invoicing, purchase and payment management, and
-encrypted backups to Google Drive. Built as a single-process Spring Boot + JavaFX
+encrypted backups to Google Drive or OneDrive. Built as a single-process Spring Boot + JavaFX
 application backed by an embedded SQLite database — no server, no separate
 database install, works fully offline except for backup upload, email, and
 WhatsApp share.
@@ -42,8 +42,12 @@ machine this is built around.
   dues and aging, CSV export.
 - **Encrypted backup & restore** — scheduled and manual backups (database,
   photos, and invoice PDFs together) encrypted with AES-256-GCM and uploaded to
-  a dedicated Google Drive folder, with retention pruning, offline queueing,
+  a dedicated Google Drive or OneDrive folder (one active destination at a
+  time, switchable from Settings), with retention pruning, offline queueing,
   catch-up runs, and an explicit, staged restore flow.
+- **Bookings** — every active invoice viewed by which of its items are still
+  undelivered, with a per-item Delivered checkbox and a "Mark All Delivered"
+  action.
 - **Audit log** — every consequential action (invoices, cancellations, price
   overrides, payments, settings changes, restores) recorded with before/after
   values, viewable and exportable, never editable from within the app.
@@ -59,7 +63,7 @@ Full requirement-by-requirement detail is in [`docs/01-requirements.md`](docs/01
 | Database | SQLite (`org.xerial:sqlite-jdbc`) via plain `JdbcTemplate`, schema versioned with Flyway |
 | PDF generation | OpenPDF |
 | Backup encryption | PBKDF2WithHmacSHA256 + AES/GCM/NoPadding (JDK-native, no external crypto library) |
-| Cloud backup | Google Drive API v3, OAuth 2.0 desktop loopback flow, `drive.file` scope only |
+| Cloud backup | Google Drive API v3 or Microsoft Graph API (OneDrive), OAuth 2.0 desktop loopback flow, one active provider at a time |
 | Windows credential storage | Windows DPAPI via JNA |
 | Packaging | `jlink` (trimmed custom runtime) + `jpackage` (native Windows installer, no separate Java install needed) |
 | Build | Maven |
@@ -110,14 +114,18 @@ quick local check of the packaging pipeline itself). See the script's own
 header comment for exactly what each stage does and why.
 
 A pre-built installer is published on the
-[Releases page](https://github.com/prashant-singh-2001/furniture-ims/releases/tag/v0.1.0)
+[Releases page](https://github.com/prashant-singh-2001/furniture-ims/releases/tag/v0.3.0)
 (`.exe`, built automatically by `.github/workflows/release.yml` on every tag
 push) — building from source is only needed for development or if you want a
 newer commit than the latest tag.
 
-### One-time setup for Google Drive backup
+### One-time setup for cloud backup
 
-The backup feature needs a Google Cloud project and OAuth client that only the
+**OneDrive** needs no setup at all — it ships pre-installed on Windows 10/11
+and the app carries its own OAuth app registration, so connecting it from
+Settings is just sign in and consent.
+
+**Google Drive** needs a Google Cloud project and OAuth client that only the
 project owner can create — this is a prerequisite, not something the app can
 provision itself. The five steps are in
 [`docs/01-requirements.md` §5](docs/01-requirements.md#5-technical-direction).
@@ -133,7 +141,7 @@ provision itself. The five steps are in
 
 ## Testing
 
-87 automated tests across 15 test classes — real SQLite temp databases and
+99 automated tests across 17 test classes — real SQLite temp databases and
 real FXML loading on the JavaFX Application Thread, not mocks, for exactly the
 kind of wiring and arithmetic bugs a mock would paper over. One test class
 seeds 20,000+ pieces and invoices directly to verify report and search
@@ -150,12 +158,14 @@ catalogue, purchases, GST sales, payments, documents, reports, encrypted
 backup/restore, and hardening (audit log, performance verification, the
 installer, and the full SRS acceptance run).
 
-Two post-v1 milestones have since shipped: **M10** re-themed the app on
+Four post-v1 milestones have since shipped: **M10** re-themed the app on
 AtlantaFX with a persistent navigation shell and made GST registration
-optional (a shop that isn't GST-registered can turn tax off entirely), and
-**M11** added per-piece condition photos on the piece detail screen,
-independent of each item model's own catalogue photos. `v0.1.0` is the first
-tagged release, built and published automatically by
+optional (a shop that isn't GST-registered can turn tax off entirely), **M11**
+added per-piece condition photos on the piece detail screen, independent of
+each item model's own catalogue photos, **M12** added OneDrive as a second
+backup destination alongside Google Drive, and **M13** added a Bookings tab
+tracking which sold items have actually been delivered. `v0.3.0` is the
+current tagged release, built and published automatically by
 [`.github/workflows/release.yml`](.github/workflows/release.yml); every push
 and pull request against `main` also runs the full suite via
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml).

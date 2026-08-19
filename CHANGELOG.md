@@ -3,13 +3,15 @@
 All notable changes to this project are documented here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-No version of this project has been tagged or released yet — everything
-below has landed on `main` but ships under the working version
-`0.1.0-SNAPSHOT`. Entries are grouped by the roadmap milestone that produced
+`v0.3.0` is the current tagged release, built and published automatically by
+[`.github/workflows/release.yml`](.github/workflows/release.yml) on every
+`v*.*.*` tag push. Entries are grouped by the roadmap milestone that produced
 them (see [`docs/04-roadmap.md`](docs/04-roadmap.md) for full scope and FR-ID
-traceability), not by release date.
+traceability), not by release date — tag boundaries were cut opportunistically
+rather than one tag per milestone, so a given milestone's entry may span more
+than one tagged release.
 
-## [Unreleased]
+## [0.3.0] - 2026-08-19
 
 ### M13 — Bookings and delivery tracking
 

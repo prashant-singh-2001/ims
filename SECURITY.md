@@ -2,9 +2,10 @@
 
 ## Supported versions
 
-This project has not yet cut a tagged release (the working version is
-`0.1.0-SNAPSHOT`). Security fixes are applied to the `main` branch only —
-there is no older release line to backport to.
+`v0.3.0` is the current tagged release. Security fixes are applied to the
+`main` branch only — there is no older release line maintained in parallel,
+so please upgrade to the latest tag before reporting an issue already fixed
+there.
 
 ## What this application handles
 
