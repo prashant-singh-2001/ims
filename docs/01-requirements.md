@@ -314,6 +314,11 @@ The system shall allow cancelling an invoice, which restores all its pieces to `
 **FR-SAL-12 — No edit after save**
 The system shall not permit editing a saved invoice. Corrections go through cancellation or a credit note. This is deliberate: a tax invoice that can be silently rewritten is not a record.
 
+**FR-SAL-13 — Delivery tracking** *(added M13)*
+The system shall let the owner record, per invoice line, whether that piece has physically reached the customer, and shall present every `ACTIVE` invoice with at least one undelivered line as a "booking" in a dedicated Bookings screen. A booking's status (Pending / Partly delivered / Delivered) is derived from its lines' delivered state at read time, never stored. Marking a line undelivered again (correcting a mis-tick) is always permitted and is not subject to FR-SAL-12, since it corrects fulfilment data recorded alongside the invoice, not the invoice itself. A cancelled invoice is never a booking. A piece returned via FR-SAL-10 before delivery is excluded from its invoice's delivery counts entirely, so a partial return can never leave a booking permanently unable to reach Delivered.
+
+Scheduled delivery date, vehicle/driver assignment, installation status and customer sign-off are deferred to a later phase (see `04-roadmap.md` v2), along with the `AWAITING_DELIVERY` piece state that phase introduces — FR-SAL-13 deliberately tracks only the delivered/not-delivered fact, leaving `Piece.State` unchanged (a delivered piece is still `SOLD`).
+
 ---
 
 ### 3.6 PAY — Money in and money out

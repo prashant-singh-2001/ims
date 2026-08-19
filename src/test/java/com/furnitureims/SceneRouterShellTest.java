@@ -318,12 +318,12 @@ class SceneRouterShellTest {
     }
 
     @Test
-    void ctrlOneJumpsToStockAndCtrlFiveJumpsToReports() throws Exception {
+    void ctrlOneJumpsToStockAndCtrlSixJumpsToReports() throws Exception {
         ensureFxToolkitStarted();
 
         AtomicReference<Throwable> error = new AtomicReference<>();
         AtomicReference<Route> routeAfterCtrlOne = new AtomicReference<>();
-        AtomicReference<Route> routeAfterCtrlFive = new AtomicReference<>();
+        AtomicReference<Route> routeAfterCtrlSix = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
 
         Platform.runLater(() -> {
@@ -334,8 +334,8 @@ class SceneRouterShellTest {
                 fireAccelerator(sceneRouter.scene(), KeyCode.DIGIT1);
                 routeAfterCtrlOne.set(sceneRouter.currentRoute());
 
-                fireAccelerator(sceneRouter.scene(), KeyCode.DIGIT5);
-                routeAfterCtrlFive.set(sceneRouter.currentRoute());
+                fireAccelerator(sceneRouter.scene(), KeyCode.DIGIT6);
+                routeAfterCtrlSix.set(sceneRouter.currentRoute());
             } catch (Throwable t) {
                 error.set(t);
             } finally {
@@ -350,11 +350,11 @@ class SceneRouterShellTest {
             throw new AssertionError("Keyboard shortcut navigation failed", error.get());
         }
 
-        // NavSection order is STOCK, SALES, PURCHASES, PAYMENTS, REPORTS, SETTINGS (NavSection.java) -
-        // Ctrl+1 is Stock (its landing screen is the piece register) and Ctrl+5 is Reports
-        // (its landing screen is the stock report) - NFR-14.
+        // NavSection order is STOCK, SALES, BOOKINGS, PURCHASES, PAYMENTS, REPORTS, SETTINGS
+        // (NavSection.java) - Ctrl+1 is Stock (its landing screen is the piece register) and
+        // Ctrl+6 is Reports (its landing screen is the stock report) - NFR-14.
         assertEquals(Route.PIECE_REGISTER, routeAfterCtrlOne.get(), "Ctrl+1 should land on Stock's screen");
-        assertEquals(Route.STOCK_REPORT, routeAfterCtrlFive.get(), "Ctrl+5 should land on Reports' screen");
+        assertEquals(Route.STOCK_REPORT, routeAfterCtrlSix.get(), "Ctrl+6 should land on Reports' screen");
     }
 
     // ---- Reflection helpers into SceneRouter's private shell fields -----------------------

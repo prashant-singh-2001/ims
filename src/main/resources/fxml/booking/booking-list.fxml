@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.booking.BookingListController"
+            styleClass="app-root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <CheckBox fx:id="showDeliveredCheck" text="Show fully delivered too"/>
+            <Button text="Search" onAction="#onSearchClicked"/>
+        </HBox>
+    </top>
+
+    <center>
+        <TableView fx:id="table">
+            <columns>
+                <TableColumn fx:id="invoiceNoColumn" text="Invoice #" prefWidth="140"/>
+                <TableColumn fx:id="dateColumn" text="Date" prefWidth="100"/>
+                <TableColumn fx:id="customerColumn" text="Customer" prefWidth="170"/>
+                <TableColumn fx:id="itemsColumn" text="Delivered" prefWidth="100"/>
+                <TableColumn fx:id="statusColumn" text="Status" prefWidth="120"/>
+                <TableColumn fx:id="actionsColumn" text="" prefWidth="80"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

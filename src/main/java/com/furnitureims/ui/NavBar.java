@@ -37,6 +37,7 @@ public class NavBar {
     static {
         LANDING.put(NavSection.STOCK, Route.PIECE_REGISTER);
         LANDING.put(NavSection.SALES, Route.NEW_SALE);
+        LANDING.put(NavSection.BOOKINGS, Route.BOOKING_LIST);
         LANDING.put(NavSection.PURCHASES, Route.PURCHASE_BILL_LIST);
         LANDING.put(NavSection.PAYMENTS, Route.PAYMENT_LIST);
         LANDING.put(NavSection.REPORTS, Route.STOCK_REPORT);
@@ -86,7 +87,7 @@ public class NavBar {
     }
 
     /** The section's landing screen - the same route its sidebar button navigates to.
-     *  Exposed so {@code SceneRouter} can build the Ctrl+1..6 keyboard shortcuts (NFR-14)
+     *  Exposed so {@code SceneRouter} can build the Ctrl+1..7 keyboard shortcuts (NFR-14)
      *  from this exact map instead of a second, easily-drifting copy of it. */
     public Route landingFor(NavSection section) {
         return LANDING.get(section);
@@ -99,7 +100,7 @@ public class NavBar {
         button.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         VBox.setVgrow(button, Priority.NEVER);
         // NFR-14: the billing screen must be operable entirely from the keyboard. Tabbing
-        // out of a form must not land in the always-visible sidebar - Ctrl+1..6 (wired in
+        // out of a form must not land in the always-visible sidebar - Ctrl+1..7 (wired in
         // SceneRouter) is the keyboard route into navigation instead.
         button.setFocusTraversable(false);
         button.setOnAction(e -> sceneRouter.navigate(target));

@@ -269,8 +269,11 @@ All arithmetic in paisa. Any remainder from integer division is added to the **l
 | unit_price, discount_amount, taxable_value | INTEGER | paisa |
 | cgst_amount, sgst_amount, igst_amount, line_total | INTEGER | paisa |
 | **cost_at_sale** | INTEGER NOT NULL | copy of `piece.landed_cost` at the moment of sale — this is what makes profit permanently correct (FR-SAL-09) |
+| delivered_at | TEXT | *(added V10, M13)* NULL until this piece has physically reached the customer (FR-SAL-13); NULL means not yet delivered, not "unknown" — no backfill was needed since that is exactly the right value for every pre-M13 row |
 
 *The snapshot columns are not redundancy for its own sake.* An invoice is a legal document; what it said on the day it was issued must never change because someone later renamed a product or corrected a rate.
+
+**"Booking" is a view, not a table.** A booking is simply an `ACTIVE` invoice looked at by how many of its lines have `delivered_at` set — Pending (none), Partly delivered (some), or Delivered (all) — computed at read time by `BookingRepository`, the same way customer/supplier balances are computed rather than stored. A line already credited back via `sales_return_line` is excluded from both the delivered and total counts for its invoice, so a partial return can never leave a booking stuck short of Delivered.
 
 **Presentation grouping:** six identical chairs are six rows here but must not print as six identical lines. The PDF groups lines by (model, unit price, gst rate) and shows a quantity, listing piece tags underneath only if the owner enables that in settings.
 

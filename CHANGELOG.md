@@ -11,6 +11,27 @@ traceability), not by release date.
 
 ## [Unreleased]
 
+### M13 — Bookings and delivery tracking
+
+- Bookings tab (FR-SAL-13): a new sidebar section listing every `ACTIVE` invoice with at
+  least one undelivered item - opening one shows its items with a per-piece Delivered
+  checkbox and a "Mark All Delivered" action. A booking is simply an existing invoice viewed
+  this way, not a new entity - no new tables, no new piece state, no stock-reservation logic.
+- One nullable column, `sales_line.delivered_at` (V10) - a `sales_line` is already exactly
+  one piece per line (FR-SAL-01), so a per-line stamp is a per-piece stamp. Booking status
+  (Pending / Partly delivered / Delivered) is derived at read time by the new
+  `BookingRepository`/`BookingService`, never stored, the same way customer and supplier
+  balances are computed rather than stored.
+- A cancelled invoice is never a booking, and a piece returned before delivery is excluded
+  from its invoice's delivered/total counts entirely, so a partial return can never leave a
+  booking stuck at "partly delivered" forever.
+- Un-ticking Delivered is always allowed - correcting a mis-tick is fulfilment data, not an
+  invoice edit, so FR-SAL-12's no-edit-after-save rule does not apply here. Both directions
+  are audit-logged (`DELIVERY_MARKED` / `DELIVERY_UNMARKED`, FR-SYS-03).
+- The new Bookings sidebar section sits between Sales and Purchases, shifting every
+  `Ctrl+N` keyboard shortcut after Sales by one - `Ctrl+6` now reaches Reports instead of
+  `Ctrl+5`.
+
 ### M12 — OneDrive backup destination
 
 - OneDrive as a second backup destination (FR-BAK-17), alongside Google Drive - one active

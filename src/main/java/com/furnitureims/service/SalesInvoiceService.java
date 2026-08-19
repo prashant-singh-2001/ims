@@ -287,7 +287,7 @@ public class SalesInvoiceService {
                     gstEnabled ? model.hsnCode() : "", gstEnabled ? model.gstRate() : BigDecimal.ZERO,
                     line.unitPriceEntered(), line.discountAmount(),
                     line.taxableValue(), line.cgst(), line.sgst(), line.igst(), line.lineTotal(),
-                    piece.landedCost()));
+                    piece.landedCost(), null));
 
             pieceService.markSold(piece.id(), invoiceId);
 

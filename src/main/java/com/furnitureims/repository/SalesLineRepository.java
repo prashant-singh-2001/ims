@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,7 +33,8 @@ public class SalesLineRepository {
             Money.ofPaisa(rs.getLong("sgst_amount")),
             Money.ofPaisa(rs.getLong("igst_amount")),
             Money.ofPaisa(rs.getLong("line_total")),
-            Money.ofPaisa(rs.getLong("cost_at_sale"))
+            Money.ofPaisa(rs.getLong("cost_at_sale")),
+            rs.getString("delivered_at") == null ? null : LocalDateTime.parse(rs.getString("delivered_at"))
     );
 
     private final JdbcTemplate jdbc;
@@ -76,5 +78,12 @@ public class SalesLineRepository {
             return ps;
         }, keyHolder);
         return Objects.requireNonNull(keyHolder.getKey()).longValue();
+    }
+
+    /** FR-SAL-13 (M13): {@code deliveredAt} of {@code null} marks the piece as not yet
+     *  delivered - clearing a mis-tick is a correction, not an invoice edit. */
+    public void updateDeliveredAt(long salesLineId, LocalDateTime deliveredAt) {
+        jdbc.update("UPDATE sales_line SET delivered_at = ? WHERE id = ?",
+                deliveredAt == null ? null : deliveredAt.toString(), salesLineId);
     }
 }

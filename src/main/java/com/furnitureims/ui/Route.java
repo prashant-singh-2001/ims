@@ -55,6 +55,11 @@ public enum Route {
     SALES_RETURN("/fxml/sales/sales-return.fxml", NavSection.SALES, Chrome.SHELL,
             null, "INVOICE_LIST"),
 
+    // ---- Shell: Bookings (M13) -------------------------------------------------------
+    BOOKING_LIST("/fxml/booking/booking-list.fxml", NavSection.BOOKINGS, Chrome.SHELL, "Bookings", null),
+    BOOKING_DETAIL("/fxml/booking/booking-detail.fxml", NavSection.BOOKINGS, Chrome.SHELL,
+            null, "BOOKING_LIST"),
+
     // ---- Shell: Purchases ----------------------------------------------------------
     SUPPLIER_LIST("/fxml/purchase/supplier-list.fxml", NavSection.PURCHASES, Chrome.SHELL,
             "Suppliers", null),

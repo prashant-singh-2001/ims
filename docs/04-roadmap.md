@@ -111,6 +111,18 @@ A real pre-existing bug was found and fixed along the way: `SettingsService.clea
 
 *Satisfies:* FR-BAK-17 (new); revises FR-BAK-07/08/09/13.
 
+### M13 — Bookings and delivery tracking *(post-v1)*
+
+The shop bills at the counter and pieces go `SOLD` immediately, but furniture rarely leaves the showroom the same day — the app had no record of whether a sold piece had actually reached the customer, only the fact that it had been billed. A **booking is an existing `ACTIVE` invoice viewed by which of its items are still undelivered**, not a new pre-invoice entity: the billing, advance-payment and GST work is already done by the time an invoice exists, so this milestone is only the fulfilment fact left over afterwards.
+
+One nullable column, `sales_line.delivered_at` (V10) — a `sales_line` is already exactly one piece per line (FR-SAL-01), so a per-line stamp is a per-piece stamp with no new table. Booking status (Pending / Partly delivered / Delivered) is computed at read time by a new `BookingRepository`/`BookingService`, the same way customer and supplier balances are computed rather than stored. A cancelled invoice is never a booking, and a piece returned before delivery is excluded from its invoice's counts entirely, so a partial return can never leave a booking stuck short of Delivered.
+
+A new **Bookings** sidebar section (list → detail, mirroring the existing Invoices screens) sits between Sales and Purchases, which shifted every `Ctrl+N` keyboard shortcut after Sales by one — `SceneRouterShellTest` and the relevant Javadoc in `SceneRouter`/`NavBar` were updated to match.
+
+Deliberately narrow: scheduled delivery date, vehicle/driver, installation status, customer sign-off, a dashboard tile, and the `AWAITING_DELIVERY` piece state all stay deferred to v2 (§6) — `Piece.State` and `StockMovement.Type` are untouched by this milestone.
+
+*Satisfies:* FR-SAL-13 (new).
+
 ---
 
 ## 3. Indicative effort
@@ -131,6 +143,7 @@ Rough relative sizing for one developer familiar with Spring and JavaFX. **These
 | M10 UI modernization + optional GST *(post-v1)* | L | Medium — mechanical in volume (26 screens, 111 inline styles) but the GST-off sentinel-value approach and the shell's Spring bean-cycle avoidance both needed care |
 | M11 Per-piece photos *(post-v1)* | S | Low — mechanical mirror of an already-proven M2 pattern |
 | M12 OneDrive backup destination *(post-v1)* | M | Low–Medium — mechanical against a proven pattern (`GoogleDriveService` → `CloudBackupProvider`), but hand-rolled OAuth+PKCE and a schema rename carry more risk than M11 did |
+| M13 Bookings and delivery tracking *(post-v1)* | S | Low — one nullable column against a proven list→detail pattern; the only real risk is the Ctrl+N shortcut shift from the new sidebar section |
 
 M8 carries the highest risk in the project despite being conceptually simple, because it combines an external API, OAuth token lifecycle, encryption, scheduling on a machine that gets switched off, and a restore path that is only exercised on the worst day the shop will ever have. It deserves the most testing per line of code of anything here.
 
@@ -160,9 +173,9 @@ These hold for v1 and must survive every future release. They are the guarantees
 ## 6. v2 — After the sale
 
 - **Customer records and follow-up** — a proper customer master with purchase history, enquiry log, and reminders for pending payments.
-- **Delivery and installation tracking** — which sold pieces are delivered versus pending, scheduled date, vehicle and driver, installation status and customer sign-off.
+- **Delivery and installation logistics** — *(narrowed by M13, post-v1)* the basic delivered/not-delivered fact per item is already tracked (FR-SAL-13, the Bookings screen). What remains here is the logistics layer on top: scheduled delivery date, vehicle and driver, installation status and customer sign-off.
 
-This introduces a piece state between `IN_STOCK` and `SOLD` — `AWAITING_DELIVERY` — which is precisely why the state machine is defined in one place in v1 rather than scattered through the code.
+This introduces a piece state between `IN_STOCK` and `SOLD` — `AWAITING_DELIVERY` — which is precisely why the state machine is defined in one place in v1 rather than scattered through the code. M13 deliberately left this state untouched so it stays available here.
 
 ## 7. v3 — Beyond one desk
 

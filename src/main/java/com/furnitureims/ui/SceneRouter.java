@@ -120,8 +120,8 @@ public class SceneRouter {
 
     /** NFR-14: the sidebar's buttons are all {@code focusTraversable(false)} (M10), so tabbing
      *  through a form like New Sale can never land in navigation - but that also means the
-     *  keyboard needs some other way to reach the sidebar's destinations. Ctrl+1..6 covers the
-     *  six {@link NavSection}s in the same order they appear in the sidebar, read from
+     *  keyboard needs some other way to reach the sidebar's destinations. Ctrl+1..7 covers the
+     *  seven {@link NavSection}s in the same order they appear in the sidebar, read from
      *  {@link NavBar#landingFor} rather than a second copy of that ordering. A scene-level
      *  accelerator fires regardless of what currently has focus, and still goes through
      *  {@link #navigate(Route)}, so it is confirmed like any other navigation

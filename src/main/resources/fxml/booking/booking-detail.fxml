@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.booking.BookingDetailController"
+            styleClass="app-root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <Button fx:id="markAllDeliveredButton" text="Mark All Delivered" onAction="#onMarkAllDeliveredClicked"
+                    styleClass="primary-button"/>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="16">
+            <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+            <GridPane hgap="20" vgap="6">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="120"/>
+                    <ColumnConstraints minWidth="200"/>
+                    <ColumnConstraints minWidth="120"/>
+                    <ColumnConstraints minWidth="150"/>
+                </columnConstraints>
+                <Label text="Customer" styleClass="field-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label fx:id="customerLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                <Label text="Invoice" styleClass="field-label" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                <Label fx:id="invoiceLabel" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                <Label text="Delivery status" styleClass="field-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label fx:id="deliveredCountLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            </GridPane>
+
+            <Label text="Items" styleClass="section-heading"/>
+            <TableView fx:id="linesTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="tagColumn" text="Tag" prefWidth="90"/>
+                    <TableColumn fx:id="descriptionColumn" text="Item" prefWidth="220"/>
+                    <TableColumn fx:id="deliveredColumn" text="Delivered" prefWidth="90"/>
+                    <TableColumn fx:id="deliveredOnColumn" text="Delivered on" prefWidth="150"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

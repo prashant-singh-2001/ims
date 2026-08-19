@@ -15,6 +15,7 @@ public enum NavSection {
 
     STOCK("Stock"),
     SALES("Sales"),
+    BOOKINGS("Bookings"),
     PURCHASES("Purchases"),
     PAYMENTS("Payments"),
     REPORTS("Reports"),

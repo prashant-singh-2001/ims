@@ -29,6 +29,9 @@ Login / Lock
                 │     └── Invoices
                 │           └── Invoice detail → Sales return · Cancel · Print · Share
                 │
+                ├── Bookings           *(added M13)*
+                │     └── Bookings list (sidebar landing) → Booking detail → per-item delivered toggle
+                │
                 ├── Purchases
                 │     ├── Purchase bills (sidebar landing)
                 │     │     └── Bill detail → Purchase return · Reverse receipt
@@ -213,6 +216,16 @@ There is deliberately **no Edit button**. The screen states why: a saved tax inv
 ### 6.3 Sales return — `FR-SAL-10`
 
 Pick the invoice, tick the pieces coming back, enter reason and date, choose whether the refund adjusts against the outstanding balance or is paid out in cash. Produces a credit note, restores those pieces to `IN_STOCK`, and reverses the corresponding tax.
+
+### 6.4 Bookings — `FR-SAL-13` *(added M13)*
+
+A booking is simply an `ACTIVE` invoice viewed by which of its items have been delivered — not a screen for a separate entity, and reached from its own **Bookings** sidebar section rather than nested under Invoices, since "what's still pending delivery" is a different question from "what did I sell."
+
+**Bookings list:** invoice number, date, customer, "N of M delivered", status (Pending / Partly delivered / Delivered) — all derived, never stored. Defaults to showing only bookings with something still undelivered; a "Show fully delivered too" checkbox plus Search reveals the rest, the same filter pattern the item models and payments lists already use. A cancelled invoice never appears here.
+
+**Booking detail:** customer, invoice number/date, "N of M delivered", and the invoice's items with a per-piece **Delivered** checkbox and a delivered-on timestamp, plus a **Mark All Delivered** button. Un-ticking is always allowed — correcting a mis-tick is fulfilment data, not an invoice edit, so FR-SAL-12's no-edit rule does not govern this screen. A piece returned via a sales return before delivery drops out of this list entirely, so a partial return can never leave a booking permanently short of Delivered.
+
+Deferred to a later phase (see `04-roadmap.md` v2): scheduled delivery date, vehicle/driver, installation status, customer sign-off, and a dashboard tile for pending deliveries.
 
 ---
 
