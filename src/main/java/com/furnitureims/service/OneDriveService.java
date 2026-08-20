@@ -60,7 +60,7 @@ public class OneDriveService implements CloudBackupProvider {
     // registrations > New registration > "Mobile and desktop applications" > redirect URI
     // http://localhost > allow public client flows > API permissions: Files.ReadWrite.AppFolder
     // + offline_access, delegated) before OneDrive support can be used.
-    private static final String DEFAULT_CLIENT_ID = "00000000-0000-0000-0000-000000000000";
+    private static final String DEFAULT_CLIENT_ID = "a69d6445-9e6e-4e4c-9eb3-4075bdf8f38e";
 
     private static final String AUTHORIZE_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
     private static final String TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token";

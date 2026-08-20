@@ -468,7 +468,7 @@ The system shall let the owner choose the active cloud destination (Google Drive
 The system shall store shop name, address, state and state code, GSTIN, phone, email, logo image, and the invoice declaration and signature text — all appearing on generated documents.
 
 **FR-SYS-02 — Settings**
-The system shall expose in one place: backup schedule, retention counts, backup destination (Google Drive or OneDrive, FR-BAK-17), Drive folder name (Google only), cloud account status, SMTP settings, WhatsApp message template, idle-lock timeout, invoice number series, financial year start, default units (cm/inch), and the category and location lists.
+The system shall expose in one place: backup schedule, retention counts, backup destination (Google Drive or OneDrive, FR-BAK-17), Drive folder name (Google only), cloud account status, SMTP settings, WhatsApp message template, idle-lock timeout, invoice number series, financial year start, default units (cm/inch), the category and location lists, and licence status (FR-LIC-01, added M14).
 
 **FR-SYS-03 — Audit log**
 The system shall record every consequential action — invoice created/cancelled, piece state changed, payment recorded/deleted, cost or price overridden, restore performed, settings changed — with timestamp, action, entity, and before/after values where applicable. The log shall be viewable and exportable, and shall not be editable from within the application.
@@ -487,6 +487,30 @@ The system shall let the owner turn GST off, for a shop that is not GST-register
 The shop's state remains a required field either way — it is ordinary address data that prints on every document regardless of GST.
 
 *Acceptance:* with GST off, an item model saves with no HSN or GST rate, a sale produces a plain bill with `grand_total == taxable_value` and zero tax, and the generated PDF contains neither "GSTIN" nor "HSN" nor "CGST" nor "Place of Supply". With GST on, every existing GST computation is unchanged.
+
+---
+
+### 3.11 LIC — Licensing and activation *(added M14)*
+
+**FR-LIC-01 — Activation**
+The system shall require a valid activation key, entered as the fifth and final step of first-run setup, before setup can complete. The key binds this installation to a signed lease issued by the licence server; setup cannot finish without a successful activation.
+
+**FR-LIC-02 — Machine binding**
+The system shall derive a fingerprint from a stable, OS-level machine identifier (the Windows `MachineGuid`) and bind the activation key to it. An activation key already bound to a different machine's fingerprint shall be refused, and the attempt recorded on the server for the licence owner to see.
+
+**FR-LIC-03 — Offline lease**
+The system shall hold a signed, time-limited lease (30 days) that lets it operate fully offline for the full lease window with no server contact at all. The lease shall be renewed silently in the background whenever connectivity is available, well before it expires.
+
+**FR-LIC-04 — Read-only wind-down**
+If the lease is missing, expired, revoked, signed by an unrecognised key, or bound to a different machine's fingerprint, the system shall enter a read-only state: creating a new invoice, purchase bill, payment, or opening-stock entry shall be refused with a plain-language explanation (NFR-11). Every already-recorded record, every report, PDF regeneration, CSV export, and the backup/restore pipeline shall remain fully available — read-only wind-down shall never withhold the shop's own data.
+
+**FR-LIC-05 — Revocation**
+The licence owner shall be able to revoke a licence remotely. A revoked installation shall stop renewing its lease and enter read-only wind-down once the currently held lease expires, with no action needed on the installation itself.
+
+**FR-LIC-06 — Owner notification**
+The licence server shall record every activation and every rejected activation attempt (a key already bound elsewhere), viewable by the licence owner, so a second, unauthorised installation is discoverable.
+
+*Acceptance:* a fresh install cannot pass the setup wizard without a valid, unbound activation key; a second installation activated with the same key as an already-bound one is refused and the attempt is recorded on the server; an installation with no internet connectivity at all continues normal operation for its full lease window; a revoked installation becomes read-only after its lease expires while its reports, PDFs, CSV export, and backup remain fully available.
 
 ---
 
@@ -510,7 +534,7 @@ The shop's state remains a required field either way — it is ordinary address 
 
 **NFR-05 — Data integrity.** Every operation touching more than one table — invoice + piece states + payment — shall be a single atomic transaction. A crash mid-operation shall leave the database consistent.
 
-**NFR-06 — Offline first.** Every function except Drive upload, email send and WhatsApp share shall work with no internet connection.
+**NFR-06 — Offline first.** Every function except Drive/OneDrive upload, email send, WhatsApp share, and licence activation/renewal (M14, FR-LIC-03) shall work with no internet connection. *Amended by M14:* a one-time licence activation needs connectivity, but once activated the app works fully offline for the full 30-day lease window (FR-LIC-03) - connectivity is only ever required to renew, never to operate.
 
 **NFR-07 — Concurrency.** Exactly one instance of the application shall run at a time; starting a second shall focus the first rather than opening a second connection to the database.
 

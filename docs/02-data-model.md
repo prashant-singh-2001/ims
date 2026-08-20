@@ -121,6 +121,26 @@ Conventions used throughout:
 
 **`app_setting`** — key/value, one row per setting from FR-SYS-02: `key` TEXT PK, `value` TEXT, `updated_at` TEXT. Kept generic on purpose; settings change more often than schemas should.
 
+**`license`** *(added M14)* — exactly one row, `id = 1`, mirroring `shop_profile`'s singleton shape. Holds this installation's activation binding and most recently issued signed lease (FR-LIC-01...06).
+
+| Column | Type | Notes |
+|---|---|---|
+| id | INTEGER PK | always 1 |
+| license_id | TEXT | server-assigned id; NULL until first successful activation |
+| activation_key | TEXT NOT NULL | the key typed into the wizard |
+| shop_name | TEXT | as recorded by the licence server; display only |
+| fingerprint | TEXT NOT NULL | SHA-256 of the Windows `MachineGuid` this key was bound to |
+| volume_serial | TEXT | soft signal only, never enforced — see below |
+| lease_token | TEXT | the raw signed lease as received; re-verified fresh on every read, never trusted from storage |
+| lease_expires_at | TEXT | cached copy of the verified lease's expiry, for display |
+| last_contact_at, last_contact_result | TEXT | when the server was last reached, and what it said |
+| clock_watermark | TEXT NOT NULL | the highest instant this installation has ever observed |
+| activated_at | TEXT NOT NULL | |
+
+Unlike the Google/OneDrive refresh tokens (FR-BAK-08), the lease is stored **unencrypted** — deliberately. It is tamper-evident by its own Ed25519 signature already (`LicenseVerifier` re-verifies it on every read, never trusting the row directly), so DPAPI protection would add nothing beyond a new failure mode: a Windows profile change would destroy an otherwise perfectly valid lease. Nothing in this table is a secret the way a refresh token is; the one thing that must never exist on this machine at all is the signing *private* key.
+
+`fingerprint` is bound only to the `MachineGuid` component of the machine fingerprint — the stable one, set once at OS install and unaffected by a disk swap or hardware repair. `volume_serial` is recorded purely as an informational signal for the licence owner ("hardware changed") and is never itself grounds for wind-down, since a routine reformat would otherwise cost a legitimate shop its licence. `clock_watermark` exists to catch a deliberately rolled-back system clock trying to keep an expired lease looking current: if "now" is ever more than 48 hours behind the highest instant this row has ever recorded, the licence treats that as tampering rather than as a plausible clock drift (DST, a dead CMOS battery).
+
 **`sequence_counter`** — the source of gap-free numbering (FR-SAL-07).
 
 | Column | Type | Notes |

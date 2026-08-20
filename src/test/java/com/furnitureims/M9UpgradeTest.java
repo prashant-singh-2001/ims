@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * snapshot was actually written to disk before the migration ran.
  * <p>
  * The expected final version below is a literal, not derived - it must be bumped every
- * time a new migration is added (most recently V10, M13's {@code delivery_tracking}), the
+ * time a new migration is added (most recently V11, M14's {@code licensing}), the
  * same way {@code RouteCoverageTest} would need a new Route registered by hand. There is no
  * dynamic "latest migration" lookup elsewhere in the app to delegate to.
  */
@@ -78,8 +78,8 @@ class M9UpgradeTest {
             Integer appliedSchemaVersion = jdbc.queryForObject(
                     "SELECT MAX(CAST(version AS INTEGER)) FROM flyway_schema_history WHERE success = 1",
                     Integer.class);
-            assertEquals(10, appliedSchemaVersion,
-                    "every pending migration up to the latest (V10) should have applied automatically on "
+            assertEquals(11, appliedSchemaVersion,
+                    "every pending migration up to the latest (V11) should have applied automatically on "
                             + "startup, with no manual database work (NFR-08)");
 
             String preExistingCategoryName = jdbc.queryForObject(

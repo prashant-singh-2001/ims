@@ -31,14 +31,15 @@ class RouteCoverageTest {
 
     /** Loaded directly by {@link com.furnitureims.ui.setup.SetupWizardController#loadStep},
      *  not through {@link com.furnitureims.ui.SceneRouter} - the wizard shell itself
-     *  ({@link Route#SETUP_WIZARD}) is the routed screen; its four step fragments are
+     *  ({@link Route#SETUP_WIZARD}) is the routed screen; its five step fragments are
      *  content injected into that screen's own {@code contentPane}, the same way a report's
      *  filter bar is part of the report screen rather than a screen of its own. */
     private static final Set<String> EXCLUDED = Set.of(
             "/fxml/setup/step1-shop-profile.fxml",
             "/fxml/setup/step2-owner-login.fxml",
             "/fxml/setup/step3-backup-password.fxml",
-            "/fxml/setup/step4-google-drive.fxml"
+            "/fxml/setup/step4-google-drive.fxml",
+            "/fxml/setup/step5-activation.fxml"
     );
 
     @Test

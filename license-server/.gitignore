@@ -1,0 +1,9 @@
+# Wrangler's local tool cache/session state - never source, never commit.
+.wrangler/
+
+# Key material and secrets. The public key lives as a source constant
+# (LicenseVerifier.DEFAULT_PUBLIC_KEY_BASE64) instead - these local files are
+# only ever your own offline backup and must never enter git history.
+*.pem
+*.der
+.env.token

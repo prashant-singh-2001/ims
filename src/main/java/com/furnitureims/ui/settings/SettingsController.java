@@ -300,4 +300,9 @@ public class SettingsController {
         sceneRouter.navigate(Route.AUDIT_LOG);
     }
 
+    @FXML
+    private void onLicenseClicked() {
+        sceneRouter.navigate(Route.LICENSE_STATUS);
+    }
+
 }

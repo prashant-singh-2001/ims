@@ -53,7 +53,8 @@ Login / Lock
                       ├── Backup & Restore
                       ├── Email / WhatsApp
                       ├── Categories & locations
-                      └── Audit log
+                      ├── Audit log
+                      └── Licence                *(added M14)*
 ```
 
 Every sidebar button navigates directly to that section's landing screen; the top bar's back chevron returns a detail/editor screen to whichever list it was opened from (`Route.parent()`), the one thing the sidebar itself cannot express — "return to where I came from" isn't the same question as "go to a section." A screen reachable straight from the sidebar carries no chevron at all, since going "back" from it would only duplicate a sidebar button already one click away.
@@ -64,9 +65,9 @@ Design rule for the whole application, unchanged since v1: **the dashboard is ne
 
 ## 2. Access screens
 
-### 2.1 First-run setup wizard — `FR-AUTH-01`, `FR-SYS-01`, `FR-BAK-06`, `FR-BAK-08`
+### 2.1 First-run setup wizard — `FR-AUTH-01`, `FR-SYS-01`, `FR-BAK-06`, `FR-BAK-08`, `FR-LIC-01` *(M14: five steps)*
 
-Four steps, no skipping, no access to the application until finished.
+Five steps. Steps 1-4 are skippable or gated only by their own field validations; **step 5 is not skippable** — no access to the application until activation succeeds.
 
 | Step | Captures |
 |---|---|
@@ -74,8 +75,9 @@ Four steps, no skipping, no access to the application until finished.
 | 2. Owner login | Username, password, confirm password; displays the generated **recovery code** with an instruction to write it down and keep it off this PC |
 | 3. Backup password | Password, confirm; the unmissable warning that a lost backup password makes every backup permanently unrecoverable |
 | 4. Backup destination *(M12)* | A destination picker (Google Drive / OneDrive) followed by "Connect" → browser consent → shows connected account. OneDrive needs nothing typed in (built-in app registration); Google Drive still needs a client ID/secret from the owner's own Cloud project. **Skippable**, with a warning that backups will not run until connected |
+| 5. Activation *(M14)* | A single activation-key field and an "Activate" button. Binds this installation to the key's licence via a signed lease from the licence server (FR-LIC-01/02). **Not skippable** — "Next" (here, "Finish") is refused until activation succeeds. The only step in the wizard that needs an internet connection at all; every other step works offline. |
 
-Validations: state always mandatory; when GST-registered is answered yes, GSTIN format and its state-code prefix are also validated; passwords non-trivial and confirmed.
+Validations: state always mandatory; when GST-registered is answered yes, GSTIN format and its state-code prefix are also validated; passwords non-trivial and confirmed; step 5 requires a successful activation before setup can finish.
 
 ### 2.2 Login / Lock — `FR-AUTH-02`, `FR-AUTH-03`, `FR-AUTH-04`, `FR-AUTH-05`, `FR-AUTH-08`
 
@@ -285,7 +287,7 @@ Filters: bucket, minimum amount, customer/supplier.
 
 ---
 
-## 10. Settings — `FR-SYS-01`, `FR-SYS-02`, `FR-SYS-03`, `FR-SYS-05`
+## 10. Settings — `FR-SYS-01`, `FR-SYS-02`, `FR-SYS-03`, `FR-SYS-05`, `FR-LIC-01` *(added M14)*
 
 | Section | Contents |
 |---|---|
@@ -298,6 +300,7 @@ Filters: bucket, minimum amount, customer/supplier.
 | Lists | Categories and storage locations — add, rename, deactivate |
 | Units | cm or inch for display |
 | Audit log | Searchable by date, action and entity; exportable; read-only, with no edit or delete anywhere in the UI |
+| **Licence** *(added M14)* | Current state (Active / Active - renewal needed soon / Read-only / Not activated) with a plain-language explanation of what it means right now; shop name, this machine's fingerprint, activation date, lease valid-until date, and the result of the last server contact; a **Check Now** button that renews the lease on demand instead of waiting for the hourly background check |
 
 ---
 
@@ -310,6 +313,7 @@ Filters: bucket, minimum amount, customer/supplier.
 5. **Every list is searchable, filterable and CSV-exportable.** No exceptions — the owner should never need to ask for an export to be added.
 6. **Nothing is deleted.** Cancel, discontinue, write off, soft-delete — the history stays.
 7. **The backup warning cannot be permanently dismissed.** Past 48 hours without a successful backup it returns, because the single scenario this software exists to prevent is losing the shop's records.
-8. **The sidebar never steals keyboard focus** *(M10, NFR-14)*. Every nav button is excluded from tab order, so tabbing through New Sale's fields can never land in navigation instead — `Ctrl+1`…`Ctrl+6` reach the six sidebar sections directly from the keyboard regardless of what currently has focus.
+8. **The sidebar never steals keyboard focus** *(M10, NFR-14)*. Every nav button is excluded from tab order, so tabbing through New Sale's fields can never land in navigation instead — `Ctrl+1`…`Ctrl+7` reach the seven sidebar sections directly from the keyboard regardless of what currently has focus (shifted from six to seven when M13 added Bookings between Sales and Purchases).
 9. **An idle lock blanks the screen completely, not mostly** *(M10, FR-AUTH-04)*. The lock scrim is fully opaque — the pre-M10 version left roughly 8% of it translucent, a real (if narrow) data leak once the sidebar made the screen behind the lock a permanent fixture rather than something shown once at login.
 10. **Leaving a screen with unsaved work asks first.** New Sale is the one screen this currently applies to: with a persistent sidebar offering roughly eight one-click ways off any screen, a bill with at least one item added prompts for confirmation before navigating away, rather than silently discarding it.
+11. **Read-only wind-down never hides data, only new writes** *(M14, FR-LIC-04)*. When the licence needs attention, a top-bar banner says so on every screen, and the handful of screens that create a new record (New Sale, Sales Return, Purchase Bill Entry, Purchase Return, Customer Receipt, Supplier Payment, Opening Stock Entry, Item Model editor, and the Bookings delivered checkbox) refuse the action with a plain-language explanation instead of opening. Every other screen — every list, every report, every PDF, CSV export, and the backup/restore pipeline — stays exactly as usable as it always was.

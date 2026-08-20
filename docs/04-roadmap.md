@@ -123,6 +123,22 @@ Deliberately narrow: scheduled delivery date, vehicle/driver, installation statu
 
 *Satisfies:* FR-SAL-13 (new).
 
+### M14 — Licensing, activation and remote kill switch *(post-v1)*
+
+Nothing before this milestone stopped the installer being copied to a second PC, and if it was, the owner had no way to find out and no way to stop it. M14 adds both halves: a per-machine activation that reports home, and a remote revocation mechanism that winds a copy down.
+
+A **booking is an existing invoice**, and this milestone follows the same instinct: a licence check is a **short-lived signed lease**, not a boolean "is this revoked?" the app asks a server. The setup wizard gained a fifth, non-skippable step that binds an activation key to this machine's fingerprint (the Windows `MachineGuid`, hashed) and receives a 30-day lease in return, signed with Ed25519 (JDK-native since Java 15 - no new Maven dependency, and the jlink module it needs, `jdk.crypto.ec`, was already in `scripts/package-windows.ps1`'s module list). The app renews that lease silently in the background whenever it has connectivity, and keeps operating normally right up to whatever `expiresAt` the last lease it holds says - which is what makes revocation, a blocked licence-server endpoint, and genuine offline use all collapse into the same one mechanism: *how old is the lease?*
+
+If the lease goes stale for any reason - expired, revoked, signed by the wrong key, or bound to a different machine's fingerprint - the app enters **read-only wind-down**, not a hard lock: every existing invoice, every report, PDF regeneration, CSV export, and the backup/restore pipeline all keep working exactly as before; only creating a new invoice, bill, payment, or opening-stock entry is refused, with a plain-language explanation (NFR-11). A hard lock was deliberately rejected - a machine fingerprint can change for entirely legitimate reasons (a disk swap, a hardware repair), and a false positive must never hold a shop's own data hostage.
+
+The licence server itself is a small, dependency-free Cloudflare Worker (`license-server/`, plain JS, WebCrypto's Ed25519, free tier) with a KV store, deliberately outside the Maven build and not something CI deploys automatically - deploying it, generating the signing key pair, and issuing activation keys are all owner actions, documented in `license-server/README.md`. Its `/admin/activations` route is the "I will know" half of this milestone: a second PC attempting to activate an already-bound key is refused and recorded there, with an optional webhook ping.
+
+**Threat model, stated plainly:** this stops a shop copying the installer to a second PC, passing it to a friend's shop, or dodging revocation by blocking the licence server's URL (blocking it is indistinguishable from revocation - no renewal means the held lease still ages out on schedule). It does **not** stop someone who clones this public repository, deletes the check, and rebuilds from source - no client-side scheme can, and obfuscating the check would only make the codebase worse without changing that fact. The realistic adversary here is a shop with an installer, not someone standing up a JDK 25 + JavaFX + jpackage toolchain, and the design is sized for that.
+
+*Amends:* NFR-06 (offline-first: activation needs connectivity once; the app then works fully offline for the full 30-day lease window) and roadmap invariant #8 below, in the same spirit.
+
+*Satisfies:* FR-LIC-01…06 (new).
+
 ---
 
 ## 3. Indicative effort
@@ -144,6 +160,7 @@ Rough relative sizing for one developer familiar with Spring and JavaFX. **These
 | M11 Per-piece photos *(post-v1)* | S | Low — mechanical mirror of an already-proven M2 pattern |
 | M12 OneDrive backup destination *(post-v1)* | M | Low–Medium — mechanical against a proven pattern (`GoogleDriveService` → `CloudBackupProvider`), but hand-rolled OAuth+PKCE and a schema rename carry more risk than M11 did |
 | M13 Bookings and delivery tracking *(post-v1)* | S | Low — one nullable column against a proven list→detail pattern; the only real risk is the Ctrl+N shortcut shift from the new sidebar section |
+| M14 Licensing, activation and remote kill switch *(post-v1)* | M | Medium — the Java side is small and mirrors existing patterns (OAuth-flow-shaped activation, a JDK-native crypto primitive already in the jlink module list), but this is the first milestone with a deployed external service behind it, and getting the offline-tolerance/wind-down trade-off wrong would directly undermine NFR-06 |
 
 M8 carries the highest risk in the project despite being conceptually simple, because it combines an external API, OAuth token lifecycle, encryption, scheduling on a machine that gets switched off, and a restore path that is only exercised on the worst day the shop will ever have. It deserves the most testing per line of code of anything here.
 
@@ -160,7 +177,7 @@ These hold for v1 and must survive every future release. They are the guarantees
 5. **Nothing is hard-deleted.** Cancel, discontinue, write off, soft-delete.
 6. **Every backup archive contains the database, the photos and the invoice PDFs**, and every archive format change bumps the manifest version so old archives stay restorable.
 7. **Migrations are forward-only** and run automatically, with an automatic local backup taken first.
-8. **The application works offline.** No feature may make billing, receiving or reporting depend on connectivity.
+8. **The application works offline.** No feature may make billing, receiving or reporting depend on connectivity. *Amended by M14:* activating a fresh installation needs connectivity once; after that, the app must keep working fully offline for the full lease window (30 days) with zero server contact, and connectivity is only ever required to renew, never to operate. Nothing may shrink that window without an explicit decision here.
 
 ---
 

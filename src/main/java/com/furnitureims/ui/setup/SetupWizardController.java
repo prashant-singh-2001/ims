@@ -33,7 +33,8 @@ public class SetupWizardController {
             "/fxml/setup/step1-shop-profile.fxml",
             "/fxml/setup/step2-owner-login.fxml",
             "/fxml/setup/step3-backup-password.fxml",
-            "/fxml/setup/step4-google-drive.fxml"
+            "/fxml/setup/step4-google-drive.fxml",
+            "/fxml/setup/step5-activation.fxml"
     };
 
     private final ApplicationContext applicationContext;

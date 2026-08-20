@@ -1,5 +1,7 @@
 package com.furnitureims.ui;
 
+import com.furnitureims.domain.LicenseState;
+import com.furnitureims.service.LicenseService;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -56,6 +58,7 @@ public class SceneRouter {
     private static final double HEIGHT = 800;
 
     private final ApplicationContext applicationContext;
+    private final LicenseService licenseService;
 
     private Stage stage;
     private Scene scene;
@@ -77,8 +80,9 @@ public class SceneRouter {
     private Route currentRoute;
     private Object currentController;
 
-    public SceneRouter(ApplicationContext applicationContext) {
+    public SceneRouter(ApplicationContext applicationContext, LicenseService licenseService) {
         this.applicationContext = applicationContext;
+        this.licenseService = licenseService;
     }
 
     /**
@@ -149,12 +153,30 @@ public class SceneRouter {
      *  owner cancels that confirmation: {@code currentRoute}/{@code currentController} are
      *  left exactly as they were, so the screen they were about to leave is still showing. */
     public void navigate(Route route) {
+        if (route.requiresLicense() && licenseService.state() == LicenseState.WIND_DOWN) {
+            showLicenseWindDownNotice();
+            return;
+        }
         if (!confirmLeavingCurrentScreen()) {
             return;
         }
         currentRoute = route;
         currentController = show(route.fxmlPath());
         applyChrome(route);
+    }
+
+    /** M14: the plain-language explanation NFR-11 requires when a write screen is refused -
+     *  never a stack trace, and never phrased as an error the owner caused. Read-only
+     *  wind-down means every already-recorded invoice, report and backup stays fully
+     *  reachable; only creating a new one is blocked, so the message says exactly that. */
+    private void showLicenseWindDownNotice() {
+        Alert notice = new Alert(Alert.AlertType.WARNING);
+        notice.setTitle("Licence Needs Attention");
+        notice.setHeaderText("This copy of the app is in read-only mode.");
+        notice.setContentText("All your existing records, reports and backups are still fully available, "
+                + "but new invoices, bills and payments cannot be created until the licence is sorted out. "
+                + "See Settings > Licence for details, or contact the supplier.");
+        notice.showAndWait();
     }
 
     /** M10: asks before discarding unsaved work - see {@link ConfirmsNavigation}. Screens
@@ -187,6 +209,7 @@ public class SceneRouter {
         }
         navBar.setActive(route);
         topBar.setBackTarget(route.parent());
+        topBar.refreshLicenseBanner();
 
         topBar.titleProperty().unbind();
         if (currentController instanceof HasScreenTitle hasTitle) {

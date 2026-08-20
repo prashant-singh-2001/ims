@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.furnitureims.ui.settings.LicenseStatusController"
+            styleClass="app-root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <Button fx:id="checkNowButton" text="Check Now" onAction="#onCheckNowClicked"/>
+            <ProgressIndicator fx:id="progressIndicator" prefWidth="20" prefHeight="20"/>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="14">
+            <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+            <Label fx:id="statusLabel" styleClass="section-heading"/>
+            <Label fx:id="statusExplanationLabel" wrapText="true" styleClass="wizard-step-subtitle"/>
+
+            <GridPane hgap="12" vgap="10">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="150"/>
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="260"/>
+                </columnConstraints>
+                <Label text="Shop" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="field-label"/>
+                <Label fx:id="shopNameLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="This machine's fingerprint" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="field-label"/>
+                <Label fx:id="fingerprintLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Activated" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="field-label"/>
+                <Label fx:id="activatedAtLabel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                <Label text="Lease valid until" GridPane.rowIndex="3" GridPane.columnIndex="0" styleClass="field-label"/>
+                <Label fx:id="leaseExpiresLabel" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                <Label text="Last contact" GridPane.rowIndex="4" GridPane.columnIndex="0" styleClass="field-label"/>
+                <Label fx:id="lastContactLabel" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+            </GridPane>
+
+            <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
+        </VBox>
+    </center>
+</BorderPane>

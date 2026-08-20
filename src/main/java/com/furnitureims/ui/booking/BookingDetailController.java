@@ -1,10 +1,12 @@
 package com.furnitureims.ui.booking;
 
 import com.furnitureims.domain.Customer;
+import com.furnitureims.domain.LicenseState;
 import com.furnitureims.domain.SalesInvoice;
 import com.furnitureims.domain.SalesLine;
 import com.furnitureims.service.BookingService;
 import com.furnitureims.service.CustomerService;
+import com.furnitureims.service.LicenseService;
 import com.furnitureims.service.PieceService;
 import com.furnitureims.service.SalesInvoiceService;
 import com.furnitureims.ui.HasScreenTitle;
@@ -29,6 +31,13 @@ import java.util.List;
  * delivered checkbox. There is deliberately no restriction on un-ticking: correcting a
  * mis-tick is fulfilment data, not an invoice edit, so FR-SAL-12's no-edit rule does not
  * apply here.
+ * <p>
+ * M14: unlike the write screens {@code Route} gates wholesale (New Sale, Purchase Bill
+ * Entry, ...), this whole screen stays reachable in {@code WIND_DOWN} - seeing which items
+ * are still undelivered is exactly the kind of thing read-only wind-down is supposed to
+ * keep available. Only the one write action, ticking delivered/not-delivered, is disabled
+ * here directly - see {@code Route}'s Javadoc for why this screen is deliberately not in
+ * its {@code requiresLicense} list.
  */
 @Component
 public class BookingDetailController implements HasScreenTitle {
@@ -37,6 +46,7 @@ public class BookingDetailController implements HasScreenTitle {
     private final SalesInvoiceService salesInvoiceService;
     private final CustomerService customerService;
     private final PieceService pieceService;
+    private final LicenseService licenseService;
 
     private final StringProperty screenTitle = new SimpleStringProperty("");
 
@@ -54,11 +64,13 @@ public class BookingDetailController implements HasScreenTitle {
     private long invoiceId;
 
     public BookingDetailController(BookingService bookingService, SalesInvoiceService salesInvoiceService,
-                                    CustomerService customerService, PieceService pieceService) {
+                                    CustomerService customerService, PieceService pieceService,
+                                    LicenseService licenseService) {
         this.bookingService = bookingService;
         this.salesInvoiceService = salesInvoiceService;
         this.customerService = customerService;
         this.pieceService = pieceService;
+        this.licenseService = licenseService;
     }
 
     public void openFor(long invoiceId) {
@@ -105,6 +117,7 @@ public class BookingDetailController implements HasScreenTitle {
                 }
                 BookingLineRow row = getTableView().getItems().get(getIndex());
                 checkBox.setSelected(row.isDelivered());
+                checkBox.setDisable(licenseService.state() == LicenseState.WIND_DOWN);
                 setGraphic(checkBox);
             }
         };
@@ -122,7 +135,8 @@ public class BookingDetailController implements HasScreenTitle {
         List<SalesLine> lines = bookingService.linesFor(invoiceId);
         long deliveredCount = lines.stream().filter(l -> l.deliveredAt() != null).count();
         deliveredCountLabel.setText(deliveredCount + " of " + lines.size() + " delivered");
-        markAllDeliveredButton.setDisable(deliveredCount == lines.size());
+        markAllDeliveredButton.setDisable(deliveredCount == lines.size()
+                || licenseService.state() == LicenseState.WIND_DOWN);
 
         List<BookingLineRow> rows = lines.stream()
                 .map(line -> new BookingLineRow(line, pieceService.findById(line.pieceId())

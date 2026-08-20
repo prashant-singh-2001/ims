@@ -24,5 +24,8 @@ Thumbs.db
 application-local.yml
 *.env
 
+# Contains the ADMIN_TOKEN once you fill it in - never commit your real token
+license-server/issue-key.sh
+
 
 /logs/

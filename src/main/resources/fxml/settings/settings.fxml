@@ -29,6 +29,7 @@
             <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
             <Button text="Backup and Restore" onAction="#onBackupSettingsClicked"/>
             <Button text="Audit Log" onAction="#onAuditLogClicked"/>
+            <Button text="Licence" onAction="#onLicenseClicked"/>
         </HBox>
     </top>
 

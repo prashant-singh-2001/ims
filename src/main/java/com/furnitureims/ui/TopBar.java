@@ -1,5 +1,7 @@
 package com.furnitureims.ui;
 
+import com.furnitureims.domain.LicenseState;
+import com.furnitureims.service.LicenseService;
 import com.furnitureims.ui.login.IdleLockManager;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -29,17 +31,20 @@ public class TopBar {
 
     private final SceneRouter sceneRouter;
     private final IdleLockManager idleLockManager;
+    private final LicenseService licenseService;
 
     private HBox view;
     private Button backButton;
     private Label titleLabel;
+    private Label licenseWarningLabel;
     private final StringProperty title = new SimpleStringProperty("");
 
     private Route backTarget;
 
-    public TopBar(SceneRouter sceneRouter, IdleLockManager idleLockManager) {
+    public TopBar(SceneRouter sceneRouter, IdleLockManager idleLockManager, LicenseService licenseService) {
         this.sceneRouter = sceneRouter;
         this.idleLockManager = idleLockManager;
+        this.licenseService = licenseService;
     }
 
     /** Builds the top bar node on first call and returns the same instance forever after -
@@ -68,6 +73,10 @@ public class TopBar {
         titleLabel.getStyleClass().add("top-bar-title");
         titleLabel.textProperty().bind(title);
 
+        licenseWarningLabel = new Label();
+        licenseWarningLabel.setVisible(false);
+        licenseWarningLabel.setManaged(false);
+
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
@@ -75,7 +84,7 @@ public class TopBar {
         lockNowButton.setFocusTraversable(false);
         lockNowButton.setOnAction(e -> idleLockManager.lockNow());
 
-        HBox box = new HBox(12, backButton, titleLabel, spacer, lockNowButton);
+        HBox box = new HBox(12, backButton, titleLabel, spacer, licenseWarningLabel, lockNowButton);
         box.getStyleClass().add("top-bar");
         box.setAlignment(Pos.CENTER_LEFT);
         box.setPadding(new Insets(10, 16, 10, 16));
@@ -92,5 +101,28 @@ public class TopBar {
         this.backTarget = parent;
         backButton.setVisible(parent != null);
         backButton.setManaged(parent != null);
+    }
+
+    /**
+     * Re-reads {@link LicenseService#state()} and updates the persistent banner (M14).
+     * Called by {@link SceneRouter} after every shell navigation - cheap (no network, see
+     * {@code LicenseService#state()}'s own Javadoc), so re-checking on each screen change is
+     * simpler than wiring a separate polling timer and catches a state change (e.g. a
+     * background renewal completing) within one navigation of it happening.
+     */
+    public void refreshLicenseBanner() {
+        LicenseState state = licenseService.state();
+        String text = switch (state) {
+            case GRACE -> "⚠ Licence renewal needed soon - see Settings > Licence";
+            case WIND_DOWN -> "⚠ Read-only mode - see Settings > Licence";
+            case ACTIVE, UNLICENSED -> null;
+        };
+        licenseWarningLabel.getStyleClass().removeAll("text-warning", "text-danger");
+        if (text != null) {
+            licenseWarningLabel.getStyleClass().add(state == LicenseState.WIND_DOWN ? "text-danger" : "text-warning");
+        }
+        licenseWarningLabel.setText(text == null ? "" : text);
+        licenseWarningLabel.setVisible(text != null);
+        licenseWarningLabel.setManaged(text != null);
     }
 }

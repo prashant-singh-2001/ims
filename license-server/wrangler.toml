@@ -1,0 +1,19 @@
+name = "furniture-ims-license-server"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+# Created once via `wrangler kv namespace create LICENSES`, then the id printed by that
+# command goes here. Holds both the activation-key index and the licence records - see the
+# "KV layout" comment at the top of worker.js.
+kv_namespaces = [
+  { binding = "LICENSES", id = "567d465166954b628e485819d9016dcd" }
+]
+
+# Secrets (never go in this file - set with `wrangler secret put <NAME>`):
+#   LICENSE_SIGNING_KEY   base64 PKCS#8 Ed25519 private key
+#   ADMIN_TOKEN            bearer token for /admin/* routes
+#
+# Optional plain var - uncomment and fill in to get Discord/Slack pings on every
+# activation and every blocked attempt:
+# [vars]
+# ALERT_WEBHOOK_URL = "https://discord.com/api/webhooks/..."

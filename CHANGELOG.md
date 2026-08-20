@@ -11,6 +11,37 @@ traceability), not by release date — tag boundaries were cut opportunistically
 rather than one tag per milestone, so a given milestone's entry may span more
 than one tagged release.
 
+## [Unreleased]
+
+### M14 — Licensing, activation and remote kill switch
+
+- Per-machine activation (FR-LIC-01/02): a new, non-skippable fifth step in the first-run
+  setup wizard binds an activation key to this installation's machine fingerprint (a SHA-256
+  hash of the Windows `MachineGuid`) and receives a 30-day signed lease in return. No access
+  to the application without it.
+- The app renews its lease silently in the background whenever it has connectivity, and
+  keeps operating normally right up to the currently held lease's expiry with zero server
+  contact otherwise (FR-LIC-03) - revocation, a blocked licence-server endpoint, and genuine
+  offline use all collapse into the same one question: how old is the lease? Amends NFR-06
+  and roadmap invariant #8 explicitly: activation needs connectivity once; nothing after that
+  does, for the full 30-day window.
+- **Read-only wind-down, never a hard lock** (FR-LIC-04): if the lease goes stale for any
+  reason - expired, revoked, wrong signature, wrong machine - creating a new invoice,
+  purchase bill, payment or opening-stock entry is refused with a plain-language message.
+  Every existing record, every report, PDF regeneration, CSV export and the backup/restore
+  pipeline stay fully available - a false positive (a legitimate hardware swap) must never
+  hold a shop's own data hostage.
+- A remote kill switch (FR-LIC-05) and activity log (FR-LIC-06): a small, dependency-free
+  Cloudflare Worker (`license-server/`, Ed25519 via WebCrypto, no npm dependencies) that
+  issues and renews leases, and records every activation and every rejected attempt (a key
+  already bound to a different PC) for the licence owner to see - the "I will know if someone
+  copies this" half of the milestone, and `/admin/revoke` the "I can stop it" half.
+- Ed25519 signing is JDK-native (`jdk.crypto.ec`, already in the jlink module list since
+  before this milestone) - no new Maven dependency and no packaging change needed, unlike
+  M12's `java.net.http` addition.
+- New Settings > Licence panel: current state, this machine's fingerprint, activation date,
+  lease expiry, last server contact, and a "Check Now" button for an on-demand renewal.
+
 ## [0.3.0] - 2026-08-19
 
 ### M13 — Bookings and delivery tracking

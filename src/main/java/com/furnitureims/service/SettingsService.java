@@ -335,4 +335,21 @@ public class SettingsService {
     public void clearOneDriveRefreshToken() {
         settings.delete(ONEDRIVE_REFRESH_TOKEN_DPAPI_KEY);
     }
+
+    private static final String LICENSE_SERVER_URL_KEY = "license.server_url";
+
+    private static final String DEFAULT_LICENSE_SERVER_URL =
+            "https://furniture-ims-license-server.leanbow.workers.dev";
+
+    /** M14: where {@code LicenseService} sends {@code /activate} and {@code /lease} requests.
+     *  A settings key rather than a hardcoded constant so a self-hosted or replaced server
+     *  never needs a new build, mirroring why {@link #oneDriveClientId} is overridable. */
+    public String licenseServerUrl() {
+        return settings.getOrDefault(LICENSE_SERVER_URL_KEY, DEFAULT_LICENSE_SERVER_URL);
+    }
+
+    public void setLicenseServerUrl(String url) {
+        settings.set(LICENSE_SERVER_URL_KEY, url);
+        auditSettingChanged(LICENSE_SERVER_URL_KEY, url);
+    }
 }
