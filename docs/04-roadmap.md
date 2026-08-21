@@ -16,6 +16,8 @@ Companion to `01-requirements.md`. Version 1.0, 15 August 2026.
 
 Only v1 is specified in detail. Later releases are directional — they exist here so v1's design does not paint them into a corner.
 
+*A naming note, since the two now coincide in a confusing way:* this table's "v1" is a **scope** label — catalogue through encrypted backup, satisfied by milestones M1–M9 — and was reached long ago, at the `v0.1.0` git tag. It is not the same thing as the project's own semver release number (`v1.0.0`, `v1.1.0`, ...), which tracks *shipped, tagged builds* and only reached `1.0.0` after five further post-v1 milestones (M10–M14, including the licensing system) were considered production-ready enough to call feature-complete. Don't read "we're at v1.0.0" as "we just finished this table's v1" — that happened five milestones ago.
+
 ---
 
 ## 2. v1 build order

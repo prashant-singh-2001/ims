@@ -3,15 +3,19 @@
 All notable changes to this project are documented here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-`v0.3.0` is the current tagged release, built and published automatically by
+`v1.0.0` is the current tagged release, built and published automatically by
 [`.github/workflows/release.yml`](.github/workflows/release.yml) on every
 `v*.*.*` tag push. Entries are grouped by the roadmap milestone that produced
 them (see [`docs/04-roadmap.md`](docs/04-roadmap.md) for full scope and FR-ID
 traceability), not by release date — tag boundaries were cut opportunistically
 rather than one tag per milestone, so a given milestone's entry may span more
-than one tagged release.
+than one tagged release. The `1.0.0` version number marks this as the first
+release considered feature-complete and production-ready end to end
+(catalogue through licensing); it is not the same thing as the roadmap's own
+"v1" scope label (`docs/04-roadmap.md` §1), which was reached much earlier,
+at `v0.1.0`.
 
-## [Unreleased]
+## [1.0.0] - 2026-08-20
 
 ### M14 — Licensing, activation and remote kill switch
 
