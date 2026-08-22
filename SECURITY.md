@@ -9,8 +9,8 @@ there.
 
 ## What this application handles
 
-This is a single-PC, single-user desktop application for a furniture retail
-shop. It is designed to work entirely offline except for three explicit
+This is a single-PC, single-user desktop application for a retail shop
+tracking individually distinguishable stock. It is designed to work entirely offline except for three explicit
 network operations: Google Drive backup upload, SMTP email, and opening a
 WhatsApp deep link. Data it handles includes:
 

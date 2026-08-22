@@ -1,4 +1,4 @@
-# Furniture IMS — licence server
+# PieceTrack — licence server
 
 This is the other half of milestone M14 (see `docs/04-roadmap.md`). It is a small,
 dependency-free Cloudflare Worker that issues short-lived signed leases to activated

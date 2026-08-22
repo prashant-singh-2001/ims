@@ -1,5 +1,5 @@
 # Delivery Roadmap
-## Furniture Shop Inventory Management System
+## PieceTrack (generic inventory management system)
 
 Companion to `01-requirements.md`. Version 1.0, 15 August 2026.
 
@@ -141,6 +141,21 @@ The licence server itself is a small, dependency-free Cloudflare Worker (`licens
 
 *Satisfies:* FR-LIC-01…06 (new).
 
+### M15 — Generic inventory system, "PieceTrack" *(post-v1)*
+
+Every milestone through M14 assumed the shop sells furniture: dimensions, material, finish and colour were hardcoded `item_model` columns, the seeded categories were Sofa/Bed/Dining/Wardrobe/Chair/Table/Mattress, and the product itself was named and packaged as `FurnitureIMS`. None of that assumption was load-bearing — the actual differentiator, piece-level tracking with its own tag, cost and location per unit, works identically for a jewellery counter, an appliance dealer, or an electronics reseller. M15 removes the furniture assumption without touching that differentiator, and renames the product to **PieceTrack** to match.
+
+**The one constraint that shaped every other decision here: a real shop is already running the pre-rename build.** Every change below had to have a migration path, not just a clean-install story.
+
+- **Data folder migration** — `AppPaths.APP_FOLDER_NAME` changed from `FurnitureIMS` to `PieceTrack`. `Launcher.main()` now calls `AppPaths.migrateLegacyRootIfNeeded()` as its first statement, before Logback opens any file handle in the new tree: if `%LOCALAPPDATA%\FurnitureIMS\` exists and `%LOCALAPPDATA%\PieceTrack\data\app.db` does not, the legacy folder is moved (or, if Logback already created an empty `PieceTrack\logs\`, its contents are merged in) — atomically, never copy-then-delete, so a failure partway through is retried on the next launch rather than leaving two half-populated databases. `AppPathsMigrationTest` covers all four cases, including the Logback-pre-creates-the-folder regression this design exists for.
+- **Installer identity** — `scripts/package-windows.ps1` gained a fixed `--win-upgrade-uuid`, since without one jpackage derives Windows product identity from `--name`, and a rename would otherwise fork the installed product instead of upgrading it. The one already-installed shop does a manual uninstall-then-install of the new build once; safe only because NFR-03 keeps all data under `%LOCALAPPDATA%`, never Program Files, so the folder migration above still applies. This is called out explicitly in the release notes as the one manual step.
+- **Package and class rename** — `com.furnitureims` → `com.piecetrack` (198 files), `FurnitureImsApplication`/`FurnitureImsFxApp` → `PieceTrackApplication`/`PieceTrackFxApp`, jar and launcher names, log file name, the default Google Drive backup folder name. Committed alone, zero behavior change, suite green either side — a large mechanical diff kept isolated from every semantic change in this milestone so both stay reviewable.
+- **Domain vocabulary** — Javadoc and UI strings that said "furniture" generalized to "item"/"product". The seeded furniture categories and storage locations from V2 are not rewritten (migrations are immutable, and the live shop's pieces reference those rows) — instead V12 conditionally deletes them, but only where genuinely unreferenced, so a fresh install starts with a blank list and a live shop keeps exactly what it already uses.
+- **User-defined item attributes** — the substantive change. `length_cm`, `width_cm`, `height_cm`, `material`, `finish`, `colour` are replaced by two new tables: `attribute_definition` (the owner's own field list — Material, Warranty, Voltage, Carat, anything) and `item_model_attribute` (values, keyed by definition id rather than name so a rename never orphans data). The six old columns are not dropped — SQLite cannot drop a column referenced elsewhere without a table rebuild, the same reasoning V9/V10 already established — but `ItemModelRepository` stops reading or writing them, and `V12__custom_attributes.sql` backfills every non-null value on the live shop's database into the new mechanism before anything is orphaned. Free-text search (`FR-ITEM-04`) now matches against `item_model_attribute` values via an `EXISTS` subquery instead of the old fixed material/colour/finish columns. The item model editor's Specification tab is now a `GridPane` built at runtime from the active attribute list, rather than fixed FXML fields; the definitions themselves are managed from the existing Categories & Locations screen, extended with a third list alongside categories and locations. The dimension-range search fields (`ItemModelSearchCriteria`'s min/max length/width/height) were dead code even before this milestone — no screen ever passed anything but null for them — and were deleted rather than ported; `docs/01-requirements.md` and `docs/03-screens.md` are corrected to stop promising a filter that never existed in the running application.
+- **Docs** — this file, the SRS, the data model, the screens doc and the changelog reframed from furniture-specific to generic, with corrections noted explicitly rather than silently carried forward.
+
+*Satisfies:* revises FR-ITEM-01/02/04 (the fixed specification fields become user-defined attribute definitions); NFR-03 (data folder path); no FR-ID is removed — every requirement this milestone touches is corrected to match what the code actually does, not narrowed in capability.
+
 ---
 
 ## 3. Indicative effort
@@ -163,6 +178,7 @@ Rough relative sizing for one developer familiar with Spring and JavaFX. **These
 | M12 OneDrive backup destination *(post-v1)* | M | Low–Medium — mechanical against a proven pattern (`GoogleDriveService` → `CloudBackupProvider`), but hand-rolled OAuth+PKCE and a schema rename carry more risk than M11 did |
 | M13 Bookings and delivery tracking *(post-v1)* | S | Low — one nullable column against a proven list→detail pattern; the only real risk is the Ctrl+N shortcut shift from the new sidebar section |
 | M14 Licensing, activation and remote kill switch *(post-v1)* | M | Medium — the Java side is small and mirrors existing patterns (OAuth-flow-shaped activation, a JDK-native crypto primitive already in the jlink module list), but this is the first milestone with a deployed external service behind it, and getting the offline-tolerance/wind-down trade-off wrong would directly undermine NFR-06 |
+| M15 Generic inventory system, "PieceTrack" *(post-v1)* | M | Medium — mechanical in volume (package rename, 198 files) but the data-folder migration and the installer identity fix are both one-shot, hard-to-reverse changes against a real shop's live install, and the custom-attribute backfill has to preserve that shop's existing specification data exactly |
 
 M8 carries the highest risk in the project despite being conceptually simple, because it combines an external API, OAuth token lifecycle, encryption, scheduling on a machine that gets switched off, and a restore path that is only exercised on the worst day the shop will ever have. It deserves the most testing per line of code of anything here.
 

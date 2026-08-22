@@ -1,5 +1,12 @@
 # Software Requirements Specification
-## Furniture Shop Inventory Management System (Windows Desktop)
+## PieceTrack — Piece-Level Inventory Management System (Windows Desktop)
+
+*Amended by M15 (`docs/04-roadmap.md`): this document originally specified a furniture-only
+system. M15 generalized the catalogue to user-defined attributes so the same system serves any
+retail business tracking individually distinguishable units. Sections below marked "M15" were
+corrected at that point rather than silently carried forward; illustrative examples elsewhere
+(sofas, chairs) are retained where they don't affect what the software actually requires — the
+software itself no longer assumes furniture anywhere.*
 
 | | |
 |---|---|
@@ -29,22 +36,22 @@ Companion documents:
 
 ### 2.1 Problem
 
-A furniture retail shop buys finished furniture from suppliers and sells it to walk-in customers. Today, stock, purchase bills, customer bills and pending payments are tracked on paper and in memory. Consequences: nobody knows exactly what is in the godown, profit per sale is guesswork because purchase costs vary between consignments, and outstanding customer balances are remembered rather than recorded.
+A retail shop buys finished goods from suppliers and sells them to walk-in customers. Today, stock, purchase bills, customer bills and pending payments are tracked on paper and in memory. Consequences: nobody knows exactly what is in the storeroom, profit per sale is guesswork because purchase costs vary between consignments, and outstanding customer balances are remembered rather than recorded.
 
 ### 2.2 Goal
 
 A single Windows application, running on one shop PC, that is the authoritative record of:
 
-1. every physical piece of furniture the shop owns, and what it cost;
+1. every physical piece of stock the shop owns, and what it cost;
 2. every purchase from a supplier and what is still owed on it;
 3. every sale to a customer, as a GST-compliant invoice, and what is still owed on it;
 4. a nightly, encrypted, off-site copy of all of the above in Google Drive or OneDrive.
 
-The defining characteristic of this system is **piece-level tracking**. The shop does not count "4 dining chairs"; it tracks four individual chairs, each with its own tag, its own purchase cost, and its own physical location. This is what makes true profit-per-sale possible, and it shapes the entire data model.
+The defining characteristic of this system is **piece-level tracking**. The shop does not count "4 chairs" or "4 rings"; it tracks four individual units, each with its own tag, its own purchase cost, and its own physical location. This is what makes true profit-per-sale possible, and it shapes the entire data model. What each item is *called* and what fields describe it (dimensions for furniture, carat for jewellery, voltage for appliances) is entirely up to the shop — the software imposes no fixed product shape *(M15: previously a fixed furniture-shaped form; see FR-ITEM-01)*.
 
 ### 2.3 In scope for v1
 
-- Furniture model catalogue with dimensions, materials, photos
+- Item model catalogue with user-defined attributes, photos
 - Piece register — every physical unit individually tagged and costed
 - Supplier master and purchase bills, with pieces created on receipt
 - Opening stock entry (the shop starts fresh; existing stock is keyed in)
@@ -67,7 +74,7 @@ These are **not oversights**. Each was considered and deferred:
 | Delivery and installation tracking | Deferred to a later phase |
 | Multi-user access, staff logins, LAN sharing | Single PC, single user |
 | Multiple branches, godown-to-godown transfers | Single location |
-| Manufacturing, bill of materials, raw material stock | Retail showroom only — furniture is bought finished |
+| Manufacturing, bill of materials, raw material stock | Retail only — stock is bought finished, not assembled on-site |
 | Wholesale price lists, dealer credit terms | Retail counter sales only |
 | GSTR-1 / GSTR-3B export files | GST depth limited to compliant invoices + summaries |
 | E-invoice (IRN/QR) and e-way bill portal integration | Not required at current turnover |
@@ -89,12 +96,13 @@ These are **not oversights**. Each was considered and deferred:
 
 | Term | Meaning in this system |
 |---|---|
-| **Item model** | A type of furniture the shop deals in — "3-seater recliner sofa, brown leatherette". Carries HSN, GST rate, dimensions, photos. Holds no stock itself. |
+| **Item model** | A type of product the shop deals in — e.g. "3-seater recliner sofa, brown leatherette" for a furniture shop, or "18K gold ring, size 14" for a jeweller. Carries HSN, GST rate, photos, and whatever attributes the owner has defined (§FR-ITEM-01, M15). Holds no stock itself. |
+| **Attribute definition** | *(M15)* A field the owner has added to describe item models — e.g. "Material", "Warranty", "Voltage" — managed from Settings, not hardcoded. Replaces the fixed dimension/material/finish/colour fields earlier versions carried. |
 | **Piece** | One physical unit of an item model, with a unique tag. This is what is counted, costed and sold. |
 | **Tag** | The human-readable unique identifier written or stuck on a physical piece, e.g. `SOF-0042`. |
 | **Landed cost** | What one specific piece actually cost the shop, after apportioning the purchase bill's freight and other charges across the pieces on it. |
 | **Purchase bill** | A supplier's invoice for goods received. Receiving it creates pieces. |
-| **Opening stock** | Furniture already in the shop when the software goes live, entered without a supplier bill. |
+| **Opening stock** | Stock already in the shop when the software goes live, entered without a supplier bill. |
 | **HSN** | Harmonised System of Nomenclature — the GST classification code printed on invoices. Wooden furniture generally falls under 9403. |
 | **Place of supply** | The state where the sale is treated as occurring. Decides CGST+SGST versus IGST. |
 | **Advance** | Money taken from a customer at or before billing, before full settlement. |
@@ -141,21 +149,19 @@ The system shall provide a documented recovery path for a forgotten login passwo
 
 ---
 
-### 3.2 ITEM — Furniture model catalogue
+### 3.2 ITEM — Item model catalogue
 
-**FR-ITEM-01 — Create item model**
+**FR-ITEM-01 — Create item model** *(revised M15)*
 The system shall let the owner define an item model with:
 
 | Field | Required | Notes |
 |---|---|---|
-| Model name | Yes | e.g. "Aspen 3-Seater Sofa" |
+| Model name | Yes | e.g. "Aspen 3-Seater Sofa" or "18K Gold Ring, size 14" |
 | Model code | Yes | Short unique code, used as the tag prefix |
-| Category | Yes | Sofa, Bed, Dining, Wardrobe, Chair, Table, Mattress, Other — editable list |
+| Category | Yes | Owner-defined, editable list — no categories are pre-seeded on a fresh install |
 | HSN code | Yes | Printed on the invoice |
 | GST rate % | Yes | Per model, never hard-coded (see §7.2) |
-| Dimensions | No | Length × Width × Height, in cm or inches |
-| Material / finish | No | Wood type, metal, upholstery fabric, finish |
-| Colour | No | Free text |
+| Custom attributes | No | *(M15)* Owner-defined fields (Material, Warranty, Voltage, Dimensions, Carat — anything), managed as a list from Settings and rendered as a form on this screen. Replaces the fixed Dimensions/Material/Finish/Colour fields earlier versions hard-coded. |
 | Default selling price | No | Pre-fills the billing screen; always overridable |
 | Photos | No | Up to 5 images |
 | Active / discontinued | Yes | Defaults to active |
@@ -169,8 +175,10 @@ The system shall allow editing any model field. A model with pieces ever recorde
 
 *Acceptance:* attempting to delete a model that has been sold gives a clear refusal explaining why; discontinuing it removes it from the billing search.
 
-**FR-ITEM-04 — Search**
-The system shall let the owner find models by name, code, category, material or colour, and by dimension range (e.g. beds between 180 and 200 cm long) — the search a customer's question actually triggers.
+**FR-ITEM-04 — Search** *(corrected M15)*
+The system shall let the owner find models by name, code, category, or the value of any custom attribute — the search a customer's question actually triggers.
+
+*Correction, M15:* earlier versions of this document also promised search by dimension range (e.g. "beds between 180 and 200 cm long"). No screen ever implemented it — `ItemModelSearchCriteria`'s dimension fields existed but were always passed `null` — and the dead fields have now been deleted from the code rather than carried forward as an unfulfilled promise. Dimensions are, in any case, no longer a fixed field: a shop that wants to filter by them can search their free-text value like any other custom attribute.
 
 **FR-ITEM-05 — Stock visibility on the model**
 The system shall show, for each model, the live count of pieces currently `IN_STOCK`, derived from the piece register rather than stored as a number.
@@ -216,8 +224,8 @@ DAMAGED   → WRITTEN_OFF           (manual, with reason)
 **FR-PIECE-05 — Landed cost is immutable per piece**
 The system shall record each piece's landed cost at the moment of receipt and shall not recalculate it afterwards, even if the purchase bill is later edited. Editing a received bill requires reversing the receipt (FR-PUR-08).
 
-**FR-PIECE-06 — Storage location**
-The system shall record where each piece physically is, chosen from an editable location list (default entries: Showroom Floor, Display Window, Godown, Workshop). The location of an `IN_STOCK` piece shall be changeable at any time.
+**FR-PIECE-06 — Storage location** *(revised M15)*
+The system shall record where each piece physically is, chosen from an editable location list defined entirely by the owner (no locations are pre-seeded on a fresh install — see FR-ITEM-01's note on categories, same reasoning). The location of an `IN_STOCK` piece shall be changeable at any time.
 
 **FR-PIECE-07 — Piece search**
 The system shall let the owner find a piece by tag, model, location, state, or acquisition date range, and shall show its full history — received on which bill, moved where, sold on which invoice, at what price and profit.
@@ -468,7 +476,9 @@ The system shall let the owner choose the active cloud destination (Google Drive
 The system shall store shop name, address, state and state code, GSTIN, phone, email, logo image, and the invoice declaration and signature text — all appearing on generated documents.
 
 **FR-SYS-02 — Settings**
-The system shall expose in one place: backup schedule, retention counts, backup destination (Google Drive or OneDrive, FR-BAK-17), Drive folder name (Google only), cloud account status, SMTP settings, WhatsApp message template, idle-lock timeout, invoice number series, financial year start, default units (cm/inch), the category and location lists, and licence status (FR-LIC-01, added M14).
+The system shall expose in one place: backup schedule, retention counts, backup destination (Google Drive or OneDrive, FR-BAK-17), Drive folder name (Google only), cloud account status, SMTP settings, WhatsApp message template, idle-lock timeout, invoice number series, financial year start, the category, location and attribute-definition lists (attribute definitions added M15), and licence status (FR-LIC-01, added M14).
+
+*Corrected M15:* earlier versions of this document listed a "default units (cm/inch)" setting here. It was never implemented — dimensions were a fixed field, but no cm/inch toggle existed anywhere in the running application — and is dropped from this list rather than carried forward as an unfulfilled promise. A shop that wants to record a dimension does so as free text in a custom attribute, in whatever unit it prefers.
 
 **FR-SYS-03 — Audit log**
 The system shall record every consequential action — invoice created/cancelled, piece state changed, payment recorded/deleted, cost or price overridden, restore performed, settings changed — with timestamp, action, entity, and before/after values where applicable. The log shall be viewable and exportable, and shall not be editable from within the application.
@@ -520,7 +530,7 @@ The licence server shall record every activation and every rejected activation a
 
 **NFR-02 — Installation.** A single signed-or-unsigned Windows installer that requires no separate Java installation, no database server, and no manual configuration beyond the first-run wizard.
 
-**NFR-03 — Data location.** All business data, photos, PDFs, logs and local backups under `%LOCALAPPDATA%\FurnitureIMS\`. Nothing written inside Program Files.
+**NFR-03 — Data location.** All business data, photos, PDFs, logs and local backups under `%LOCALAPPDATA%\PieceTrack\` *(renamed from `FurnitureIMS`, M15 — an existing install's data folder is migrated automatically on first launch of the new build, never left behind)*. Nothing written inside Program Files.
 
 **NFR-04 — Performance targets**, on ordinary shop-PC hardware (4 GB RAM, spinning disk), at a realistic scale of 20,000 pieces and 20,000 invoices:
 
@@ -607,8 +617,9 @@ Each traced to the decision it came from. No item here was assumed.
 | # | Constraint | Source |
 |---|---|---|
 | C-01 | Single Windows PC, single user, no server, no LAN | Stated: one PC, one user |
-| C-02 | Retail showroom only — no manufacturing, no BOM, no wholesale | Stated: retail showroom |
+| C-02 | Retail only — no manufacturing, no BOM, no wholesale | Stated: retail showroom |
 | C-03 | Every piece tracked individually, not by quantity | Stated: track each piece individually |
+| C-15 | The item catalogue's field set is owner-defined, not fixed to any one trade (furniture, jewellery, electronics, ...) | Revised M15 — generalized from a furniture-only catalogue |
 | C-04 | Indian GST applies **when the shop is GST-registered**; a shop that isn't can turn GST off entirely (FR-SYS-05) and bills plain, with no GSTIN, HSN or tax anywhere | Stated: India — GST; revised M10 — not every furniture retailer at this scale is GST-registered |
 | C-05 | GST scope, when GST is on, stops at compliant invoices and period summaries | Stated: invoice + basic reports |
 | C-06 | Both customer receivables and supplier payables tracked | Stated: advance + balance + supplier dues |

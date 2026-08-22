@@ -15,6 +15,37 @@ release considered feature-complete and production-ready end to end
 "v1" scope label (`docs/04-roadmap.md` §1), which was reached much earlier,
 at `v0.1.0`.
 
+## [Unreleased]
+
+### M15 — Generic inventory system, "PieceTrack"
+
+- Renamed the product from FurnitureIMS to **PieceTrack**, and genericized the catalogue: the
+  six hardcoded specification columns (`length_cm`, `width_cm`, `height_cm`, `material`,
+  `finish`, `colour`) are replaced by two new tables, `attribute_definition` and
+  `item_model_attribute`, so the owner defines their own product fields (Material, Warranty,
+  Voltage, Carat, anything) from Categories & Locations instead of the software assuming
+  furniture. Piece-level tracking itself — the actual differentiator — is unchanged.
+- **Live-shop migration, not a breaking change.** `AppPaths.migrateLegacyRootIfNeeded()` moves
+  (or merges) `%LOCALAPPDATA%\FurnitureIMS\` into `%LOCALAPPDATA%\PieceTrack\` automatically on
+  first launch of the new build, atomically and retryable on failure. `V12__custom_attributes.sql`
+  backfills any existing material/colour/finish/dimension data on a live shop's database into
+  the new attribute mechanism before the old columns go dead, and separately preserves that
+  shop's resolved Google Drive backup folder name so it doesn't silently fork a new folder.
+  The seeded furniture categories/locations from V2 are deleted only where genuinely
+  unreferenced — a fresh install starts blank, a live shop keeps exactly what it already uses.
+- A fixed `--win-upgrade-uuid` was added to the Windows installer (`scripts/package-windows.ps1`)
+  so this and every future rename upgrades the existing install instead of forking a new
+  product identity — the one already-installed shop needs a single manual uninstall/reinstall
+  for this rename specifically, since its pre-rename install predates the fix.
+- Free-text item search now matches custom attribute values via an `EXISTS` subquery instead
+  of the old fixed material/colour/finish columns; the item model editor's Specification tab is
+  built dynamically from the active attribute list instead of fixed FXML fields.
+- Package rename `com.furnitureims` → `com.piecetrack` (198 files) committed as an isolated,
+  zero-behavior-change commit, separate from every functional change in this milestone.
+- Corrected the SRS and screens doc to stop promising a dimension-range search filter that
+  never existed in the running application — the underlying `ItemModelSearchCriteria` fields
+  were dead code (no screen ever passed them) and are now deleted rather than carried forward.
+
 ## [1.0.0] - 2026-08-20
 
 ### M14 — Licensing, activation and remote kill switch

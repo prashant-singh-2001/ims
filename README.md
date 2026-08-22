@@ -1,4 +1,4 @@
-# Furniture Shop Inventory Management System
+# PieceTrack
 
 ![Java 25](https://img.shields.io/badge/Java-25-orange)
 ![Windows 10%2F11](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
@@ -6,7 +6,8 @@
 ![Status: Stable](https://img.shields.io/badge/status-stable-brightgreen)
 ![Release: v1.0.0](https://img.shields.io/badge/release-v1.0.0-blue)
 
-A Windows desktop application for a furniture retail shop: piece-level inventory
+A Windows desktop application for any retail business that needs to track
+individual physical units, not just quantities: piece-level inventory
 tracking, GST-compliant sales invoicing, purchase and payment management, and
 encrypted backups to Google Drive or OneDrive. Built as a single-process Spring Boot + JavaFX
 application backed by an embedded SQLite database — no server, no separate
@@ -15,17 +16,24 @@ WhatsApp share.
 
 ## Why piece-level tracking
 
-Most inventory tools count "4 dining chairs." This one tracks four *specific*
+Most inventory tools count "4 chairs." This one tracks four *specific*
 chairs — each with its own tag, its own recorded purchase cost, and its own
 location — because that is what makes real profit-per-sale possible instead of
-an averaged guess. It shapes the entire data model: see
-[`docs/02-data-model.md`](docs/02-data-model.md) for the piece lifecycle state
-machine this is built around.
+an averaged guess. It works for anything sold as individually distinguishable
+units — furniture, appliances, jewellery, electronics — where two nominally
+identical items can carry different costs and different histories. It shapes
+the entire data model: see [`docs/02-data-model.md`](docs/02-data-model.md)
+for the piece lifecycle state machine this is built around.
+
+Item models carry whatever fields your business actually needs — the field
+list itself (Material, Warranty, Voltage, Carat, or anything else) is defined
+by the owner from Settings, not hardcoded into the software (M15).
 
 ## Features
 
-- **Catalogue & piece register** — furniture models with photos, dimensions,
-  materials; every physical unit individually tagged, costed, and tracked
+- **Catalogue & piece register** — item models with photos and user-defined
+  attributes (Material, Warranty, Voltage — whatever your business tracks);
+  every physical unit individually tagged, costed, and tracked
   through its own lifecycle (in stock → sold / returned / damaged / written off).
 - **Purchases** — supplier bills with GSTIN, landed-cost apportionment across
   received pieces, purchase returns.
@@ -80,8 +88,8 @@ Full requirement-by-requirement detail is in [`docs/01-requirements.md`](docs/01
 ## Getting started
 
 ```bash
-git clone https://github.com/prashant-singh-2001/furniture-ims.git
-cd furniture-ims
+git clone https://github.com/prashant-singh-2001/ims.git
+cd ims
 ```
 
 Run it during development (fastest loop, no packaging step):
@@ -114,7 +122,7 @@ quick local check of the packaging pipeline itself). See the script's own
 header comment for exactly what each stage does and why.
 
 A pre-built installer is published on the
-[Releases page](https://github.com/prashant-singh-2001/furniture-ims/releases/tag/v1.0.0)
+[Releases page](https://github.com/prashant-singh-2001/ims/releases/tag/v1.0.0)
 (`.exe`, built automatically by `.github/workflows/release.yml` on every tag
 push) — building from source is only needed for development or if you want a
 newer commit than the latest tag.
@@ -141,7 +149,7 @@ provision itself. The five steps are in
 
 ## Testing
 
-108 automated tests across 18 test classes — real SQLite temp databases and
+118 automated tests across 19 test classes — real SQLite temp databases and
 real FXML loading on the JavaFX Application Thread, not mocks, for exactly the
 kind of wiring and arithmetic bugs a mock would paper over. One test class
 seeds 20,000+ pieces and invoices directly to verify report and search
@@ -173,6 +181,16 @@ automatically by [`.github/workflows/release.yml`](.github/workflows/release.yml
 every push and pull request against `main` also runs the full suite via
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
+**M15** (post-`v1.0.0`) generalized the application from a furniture-only tool
+into PieceTrack: the six hardcoded specification columns (dimensions,
+material, finish, colour) were replaced with user-defined attribute
+definitions the owner manages from Categories & Locations, so any retail
+business — not just furniture — can describe its own products. Existing
+installs migrate automatically: the application data folder, existing
+specification data, and the Google Drive backup folder name all carry over
+with nothing lost. See [`docs/04-roadmap.md`](docs/04-roadmap.md) for the
+full milestone writeup.
+
 v1.1 (GST period summary, CSV import, quotations) and v2/v3 are directional
 only — see the roadmap for what's deferred and why.
 
@@ -191,5 +209,5 @@ visibility; it is not licensed for reuse, modification, or redistribution.
 
 ## Contact
 
-Open a [GitHub issue](https://github.com/prashant-singh-2001/furniture-ims/issues)
+Open a [GitHub issue](https://github.com/prashant-singh-2001/ims/issues)
 or reach the maintainer at [@prashant-singh-2001](https://github.com/prashant-singh-2001).
