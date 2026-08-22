@@ -1,0 +1,15 @@
+package com.piecetrack;
+
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+/**
+ * The Spring Boot side of this app: owns dependency injection, transactions and (from
+ * milestone M8) the backup scheduler. It is not the JavaFX entry point - see
+ * {@link PieceTrackFxApp}, which starts this context in its {@code init()} and hands
+ * beans to FXML controllers via a Spring-aware controller factory.
+ */
+@SpringBootApplication
+@EnableScheduling
+public class PieceTrackApplication {
+}

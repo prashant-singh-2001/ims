@@ -11,7 +11,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.furnitureims.ui.sales.InvoiceListController"
+            fx:controller="com.piecetrack.ui.sales.InvoiceListController"
             styleClass="app-root">
 
     <top>

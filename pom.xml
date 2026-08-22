@@ -11,13 +11,13 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.furnitureims</groupId>
+    <groupId>com.piecetrack</groupId>
     <artifactId>inventory-management-system</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Furniture Shop Inventory Management System</name>
-    <description>Windows desktop inventory, GST billing and backup system for a furniture retail shop</description>
+    <name>PieceTrack</name>
+    <description>Windows desktop inventory management with per-unit tracking, optional GST billing, and encrypted backup</description>
 
     <properties>
         <java.version>25</java.version>
@@ -173,7 +173,7 @@
     </dependencies>
 
     <build>
-        <finalName>furniture-ims</finalName>
+        <finalName>piecetrack</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -190,15 +190,15 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.furnitureims.Launcher</mainClass>
-                    <launcher>furniture-ims</launcher>
+                    <mainClass>com.piecetrack.Launcher</mainClass>
+                    <launcher>piecetrack</launcher>
                 </configuration>
             </plugin>
 
-            <!-- `mvn package` now produces a real executable fat jar (target/furniture-ims.jar) -
+            <!-- `mvn package` now produces a real executable fat jar (target/piecetrack.jar) -
                  every dependency, including the "win"-classified JavaFX jars fixed above, nested
-                 inside via Spring Boot's own loader, entry point com.furnitureims.Launcher rather
-                 than FurnitureImsApplication (which has no main()). This fat jar is the input
+                 inside via Spring Boot's own loader, entry point com.piecetrack.Launcher rather
+                 than PieceTrackApplication (which has no main()). This fat jar is the input
                  scripts/package-windows.ps1 feeds to jlink + jpackage to build the Windows
                  installer (NFR-02, milestone M9) - see that script for why jlink only needs to
                  supply java.desktop and friends, not the JavaFX modules themselves: this app runs
@@ -207,7 +207,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.furnitureims.Launcher</mainClass>
+                    <mainClass>com.piecetrack.Launcher</mainClass>
                 </configuration>
                 <executions>
                     <execution>

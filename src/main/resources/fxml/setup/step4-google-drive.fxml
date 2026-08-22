@@ -14,7 +14,7 @@
 
 <VBox spacing="14" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.furnitureims.ui.setup.Step4GoogleDriveController">
+      fx:controller="com.piecetrack.ui.setup.Step4GoogleDriveController">
     <padding><Insets top="8" right="24" bottom="8" left="24"/></padding>
 
     <Label text="Connect a Backup Destination" styleClass="wizard-step-title"/>

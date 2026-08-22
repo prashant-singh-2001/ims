@@ -11,7 +11,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.furnitureims.ui.catalogue.OpeningStockEntryController"
+            fx:controller="com.piecetrack.ui.catalogue.OpeningStockEntryController"
             styleClass="app-root">
 
     <center>

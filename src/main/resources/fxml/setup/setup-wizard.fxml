@@ -11,13 +11,13 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.furnitureims.ui.setup.SetupWizardController"
+            fx:controller="com.piecetrack.ui.setup.SetupWizardController"
             styleClass="app-root">
 
     <top>
         <VBox spacing="4" styleClass="wizard-header">
             <padding><Insets top="16" right="24" bottom="12" left="24"/></padding>
-            <Label text="Furniture Shop Inventory Management - Setup" styleClass="wizard-header-title"/>
+            <Label text="PieceTrack - Setup" styleClass="wizard-header-title"/>
             <Label fx:id="stepIndicatorLabel" styleClass="wizard-header-subtitle"/>
         </VBox>
     </top>

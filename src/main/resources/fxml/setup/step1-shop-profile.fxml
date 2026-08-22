@@ -14,7 +14,7 @@
 
 <VBox spacing="12" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.furnitureims.ui.setup.Step1ShopProfileController">
+      fx:controller="com.piecetrack.ui.setup.Step1ShopProfileController">
     <padding><Insets top="8" right="24" bottom="8" left="24"/></padding>
 
     <Label text="Shop Profile" styleClass="wizard-step-title"/>

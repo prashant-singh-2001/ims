@@ -12,7 +12,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.furnitureims.ui.settings.LicenseStatusController"
+            fx:controller="com.piecetrack.ui.settings.LicenseStatusController"
             styleClass="app-root">
 
     <top>

@@ -15,7 +15,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.furnitureims.ui.catalogue.ItemModelListController"
+            fx:controller="com.piecetrack.ui.catalogue.ItemModelListController"
             styleClass="app-root">
 
     <top>
