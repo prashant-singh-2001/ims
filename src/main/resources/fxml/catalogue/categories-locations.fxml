@@ -13,7 +13,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.furnitureims.ui.catalogue.CategoriesLocationsController"
+            fx:controller="com.piecetrack.ui.catalogue.CategoriesLocationsController"
             styleClass="app-root">
 
     <center>
@@ -50,6 +50,22 @@
                     <Button text="Add" onAction="#onAddLocationClicked"/>
                 </HBox>
                 <Label fx:id="locationErrorLabel" styleClass="wizard-error-label" wrapText="true"/>
+            </VBox>
+
+            <VBox spacing="10" HBox.hgrow="ALWAYS">
+                <Label text="Item Attributes" styleClass="section-heading"/>
+                <TableView fx:id="attributeTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="attributeNameColumn" text="Name" prefWidth="220"/>
+                        <TableColumn fx:id="attributeActiveColumn" text="Active" prefWidth="70"/>
+                        <TableColumn fx:id="attributeActionsColumn" text="" prefWidth="90"/>
+                    </columns>
+                </TableView>
+                <HBox spacing="8">
+                    <TextField fx:id="newAttributeField" promptText="New attribute name" HBox.hgrow="ALWAYS"/>
+                    <Button text="Add" onAction="#onAddAttributeClicked"/>
+                </HBox>
+                <Label fx:id="attributeErrorLabel" styleClass="wizard-error-label" wrapText="true"/>
             </VBox>
         </HBox>
     </center>

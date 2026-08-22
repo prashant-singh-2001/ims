@@ -19,7 +19,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.furnitureims.ui.catalogue.ItemModelEditorController"
+            fx:controller="com.piecetrack.ui.catalogue.ItemModelEditorController"
             styleClass="app-root">
 
     <center>
@@ -66,28 +66,13 @@
             <Tab text="Specification">
                 <VBox spacing="10">
                     <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
-                    <GridPane hgap="12" vgap="10">
+                    <Label text="Manage the fields below from Stock &gt; Categories &amp; Locations."
+                           wrapText="true" styleClass="wizard-step-subtitle"/>
+                    <GridPane fx:id="attributesGrid" hgap="12" vgap="10">
                         <columnConstraints>
                             <ColumnConstraints minWidth="140"/>
                             <ColumnConstraints hgrow="ALWAYS"/>
                         </columnConstraints>
-                        <Label text="Length (cm)" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                        <TextField fx:id="lengthField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-
-                        <Label text="Width (cm)" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                        <TextField fx:id="widthField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-
-                        <Label text="Height (cm)" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                        <TextField fx:id="heightField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-
-                        <Label text="Material" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                        <TextField fx:id="materialField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-
-                        <Label text="Finish" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                        <TextField fx:id="finishField" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
-
-                        <Label text="Colour" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-                        <TextField fx:id="colourField" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
                     </GridPane>
                 </VBox>
             </Tab>
