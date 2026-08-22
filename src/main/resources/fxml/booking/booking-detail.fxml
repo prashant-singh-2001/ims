@@ -13,7 +13,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.furnitureims.ui.booking.BookingDetailController"
+            fx:controller="com.piecetrack.ui.booking.BookingDetailController"
             styleClass="app-root">
 
     <top>

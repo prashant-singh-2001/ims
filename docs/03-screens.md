@@ -1,5 +1,5 @@
 # Screens and Navigation
-## Furniture Shop Inventory Management System
+## PieceTrack
 
 Companion to `01-requirements.md` and `02-data-model.md`. Version 1.0, 15 August 2026.
 
@@ -111,14 +111,16 @@ The pre-M10 dashboard additionally carried a "Reports" row (three buttons duplic
 ### 4.1 Item models — `FR-ITEM-01`, `FR-ITEM-03`, `FR-ITEM-04`, `FR-ITEM-05`
 
 List with columns: photo thumbnail, code, name, category, HSN, GST % *(HSN and GST % columns hidden when GST is off, FR-SYS-05)*, default price, **in stock count**, active flag.
-Filters: category, active/discontinued, material, colour, and dimension ranges (length/width/height between). Free-text search across name, code, material, colour.
+Filters: category, active/discontinued. Free-text search across name, code, and the value of any custom attribute (M15).
 Actions: New · Edit · Discontinue · View pieces.
+
+*Corrected M15:* earlier versions of this document also listed material/colour filters and a dimension-range filter (length/width/height between). No screen ever implemented the dimension-range part — it was dead code in `ItemModelSearchCriteria` — and material/colour are no longer fixed columns at all; both search concerns are now covered by the generic custom-attribute free-text match above.
 
 Deleting a model with any piece history is refused with an explanation, offering "Discontinue" instead.
 
 ### 4.2 Item model editor — `FR-ITEM-01`, `FR-ITEM-02`
 
-Tabs: **Details** (code, name, category, HSN, GST rate, default price, active, notes) · **Specification** (length, width, height with cm/inch toggle, material, finish, colour) · **Photos** (drag-and-drop or browse, up to 5, reorder, set primary, delete; auto-downscaled beyond 1600 px).
+Tabs: **Details** (code, name, category, HSN, GST rate, default price, active, notes) · **Specification** *(revised M15)* — a form built at runtime, one row per active attribute definition, with a subtitle pointing to Stock > Categories & Locations for managing the field list itself (definitions aren't added from this screen — the same "manage the shop's own lists" screen that already handles categories and locations gained a third list for them) · **Photos** (drag-and-drop or browse, up to 5, reorder, set primary, delete; auto-downscaled beyond 1600 px).
 
 Validations: code unique and used as the tag prefix; GST rate 0–28.
 
@@ -145,7 +147,7 @@ This screen is what settles a physical stock discrepancy, so it must show every 
 
 For go-live only, but permanently available.
 Rows of: model, quantity, per-piece cost, location, acquisition date (defaults to today, editable so aging is truthful).
-On save: creates `quantity` individually tagged pieces per row, source `OPENING_STOCK`, and shows the generated tags so they can be written onto the furniture.
+On save: creates `quantity` individually tagged pieces per row, source `OPENING_STOCK`, and shows the generated tags so they can be written onto the physical stock.
 
 Confirmation summary before commit: "This will create 24 pieces with a total value of ₹4,80,000."
 
@@ -169,7 +171,7 @@ Charges: freight, loading, other.
 Totals panel: taxable value (labelled **Subtotal** when GST is off), CGST/SGST or IGST *(the whole tax block hidden as one unit when GST is off, FR-SYS-05)*, round-off, grand total.
 Payment: optional payment now, with mode and reference (creates a `payment` with direction `OUT`).
 
-**Save as draft** keeps it editable and creates no pieces. **Confirm receipt** creates the pieces — and shows a preview first: "This will create 7 pieces: 1 × Aspen Sofa at ₹18,420 each, 6 × Oak Chair at ₹3,180 each" — followed by the generated tag list to write onto the furniture.
+**Save as draft** keeps it editable and creates no pieces. **Confirm receipt** creates the pieces — and shows a preview first: "This will create 7 pieces: 1 × Aspen Sofa at ₹18,420 each, 6 × Oak Chair at ₹3,180 each" — followed by the generated tag list to write onto the physical stock.
 
 Validations: duplicate (supplier, bill number) refused; quantity ≥ 1; a bill with no lines cannot be confirmed.
 
@@ -297,8 +299,7 @@ Filters: bucket, minimum amount, customer/supplier.
 | Email | SMTP host, port, TLS, username, app password, from-name, subject and body templates, **Send test email** |
 | WhatsApp | Message template with placeholders (customer name, invoice number, amount) |
 | Security | Idle lock timeout, change login password, regenerate recovery code |
-| Lists | Categories and storage locations — add, rename, deactivate |
-| Units | cm or inch for display |
+| Lists | Categories, storage locations, and item attribute definitions (M15) — add, rename, deactivate |
 | Audit log | Searchable by date, action and entity; exportable; read-only, with no edit or delete anywhere in the UI |
 | **Licence** *(added M14)* | Current state (Active / Active - renewal needed soon / Read-only / Not activated) with a plain-language explanation of what it means right now; shop name, this machine's fingerprint, activation date, lease valid-until date, and the result of the last server contact; a **Check Now** button that renews the lease on demand instead of waiting for the hourly background check |
 

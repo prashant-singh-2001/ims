@@ -19,7 +19,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.furnitureims.ui.backup.BackupSettingsController"
+            fx:controller="com.piecetrack.ui.backup.BackupSettingsController"
             styleClass="app-root">
 
     <center>

@@ -1,6 +1,6 @@
 /*
  * Thin app-specific layer on top of AtlantaFX Primer Light, which is applied as the
- * user-agent stylesheet in FurnitureImsFxApp.applyBaseTheme() (M10).
+ * user-agent stylesheet in PieceTrackFxApp.applyBaseTheme() (M10).
  *
  * Primer owns every standard control - buttons, tables, text fields, combo boxes, tabs,
  * scroll panes, dialogs. This file only adds what Primer has no opinion about: this app's

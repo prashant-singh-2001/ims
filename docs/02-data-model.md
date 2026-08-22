@@ -1,13 +1,13 @@
 # Data Model
-## Furniture Shop Inventory Management System
+## PieceTrack
 
-Companion to `01-requirements.md`. Version 1.0, 15 August 2026.
+Companion to `01-requirements.md`. Version 1.0, 15 August 2026. *Attribute tables added M15.*
 
 ---
 
 ## 1. The idea the model is built around
 
-The shop does not hold "4 dining chairs". It holds four specific chairs, each of which arrived on a particular bill, cost a particular amount, sits in a particular place, and will be sold to a particular customer on a particular day.
+The shop does not hold "4 chairs" or "4 rings". It holds four specific units, each of which arrived on a particular bill, cost a particular amount, sits in a particular place, and will be sold to a particular customer on a particular day.
 
 So **`piece` is the centre of this model**, not `item_model`. Every other table either describes a piece, brings pieces in, sends pieces out, or records money moving because of pieces.
 
@@ -26,6 +26,8 @@ erDiagram
     CATEGORY      ||--o{ ITEM_MODEL    : classifies
     ITEM_MODEL    ||--o{ ITEM_PHOTO    : has
     ITEM_MODEL    ||--o{ PIECE         : "is realised as"
+    ITEM_MODEL    ||--o{ ITEM_MODEL_ATTRIBUTE : has
+    ATTRIBUTE_DEFINITION ||--o{ ITEM_MODEL_ATTRIBUTE : defines
     PIECE         ||--o{ PIECE_PHOTO   : has
     STORAGE_LOCATION ||--o{ PIECE      : holds
 
@@ -154,9 +156,9 @@ Allocation happens inside the same transaction that saves the document, by updat
 
 ### 4.2 Catalogue
 
-**`category`** — `id`, `name` UNIQUE, `is_active`. Seeded with Sofa, Bed, Dining, Wardrobe, Chair, Table, Mattress, Other.
+**`category`** — `id`, `name` UNIQUE, `is_active`. Seeded by V2 with furniture-flavoured examples (Sofa, Bed, Dining, Wardrobe, Chair, Table, Mattress, Other); as of V12 (M15) those seed rows are deleted on any install where none of them is actually referenced by an `item_model`, so a fresh install now starts with an empty, owner-defined list. A live shop that already uses one of them keeps it untouched — the delete is conditional on being unreferenced, not unconditional.
 
-**`storage_location`** — `id`, `name` UNIQUE, `is_active`. Seeded with Showroom Floor, Display Window, Godown, Workshop.
+**`storage_location`** — `id`, `name` UNIQUE, `is_active`. Seeded by V2 with furniture-flavoured examples (Showroom Floor, Display Window, Godown, Workshop); cleaned up by V12 the same way and for the same reason as `category` above, checked against `piece.location_id` and `stock_movement.from_location_id`/`to_location_id`.
 
 **`item_model`**
 
@@ -168,8 +170,7 @@ Allocation happens inside the same transaction that saves the document, by updat
 | category_id | INTEGER FK NOT NULL | |
 | hsn_code | TEXT NOT NULL | |
 | gst_rate | NUMERIC NOT NULL | percent; per model, never hard-coded |
-| length_cm, width_cm, height_cm | NUMERIC | stored in cm, displayed in the configured unit |
-| material, finish, colour | TEXT | |
+| length_cm, width_cm, height_cm, material, finish, colour | NUMERIC / TEXT | **Dead as of V12 (M15).** Not dropped — SQLite cannot drop a column without rebuilding a foreign-key-referenced table, the same reasoning V9/V10 already established — but `ItemModelRepository` no longer reads or writes any of the six. Replaced by `attribute_definition` / `item_model_attribute` below; any non-null value a live shop already had was backfilled into the new tables by V12 before the columns went dead. |
 | default_sale_price | INTEGER | paisa |
 | is_active | INTEGER NOT NULL | discontinued models set this to 0 — models are never deleted |
 | notes | TEXT | |
@@ -177,6 +178,26 @@ Allocation happens inside the same transaction that saves the document, by updat
 **`item_photo`** — `id`, `item_model_id` FK, `relative_path` TEXT (under `Photos/`), `sort_order`, `is_primary`.
 
 Photos are files on disk with a path in the database, not blobs. This keeps the database small and fast — and it is precisely why the backup archive must include the `Photos/` folder (FR-BAK-03). A database-only backup would restore rows pointing at files that no longer exist.
+
+**`attribute_definition`** *(added V12, M15)* — the owner's own product field list, replacing the fixed dimension/material/finish/colour columns above.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | INTEGER PK | |
+| name | TEXT NOT NULL UNIQUE | e.g. "Material", "Warranty", "Voltage", "Carat" |
+| display_order | INTEGER NOT NULL DEFAULT 0 | order fields render in on the item model editor |
+| is_active | INTEGER NOT NULL DEFAULT 1 | deactivated definitions stop appearing on the editor but their existing values are kept |
+
+**`item_model_attribute`** *(added V12, M15)* — the values, one row per (model, definition) pair.
+
+| Column | Type | Notes |
+|---|---|---|
+| item_model_id | INTEGER FK NOT NULL | |
+| attribute_definition_id | INTEGER FK NOT NULL | keyed by definition **id**, not name, so renaming a definition never orphans its values |
+| value | TEXT | |
+| | | PK (item_model_id, attribute_definition_id) |
+
+Saving a model's attribute values is a full delete-and-reinsert of its rows in this table — the same replace-the-whole-set pattern `ItemModelRepository.update()` already uses for the model row itself — driven by a single "Save" button that submits the whole form at once. A blank value is dropped rather than stored as an empty string.
 
 ### 4.3 The piece register
 
@@ -346,7 +367,7 @@ A stored balance column would need updating from six different code paths and wo
 | backup_type | TEXT NOT NULL | `DAILY` / `WEEKLY` / `MANUAL` |
 | started_at, finished_at | TEXT | |
 | status | TEXT NOT NULL | `SUCCESS` / `FAILED` / `UPLOAD_PENDING` |
-| archive_name | TEXT | `fims-20260815-213000-daily.zip.enc` |
+| archive_name | TEXT | `piecetrack-20260815-213000-daily.zip.enc` *(prefix was `fims-` before M15; restore reads the stored `archive_name` value directly, so pre-rename archives still resolve)* |
 | size_bytes | INTEGER | |
 | sha256 | TEXT | of the plaintext archive, for restore verification |
 | remote_file_id | TEXT | *(renamed from `drive_file_id` in V9, M12)* the Drive file id or Graph item id this archive was uploaded to; used for retention pruning and restore |
@@ -382,7 +403,7 @@ Chosen from the queries the screens actually run, not speculatively:
 
 ## 6. Files on disk
 
-The database is only part of the data. Under `%LOCALAPPDATA%\FurnitureIMS\`:
+The database is only part of the data. Under `%LOCALAPPDATA%\PieceTrack\` *(renamed from `FurnitureIMS`, M15 — an existing install's folder is migrated automatically, not left behind)*:
 
 ```
 data/app.db              SQLite database

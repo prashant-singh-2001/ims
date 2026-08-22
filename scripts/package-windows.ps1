@@ -1,16 +1,15 @@
 <#
 .SYNOPSIS
-    Builds the Windows installer for the Furniture Shop Inventory Management System
-    (NFR-02, milestone M9): a self-contained MSI with a bundled Java runtime, so the shop
-    PC needs no separate Java installation and no manual configuration beyond the
-    first-run wizard.
+    Builds the Windows installer for PieceTrack (NFR-02, milestone M9): a self-contained MSI
+    with a bundled Java runtime, so the shop PC needs no separate Java installation and no
+    manual configuration beyond the first-run wizard.
 
 .DESCRIPTION
     Three stages, each depending on the previous one's output:
 
-    1. `mvn package` builds target/furniture-ims.jar - a Spring Boot executable fat jar
+    1. `mvn package` builds target/piecetrack.jar - a Spring Boot executable fat jar
        (spring-boot-maven-plugin, configured in pom.xml) whose entry point is
-       com.furnitureims.Launcher, not FurnitureImsApplication (which has no main()).
+       com.piecetrack.Launcher, not PieceTrackApplication (which has no main()).
 
     2. jlink builds a trimmed custom Java runtime under target/runtime, containing only
        the JDK modules this app actually needs - NOT the JavaFX modules. JavaFX runs in
@@ -34,11 +33,19 @@
     3. jpackage wraps that runtime image and the fat jar into a native Windows installer.
        `--main-jar` is passed WITHOUT `--main-class`: jpackage must read Main-Class from
        the jar's own manifest (org.springframework.boot.loader.launch.JarLauncher) so the
-       native launcher runs the equivalent of `java -jar app\furniture-ims.jar` rather
-       than trying to load com.furnitureims.Launcher directly off a plain classpath -
+       native launcher runs the equivalent of `java -jar app\piecetrack.jar` rather
+       than trying to load com.piecetrack.Launcher directly off a plain classpath -
        that class lives inside BOOT-INF/classes/ in Spring Boot's fat-jar layout, which a
        direct -cp launch cannot see. (Getting this backwards produces a native launcher
        that always exits immediately with "Could not find or load main class".)
+
+       `--win-upgrade-uuid` is fixed below rather than left to jpackage's default (which is
+       derived from `--name`): without it, any future product-name change - like this
+       milestone's own furniture-to-generic rename - makes Windows treat the result as a
+       brand new, unrelated product rather than an upgrade, leaving the old install behind
+       instead of replacing it. Generated once (2026-08-22); never change it again, for the
+       same reason changing it once already forces a manual uninstall/reinstall (see M15's
+       docs/04-roadmap.md entry for the one existing install that already paid this cost).
 
 .PARAMETER InstallerType
     "msi" (default), "exe", or "app-image".
@@ -89,9 +96,9 @@ if (-not $SkipBuild) {
     if ($LASTEXITCODE -ne 0) { throw "mvn package failed" }
 }
 
-$fatJar = Join-Path $repoRoot "target\furniture-ims.jar"
+$fatJar = Join-Path $repoRoot "target\piecetrack.jar"
 if (-not (Test-Path $fatJar)) {
-    throw "target\furniture-ims.jar not found - build it first (omit -SkipBuild)."
+    throw "target\piecetrack.jar not found - build it first (omit -SkipBuild)."
 }
 
 # Parsed directly from pom.xml rather than `mvn help:evaluate` - that goal needs a plugin
@@ -107,8 +114,8 @@ $runtimeDir = Join-Path $repoRoot "target\runtime"
 if (Test-Path $runtimeDir) { Remove-Item $runtimeDir -Recurse -Force }
 
 # Derived from `jdeps --multi-release 25 --print-module-deps --recursive --class-path
-# "lib\*" furniture-ims.jar` run against the fat jar's extracted layers (`java
-# -Djarmode=tools -jar furniture-ims.jar extract`), plus the reflective/SPI-loaded
+# "lib\*" piecetrack.jar` run against the fat jar's extracted layers (`java
+# -Djarmode=tools -jar piecetrack.jar extract`), plus the reflective/SPI-loaded
 # additions noted in the script header above.
 $modules = @(
     "java.base", "java.compiler", "java.desktop", "java.instrument", "java.logging",
@@ -147,21 +154,24 @@ if ($InstallerType -ne "app-image") {
 Write-Host "==> jpackage: building the $InstallerType"
 $jpackageArgs = @(
     "--type", $InstallerType,
-    "--name", "Furniture Shop Inventory Management",
+    "--name", "PieceTrack",
     "--app-version", $appVersion,
-    "--vendor", "Furniture Shop",
-    "--description", "Windows desktop inventory, GST billing and backup system for a furniture retail shop",
+    "--vendor", "PieceTrack",
+    "--description", "Windows desktop inventory management with per-unit tracking, optional GST billing, and encrypted backup",
     "--input", $jpackageInput,
-    "--main-jar", "furniture-ims.jar",
+    "--main-jar", "piecetrack.jar",
     "--runtime-image", $runtimeDir,
     "--dest", $installerDest
 )
 if ($InstallerType -ne "app-image") {
-    # Installer-only options (MSI/EXE): a Start Menu entry, a desktop shortcut, and the
-    # option to let the owner pick the install directory instead of a fixed default.
-    # jpackage rejects all three for a plain app-image, which has no installer step to
+    # Installer-only options (MSI/EXE): a Start Menu entry, a desktop shortcut, the
+    # option to let the owner pick the install directory instead of a fixed default, and
+    # the fixed upgrade UUID that makes a future rename upgrade the existing install
+    # instead of forking a new product identity. jpackage rejects all four for a plain
+    # app-image, which has no installer step (and therefore no upgrade concept) to
     # attach them to.
-    $jpackageArgs += @("--win-dir-chooser", "--win-menu", "--win-shortcut")
+    $jpackageArgs += @("--win-dir-chooser", "--win-menu", "--win-shortcut",
+        "--win-upgrade-uuid", "6DD01868-D1B9-40AC-9ABE-A4F013605B13")
 }
 & $jpackage @jpackageArgs
 if ($LASTEXITCODE -ne 0) { throw "jpackage failed" }

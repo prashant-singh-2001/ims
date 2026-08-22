@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Rolling application log, 30 days retention (NFR-10). The log directory comes from the
-  FURNITURE_IMS_LOG_DIR system property, which com.furnitureims.Launcher sets before this
+  PIECETRACK_LOG_DIR system property, which com.piecetrack.Launcher sets before this
   file is parsed - see the comment there for why it can't come from the AppPaths Spring bean.
 
   NFR-10 also forbids the login password, backup password and OAuth tokens from ever
@@ -9,7 +9,7 @@
   every call site never to pass those values to a logger in the first place.
 -->
 <configuration>
-    <property name="LOG_DIR" value="${FURNITURE_IMS_LOG_DIR:-./logs}"/>
+    <property name="LOG_DIR" value="${PIECETRACK_LOG_DIR:-./logs}"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -18,9 +18,9 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/furniture-ims.log</file>
+        <file>${LOG_DIR}/piecetrack.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/furniture-ims-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${LOG_DIR}/piecetrack-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
@@ -28,7 +28,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.furnitureims" level="INFO"/>
+    <logger name="com.piecetrack" level="INFO"/>
     <logger name="org.flywaydb" level="INFO"/>
 
     <root level="WARN">

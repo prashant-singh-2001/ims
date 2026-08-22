@@ -19,7 +19,7 @@ genuinely useful and welcome:
 - **Found a bug?** Open an issue using the bug report template. Include
   Windows version, what you did, what you expected, and what actually
   happened. If it's a crash, attach the relevant lines from the rolling log
-  under `%LOCALAPPDATA%\FurnitureIMS\logs\` — but check them first for
+  under `%LOCALAPPDATA%\PieceTrack\logs\` — but check them first for
   anything shop-specific (customer names, phone numbers, amounts) before
   pasting into a public issue, since this is a public repository.
 - **Have a feature idea?** Open an issue using the feature request template.

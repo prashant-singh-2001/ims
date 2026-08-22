@@ -36,7 +36,7 @@ If applicable, add screenshots (with sensitive data redacted).
 ## Log excerpt
 
 If this was a crash or an error dialog, paste the relevant lines from
-`%LOCALAPPDATA%\FurnitureIMS\logs\furniture-ims.log` — after checking them
+`%LOCALAPPDATA%\PieceTrack\logs\piecetrack.log` — after checking them
 for anything shop-specific first.
 
 ```

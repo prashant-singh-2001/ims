@@ -9,7 +9,7 @@
 
 <ScrollPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.furnitureims.ui.shell.DashboardController"
+            fx:controller="com.piecetrack.ui.shell.DashboardController"
             styleClass="app-root" fitToWidth="true">
     <VBox spacing="20">
         <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>

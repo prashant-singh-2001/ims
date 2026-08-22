@@ -10,7 +10,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.furnitureims.ui.booking.BookingListController"
+            fx:controller="com.piecetrack.ui.booking.BookingListController"
             styleClass="app-root">
 
     <top>

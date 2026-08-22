@@ -1,11 +1,11 @@
-# Furniture Shop Inventory Management System — Documentation
+# PieceTrack — Documentation
 
-Windows desktop software for a furniture retail shop: piece-level stock tracking, GST invoicing, customer and supplier balances, and encrypted daily/weekly backups to Google Drive.
+Windows desktop software for a retail shop tracking individually distinguishable stock: piece-level stock tracking, GST invoicing, customer and supplier balances, and encrypted daily/weekly backups to Google Drive or OneDrive.
 
 For an overview, build instructions, and the tech stack, see the [repository root README](../README.md). This folder is the detailed specification the build was verified against.
 
-**Status:** v1 (milestones M1–M9, see [04-roadmap.md](04-roadmap.md)) is built and verified, and five post-v1 milestones have since shipped on top of it — M10 (AtlantaFX restyle, persistent navigation shell, optional GST), M11 (per-piece condition photos), M12 (OneDrive as a second backup destination alongside Google Drive), M13 (Bookings tab tracking per-item delivery status), and M14 (per-machine licensing, activation and a remote kill switch). 108 automated tests, full SRS acceptance run. `v1.0.0` is the current tagged release — the first considered feature-complete and production-ready end to end (this is a semver milestone, not the same thing as this document's own "v1" scope label — see `04-roadmap.md` §1 for that distinction). Five requirements points from the original gathering pass are still open (below), one now partially resolved by M10; v1 proceeded on the documented defaults for each in the meantime.
-**Last updated:** 20 August 2026
+**Status:** v1 (milestones M1–M9, see [04-roadmap.md](04-roadmap.md)) is built and verified, and six post-v1 milestones have since shipped on top of it — M10 (AtlantaFX restyle, persistent navigation shell, optional GST), M11 (per-piece condition photos), M12 (OneDrive as a second backup destination alongside Google Drive), M13 (Bookings tab tracking per-item delivery status), M14 (per-machine licensing, activation and a remote kill switch), and M15 (generalized the furniture-only catalogue into user-defined item attributes, renamed the product to PieceTrack). 118 automated tests, full SRS acceptance run. `v1.0.0` is the current tagged release — the first considered feature-complete and production-ready end to end (this is a semver milestone, not the same thing as this document's own "v1" scope label — see `04-roadmap.md` §1 for that distinction). Five requirements points from the original gathering pass are still open (below), one now partially resolved by M10; v1 proceeded on the documented defaults for each in the meantime.
+**Last updated:** 22 August 2026
 
 ---
 
@@ -16,7 +16,7 @@ For an overview, build instructions, and the tech stack, see the [repository roo
 | [01-requirements.md](01-requirements.md) | The SRS. Scope, actors, ~90 numbered requirements, non-functional requirements, technical direction, open points, and the 20 acceptance tests that define "done". | Deciding what gets built, and settling any argument about whether something is in scope. |
 | [02-data-model.md](02-data-model.md) | Tables, columns, keys, indexes, the piece lifecycle state machine, and the exact landed-cost arithmetic. | Before writing the first migration, and whenever a schema question comes up. |
 | [03-screens.md](03-screens.md) | Navigation map and every screen — fields, actions, validations, and the requirement IDs each satisfies. | Building the UI, and checking nothing was missed. |
-| [04-roadmap.md](04-roadmap.md) | Build order in nine v1 milestones plus five post-v1 milestones (M10 restyle/GST-optional, M11 piece photos, M12 OneDrive backup, M13 Bookings/delivery tracking, M14 licensing/activation), indicative effort and risk, invariants no later phase may break, and what waits for v1.1, v2 and v3. | Planning the sequence of work. |
+| [04-roadmap.md](04-roadmap.md) | Build order in nine v1 milestones plus six post-v1 milestones (M10 restyle/GST-optional, M11 piece photos, M12 OneDrive backup, M13 Bookings/delivery tracking, M14 licensing/activation, M15 generic inventory/PieceTrack rename), indicative effort and risk, invariants no later phase may break, and what waits for v1.1, v2 and v3. | Planning the sequence of work. |
 
 ---
 
@@ -24,7 +24,7 @@ For an overview, build instructions, and the tech stack, see the [repository roo
 
 | | |
 |---|---|
-| Business | Retail furniture showroom — buys finished goods, sells to walk-in customers |
+| Business | Any retail business tracking individually distinguishable stock — buys finished goods, sells to walk-in customers |
 | Deployment | One Windows PC, one user, embedded database, works offline |
 | Stock model | **Every physical piece tracked individually** — its own tag, its own cost, its own location |
 | Modules | Purchases and goods receipt · GST sales invoicing · Customer and supplier payments |
