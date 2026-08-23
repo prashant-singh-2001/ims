@@ -21,11 +21,11 @@
     <top>
         <VBox styleClass="screen-actions">
             <HBox alignment="CENTER_LEFT" spacing="12">
-                <padding><Insets top="14" right="24" bottom="6" left="24"/></padding>
+                <padding><Insets top="16" right="24" bottom="8" left="24"/></padding>
                 <Button text="Opening Stock Entry" onAction="#onOpeningStockClicked" styleClass="primary-button"/>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="8">
-                <padding><Insets top="6" right="24" bottom="6" left="24"/></padding>
+                <padding><Insets top="8" right="24" bottom="8" left="24"/></padding>
                 <TextField fx:id="searchField" promptText="Tag or model" prefWidth="180"/>
                 <ComboBox fx:id="stateFilterCombo" promptText="All states"/>
                 <ComboBox fx:id="categoryFilterCombo" promptText="All categories"/>
@@ -37,7 +37,7 @@
                 <Button text="Search" onAction="#onSearchClicked"/>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="8">
-                <padding><Insets top="0" right="24" bottom="14" left="24"/></padding>
+                <padding><Insets top="0" right="24" bottom="16" left="24"/></padding>
                 <Button text="Change Location for Selected" onAction="#onBulkChangeLocationClicked"/>
                 <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
             </HBox>

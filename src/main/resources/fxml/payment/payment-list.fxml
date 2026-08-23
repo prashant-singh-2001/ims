@@ -21,12 +21,12 @@
     <top>
         <VBox styleClass="screen-actions">
             <HBox alignment="CENTER_LEFT" spacing="12">
-                <padding><Insets top="14" right="24" bottom="10" left="24"/></padding>
+                <padding><Insets top="16" right="24" bottom="12" left="24"/></padding>
                 <Button text="Customer Receipt" onAction="#onCustomerReceiptClicked" styleClass="primary-button"/>
                 <Button text="Supplier Payment" onAction="#onSupplierPaymentClicked" styleClass="primary-button"/>
             </HBox>
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <padding><Insets top="0" right="24" bottom="14" left="24"/></padding>
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <padding><Insets top="0" right="24" bottom="16" left="24"/></padding>
                 <ComboBox fx:id="partyTypeFilterCombo" promptText="All parties"/>
                 <ComboBox fx:id="modeFilterCombo" promptText="All modes"/>
                 <Label text="From"/>

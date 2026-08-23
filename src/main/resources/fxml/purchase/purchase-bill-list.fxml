@@ -18,12 +18,12 @@
     <top>
         <VBox styleClass="screen-actions">
             <HBox alignment="CENTER_LEFT" spacing="12">
-                <padding><Insets top="14" right="24" bottom="6" left="24"/></padding>
+                <padding><Insets top="16" right="24" bottom="8" left="24"/></padding>
                 <Button text="Suppliers" onAction="#onSuppliersClicked"/>
                 <Button text="New Purchase Bill" onAction="#onNewClicked" styleClass="primary-button"/>
             </HBox>
             <HBox alignment="CENTER_LEFT">
-                <padding><Insets top="0" right="24" bottom="14" left="24"/></padding>
+                <padding><Insets top="0" right="24" bottom="16" left="24"/></padding>
                 <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
             </HBox>
         </VBox>

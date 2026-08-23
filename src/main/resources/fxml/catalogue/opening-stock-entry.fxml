@@ -22,7 +22,7 @@
             <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
                 <VBox fx:id="rowsBox" spacing="8"/>
             </ScrollPane>
-            <HBox spacing="10">
+            <HBox spacing="12">
                 <Button text="+ Add Row" onAction="#onAddRowClicked"/>
                 <Button text="+ New Item" onAction="#onAddNewItemRowClicked"/>
             </HBox>

@@ -17,6 +17,7 @@ import com.piecetrack.service.PurchaseBillService;
 import com.piecetrack.service.SalesInvoiceService;
 import com.piecetrack.service.StorageLocationService;
 import com.piecetrack.service.SupplierService;
+import com.piecetrack.ui.Fonts;
 import com.piecetrack.ui.catalogue.PieceDetailController;
 import com.piecetrack.ui.purchase.PurchaseReturnController;
 import com.piecetrack.ui.sales.InvoiceDetailController;
@@ -90,6 +91,10 @@ class FxmlLoadSmokeTest {
         // this the whole suite would keep validating every screen against JavaFX's stock
         // Modena stylesheet, and so could not catch a theme regression even in principle.
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+        // Same bundled display face the real app registers - without it this suite would
+        // render every screen against the platform default font instead of the real one,
+        // and could not catch a font-loading regression even in principle.
+        Fonts.loadAll();
         fxToolkitStarted = true;
     }
 

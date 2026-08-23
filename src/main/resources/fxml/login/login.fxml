@@ -16,11 +16,11 @@
            fx:controller="com.piecetrack.ui.login.LoginController"
            styleClass="lock-scrim">
 
-    <VBox fx:id="loginPane" spacing="14" maxWidth="360" maxHeight="-Infinity"
+    <VBox fx:id="loginPane" spacing="16" maxWidth="360" maxHeight="-Infinity"
           alignment="CENTER" styleClass="auth-card">
         <Label text="PieceTrack" wrapText="true" styleClass="wizard-step-title"/>
 
-        <GridPane hgap="10" vgap="10">
+        <GridPane hgap="12" vgap="12">
             <columnConstraints>
                 <ColumnConstraints minWidth="90"/>
                 <ColumnConstraints hgrow="ALWAYS"/>
@@ -40,12 +40,12 @@
         <Hyperlink text="Forgot password?" onAction="#onForgotPasswordClicked"/>
     </VBox>
 
-    <VBox fx:id="recoveryPane" spacing="14" maxWidth="380" maxHeight="-Infinity"
+    <VBox fx:id="recoveryPane" spacing="16" maxWidth="380" maxHeight="-Infinity"
           alignment="CENTER" visible="false" managed="false"
           styleClass="auth-card">
         <Label text="Reset Password with Recovery Code" wrapText="true" styleClass="wizard-step-title"/>
 
-        <GridPane hgap="10" vgap="10">
+        <GridPane hgap="12" vgap="12">
             <columnConstraints>
                 <ColumnConstraints minWidth="120"/>
                 <ColumnConstraints hgrow="ALWAYS"/>

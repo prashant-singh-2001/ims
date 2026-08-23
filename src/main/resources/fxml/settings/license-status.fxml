@@ -17,20 +17,20 @@
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <padding><Insets top="16" right="24" bottom="16" left="24"/></padding>
             <Button fx:id="checkNowButton" text="Check Now" onAction="#onCheckNowClicked"/>
             <ProgressIndicator fx:id="progressIndicator" prefWidth="20" prefHeight="20"/>
         </HBox>
     </top>
 
     <center>
-        <VBox spacing="14">
+        <VBox spacing="16">
             <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
             <Label fx:id="statusLabel" styleClass="section-heading"/>
             <Label fx:id="statusExplanationLabel" wrapText="true" styleClass="wizard-step-subtitle"/>
 
-            <GridPane hgap="12" vgap="10">
+            <GridPane hgap="12" vgap="12">
                 <columnConstraints>
                     <ColumnConstraints minWidth="150"/>
                     <ColumnConstraints hgrow="ALWAYS" minWidth="260"/>

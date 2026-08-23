@@ -25,9 +25,9 @@
     <center>
         <TabPane tabClosingPolicy="UNAVAILABLE">
             <Tab text="Details">
-                <VBox spacing="10">
+                <VBox spacing="12">
                     <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
-                    <GridPane hgap="12" vgap="10">
+                    <GridPane hgap="12" vgap="12">
                         <columnConstraints>
                             <ColumnConstraints minWidth="140"/>
                             <ColumnConstraints hgrow="ALWAYS"/>
@@ -64,11 +64,11 @@
             </Tab>
 
             <Tab text="Specification">
-                <VBox spacing="10">
+                <VBox spacing="12">
                     <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
                     <Label text="Manage the fields below from Stock &gt; Categories &amp; Locations."
                            wrapText="true" styleClass="wizard-step-subtitle"/>
-                    <GridPane fx:id="attributesGrid" hgap="12" vgap="10">
+                    <GridPane fx:id="attributesGrid" hgap="12" vgap="12">
                         <columnConstraints>
                             <ColumnConstraints minWidth="140"/>
                             <ColumnConstraints hgrow="ALWAYS"/>
@@ -80,7 +80,7 @@
             <Tab fx:id="photosTab" text="Photos">
                 <VBox spacing="12">
                     <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
-                    <HBox spacing="10" alignment="CENTER_LEFT">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
                         <Button text="Add Photo" onAction="#onAddPhotoClicked"/>
                         <Label text="Up to 5 photos. Large images are downscaled automatically." styleClass="wizard-step-subtitle"/>
                     </HBox>

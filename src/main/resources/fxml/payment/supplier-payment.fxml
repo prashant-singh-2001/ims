@@ -21,7 +21,7 @@
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <padding><Insets top="16" right="24" bottom="16" left="24"/></padding>
             <Button text="Payment List" onAction="#onPaymentListClicked"/>
         </HBox>
     </top>
@@ -36,10 +36,10 @@
                 <Label fx:id="supplierDuesLabel" styleClass="wizard-step-subtitle"/>
 
                 <Label text="Unpaid bills" styleClass="section-heading"/>
-                <VBox fx:id="billsBox" spacing="6"/>
+                <VBox fx:id="billsBox" spacing="8"/>
 
                 <Label text="Payment" styleClass="section-heading"/>
-                <GridPane hgap="12" vgap="10">
+                <GridPane hgap="12" vgap="12">
                     <columnConstraints>
                         <ColumnConstraints minWidth="120"/>
                         <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>

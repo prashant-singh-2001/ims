@@ -18,7 +18,7 @@
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <padding><Insets top="16" right="24" bottom="16" left="24"/></padding>
             <Button fx:id="markAllDeliveredButton" text="Mark All Delivered" onAction="#onMarkAllDeliveredClicked"
                     styleClass="primary-button"/>
         </HBox>
@@ -28,7 +28,7 @@
         <VBox spacing="16">
             <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
-            <GridPane hgap="20" vgap="6">
+            <GridPane hgap="20" vgap="8">
                 <columnConstraints>
                     <ColumnConstraints minWidth="120"/>
                     <ColumnConstraints minWidth="200"/>

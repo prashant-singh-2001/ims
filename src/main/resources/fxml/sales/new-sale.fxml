@@ -27,7 +27,7 @@
                 <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
                 <Label text="Customer" styleClass="section-heading"/>
-                <GridPane hgap="12" vgap="10">
+                <GridPane hgap="12" vgap="12">
                     <columnConstraints>
                         <ColumnConstraints minWidth="120"/>
                         <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
@@ -75,7 +75,7 @@
                 </GridPane>
 
                 <Label text="Add items" styleClass="section-heading"/>
-                <HBox spacing="10" alignment="CENTER_LEFT">
+                <HBox spacing="12" alignment="CENTER_LEFT">
                     <Label text="Model:"/>
                     <ComboBox fx:id="modelSearchCombo" promptText="Search by model" prefWidth="260"/>
                     <Label text="or tag:"/>
@@ -101,7 +101,7 @@
                     <Label fx:id="taxColumnHeader" text="Tax" prefWidth="90" styleClass="field-label"/>
                     <Label text="Total" prefWidth="90" styleClass="field-label"/>
                 </HBox>
-                <VBox fx:id="rowsBox" spacing="6"/>
+                <VBox fx:id="rowsBox" spacing="8"/>
 
                 <HBox spacing="20" alignment="CENTER_LEFT">
                     <CheckBox fx:id="priceInclusiveCheck" text="Entered prices include tax"/>
@@ -115,8 +115,8 @@
                      always-visible grid, a separately-toggled gstTotalsGrid, and a Grand Total
                      row so the GST rows can hide as one unit instead of needing to be picked
                      apart cell by cell. -->
-                <VBox spacing="6" styleClass="wizard-callout">
-                    <GridPane hgap="20" vgap="6">
+                <VBox spacing="8" styleClass="wizard-callout">
+                    <GridPane hgap="20" vgap="8">
                         <columnConstraints>
                             <ColumnConstraints minWidth="120"/>
                             <ColumnConstraints minWidth="110"/>
@@ -135,7 +135,7 @@
                         <Label fx:id="roundOffLabel" text="-" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
                     </GridPane>
 
-                    <GridPane fx:id="gstTotalsGrid" hgap="20" vgap="6">
+                    <GridPane fx:id="gstTotalsGrid" hgap="20" vgap="8">
                         <columnConstraints>
                             <ColumnConstraints minWidth="120"/>
                             <ColumnConstraints minWidth="110"/>
@@ -161,7 +161,7 @@
                 <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
 
                 <Label text="Advance (optional)" styleClass="section-heading"/>
-                <GridPane hgap="12" vgap="10">
+                <GridPane hgap="12" vgap="12">
                     <columnConstraints>
                         <ColumnConstraints minWidth="120"/>
                         <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>

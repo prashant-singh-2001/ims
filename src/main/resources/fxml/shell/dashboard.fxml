@@ -55,7 +55,7 @@
                 <Label text="Payable" styleClass="metric-tile-label"/>
                 <Label fx:id="payableLabel" styleClass="metric-tile-value"/>
             </VBox>
-            <VBox spacing="4" styleClass="metric-tile" onMouseClicked="#onBackupStatusTileClicked">
+            <VBox fx:id="backupStatusTile" spacing="4" styleClass="metric-tile" onMouseClicked="#onBackupStatusTileClicked">
                 <Label text="Backup Status" styleClass="metric-tile-label"/>
                 <Label fx:id="backupStatusLabel"/>
             </VBox>

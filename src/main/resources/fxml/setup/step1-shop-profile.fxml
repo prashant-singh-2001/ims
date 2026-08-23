@@ -21,7 +21,7 @@
     <Label text="This appears on every invoice, credit note and debit note the shop issues."
            wrapText="true" styleClass="wizard-step-subtitle"/>
 
-    <GridPane hgap="12" vgap="10">
+    <GridPane hgap="12" vgap="12">
         <columnConstraints>
             <ColumnConstraints minWidth="160"/>
             <ColumnConstraints hgrow="ALWAYS"/>

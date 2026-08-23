@@ -70,7 +70,7 @@ public class NavBar {
         box.setPrefWidth(200);
         box.getStyleClass().add("nav-bar");
 
-        homeButton = navButton("Dashboard", Route.DASHBOARD);
+        homeButton = navButton("Dashboard", NavSection.NONE, Route.DASHBOARD);
         box.getChildren().add(homeButton);
         box.getChildren().add(separator());
 
@@ -78,7 +78,7 @@ public class NavBar {
             if (section == NavSection.NONE) {
                 continue;
             }
-            Button button = navButton(section.label(), LANDING.get(section));
+            Button button = navButton(section.label(), section, LANDING.get(section));
             sectionButtons.put(section, button);
             box.getChildren().add(button);
         }
@@ -93,12 +93,16 @@ public class NavBar {
         return LANDING.get(section);
     }
 
-    private Button navButton(String label, Route target) {
+    private Button navButton(String label, NavSection section, Route target) {
         Button button = new Button(label);
         button.getStyleClass().add("nav-button");
         button.setMaxWidth(Double.MAX_VALUE);
         button.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         VBox.setVgrow(button, Priority.NEVER);
+        // A geometric mark per section (Bauhaus) - set as the graphic, never prefixed into
+        // the label text: SceneRouterShellTest matches nav buttons by their exact getText(),
+        // and setGraphic() leaves that untouched.
+        button.setGraphic(Marks.forSection(section));
         // NFR-14: the billing screen must be operable entirely from the keyboard. Tabbing
         // out of a form must not land in the always-visible sidebar - Ctrl+1..7 (wired in
         // SceneRouter) is the keyboard route into navigation instead.

@@ -21,12 +21,12 @@
     <top>
         <VBox styleClass="screen-actions">
             <HBox alignment="CENTER_LEFT" spacing="12">
-                <padding><Insets top="14" right="24" bottom="6" left="24"/></padding>
+                <padding><Insets top="16" right="24" bottom="8" left="24"/></padding>
                 <Button text="Categories &amp; Locations" onAction="#onCategoriesLocationsClicked"/>
                 <Button text="New Model" onAction="#onNewClicked" styleClass="primary-button"/>
             </HBox>
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <padding><Insets top="6" right="24" bottom="14" left="24"/></padding>
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <padding><Insets top="8" right="24" bottom="16" left="24"/></padding>
                 <TextField fx:id="searchField" promptText="Search name, code, material, colour" prefWidth="280"/>
                 <ComboBox fx:id="categoryFilterCombo" promptText="All categories"/>
                 <CheckBox fx:id="activeOnlyCheck" text="Active only"/>

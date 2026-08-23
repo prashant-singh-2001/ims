@@ -24,11 +24,11 @@
 
     <center>
         <ScrollPane fitToWidth="true">
-            <VBox spacing="18">
+            <VBox spacing="16">
                 <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
                 <Label text="Status" styleClass="section-heading"/>
-                <GridPane hgap="24" vgap="6" styleClass="wizard-callout">
+                <GridPane hgap="24" vgap="8" styleClass="wizard-callout">
                     <columnConstraints>
                         <ColumnConstraints minWidth="140"/>
                         <ColumnConstraints hgrow="ALWAYS" minWidth="260"/>
@@ -54,14 +54,14 @@
                     <Button text="Disconnect" onAction="#onDisconnectClicked"/>
                     <Button text="Change Backup Password" onAction="#onChangeBackupPasswordClicked"/>
                 </HBox>
-                <HBox spacing="10" alignment="CENTER_LEFT">
+                <HBox spacing="12" alignment="CENTER_LEFT">
                     <ProgressIndicator fx:id="progressIndicator" prefWidth="24" prefHeight="24"/>
                     <Label fx:id="progressLabel" styleClass="wizard-step-subtitle"/>
                 </HBox>
                 <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
 
                 <Label text="Schedule and Settings" styleClass="section-heading"/>
-                <GridPane hgap="12" vgap="10">
+                <GridPane hgap="12" vgap="12">
                     <columnConstraints>
                         <ColumnConstraints minWidth="140"/>
                         <ColumnConstraints hgrow="ALWAYS" minWidth="160"/>
@@ -90,7 +90,7 @@
                 <Label fx:id="googleCredentialHintLabel"
                        text="The Google client ID/secret come from your own Google Cloud project - see docs/01-requirements.md section 5. This app never ships with one built in."
                        wrapText="true" styleClass="wizard-step-subtitle"/>
-                <HBox spacing="10" alignment="CENTER_LEFT">
+                <HBox spacing="12" alignment="CENTER_LEFT">
                     <Button text="Save Settings" onAction="#onSaveSettingsClicked" styleClass="primary-button"/>
                     <Label fx:id="settingsStatusLabel" styleClass="wizard-step-subtitle"/>
                 </HBox>

@@ -56,7 +56,7 @@
             </GridPane>
 
             <Label text="Photos" styleClass="section-heading"/>
-            <HBox spacing="10" alignment="CENTER_LEFT">
+            <HBox spacing="12" alignment="CENTER_LEFT">
                 <Button text="Add Photo" onAction="#onAddPhotoClicked"/>
                 <Label text="Up to 3 photos of this specific piece's condition. Large images are downscaled automatically."
                        styleClass="wizard-step-subtitle"/>

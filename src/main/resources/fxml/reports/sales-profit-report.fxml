@@ -22,11 +22,11 @@
     <top>
         <VBox styleClass="screen-actions">
             <HBox alignment="CENTER_LEFT" spacing="12">
-                <padding><Insets top="14" right="24" bottom="6" left="24"/></padding>
+                <padding><Insets top="16" right="24" bottom="8" left="24"/></padding>
                 <Button text="Export CSV" onAction="#onExportCsvClicked"/>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="8">
-                <padding><Insets top="0" right="24" bottom="6" left="24"/></padding>
+                <padding><Insets top="0" right="24" bottom="8" left="24"/></padding>
                 <Label text="From"/>
                 <DatePicker fx:id="fromDatePicker" prefWidth="140"/>
                 <Label text="To"/>
@@ -38,7 +38,7 @@
                 <Button text="This FY" onAction="#onThisFinancialYearPresetClicked"/>
             </HBox>
             <HBox alignment="CENTER_LEFT">
-                <padding><Insets top="0" right="24" bottom="14" left="24"/></padding>
+                <padding><Insets top="0" right="24" bottom="16" left="24"/></padding>
                 <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
             </HBox>
         </VBox>
@@ -48,7 +48,7 @@
         <VBox spacing="16">
             <padding><Insets top="16" right="24" bottom="16" left="24"/></padding>
 
-            <GridPane hgap="24" vgap="6" styleClass="wizard-callout">
+            <GridPane hgap="24" vgap="8" styleClass="wizard-callout">
                 <columnConstraints>
                     <ColumnConstraints minWidth="110"/>
                     <ColumnConstraints minWidth="110"/>

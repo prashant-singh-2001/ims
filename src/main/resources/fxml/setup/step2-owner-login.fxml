@@ -19,8 +19,8 @@
     <Label text="This password unlocks the application every time it starts."
            wrapText="true" styleClass="wizard-step-subtitle"/>
 
-    <VBox fx:id="credentialsPane" spacing="10">
-        <GridPane hgap="12" vgap="10">
+    <VBox fx:id="credentialsPane" spacing="12">
+        <GridPane hgap="12" vgap="12">
             <columnConstraints>
                 <ColumnConstraints minWidth="160"/>
                 <ColumnConstraints hgrow="ALWAYS"/>
