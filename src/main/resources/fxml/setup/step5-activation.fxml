@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="14" xmlns="http://javafx.com/javafx"
+<VBox spacing="16" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.piecetrack.ui.setup.Step5ActivationController">
     <padding><Insets top="8" right="24" bottom="8" left="24"/></padding>
@@ -17,12 +17,12 @@
     <Label text="Enter the activation key you were given to bind this installation to this PC. Setup cannot finish without it."
            wrapText="true" styleClass="wizard-step-subtitle"/>
 
-    <VBox spacing="10" styleClass="wizard-callout">
+    <VBox spacing="12" styleClass="wizard-callout">
         <HBox spacing="12" alignment="CENTER_LEFT">
             <Label text="Activation key" minWidth="130"/>
             <TextField fx:id="activationKeyField" promptText="FIMS-XXXX-XXXX-XXXX" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
         </HBox>
-        <HBox spacing="10" alignment="CENTER_LEFT">
+        <HBox spacing="12" alignment="CENTER_LEFT">
             <Button fx:id="activateButton" text="Activate" onAction="#onActivateClicked"/>
             <ProgressIndicator fx:id="progressIndicator" prefWidth="20" prefHeight="20"/>
             <Label fx:id="statusLabel"/>

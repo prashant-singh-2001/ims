@@ -401,7 +401,7 @@ public class NewSaleController implements ConfirmsNavigation {
             igstLabel.setText(preview.igstAmount().toDisplayString());
             roundOffLabel.setText(preview.roundOff().toDisplayString());
             grandTotalLabel.setText(preview.grandTotal().toDisplayString());
-            warningLabel.setText(warnings.toString());
+            setWarningText(warnings.toString());
             errorLabel.setText("");
         } catch (IllegalArgumentException | IllegalStateException e) {
             errorLabel.setText(e.getMessage());
@@ -599,8 +599,17 @@ public class NewSaleController implements ConfirmsNavigation {
         igstLabel.setText("-");
         roundOffLabel.setText("-");
         grandTotalLabel.setText("-");
-        warningLabel.setText("");
+        setWarningText("");
         errorLabel.setText("");
+    }
+
+    /** {@code .wizard-warning-text} (app.css) always paints a filled pill behind this
+     *  label's text - unlike a plain colour, an empty pill is still visible, so this label
+     *  must collapse out of layout entirely rather than just showing empty text. */
+    private void setWarningText(String text) {
+        warningLabel.setText(text);
+        warningLabel.setVisible(!text.isEmpty());
+        warningLabel.setManaged(!text.isEmpty());
     }
 
     private static Money parseMoney(String text, String label) {

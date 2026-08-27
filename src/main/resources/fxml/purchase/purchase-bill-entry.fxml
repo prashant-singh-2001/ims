@@ -25,7 +25,7 @@
             <VBox spacing="16">
                 <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
-                <GridPane hgap="12" vgap="10">
+                <GridPane hgap="12" vgap="12">
                     <columnConstraints>
                         <ColumnConstraints minWidth="130"/>
                         <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
@@ -50,7 +50,7 @@
                 <Button text="+ Add Line" onAction="#onAddRowClicked"/>
 
                 <Label text="Charges" styleClass="section-heading"/>
-                <GridPane hgap="12" vgap="10">
+                <GridPane hgap="12" vgap="12">
                     <columnConstraints>
                         <ColumnConstraints minWidth="130"/>
                         <ColumnConstraints minWidth="150"/>
@@ -70,14 +70,14 @@
                 <Label text="Notes" styleClass="section-heading"/>
                 <TextArea fx:id="notesArea" prefRowCount="2"/>
 
-                <HBox spacing="10" alignment="CENTER_LEFT">
+                <HBox spacing="12" alignment="CENTER_LEFT">
                     <Button text="Recalculate Totals" onAction="#onRecalculateClicked"/>
                 </HBox>
 
                 <!-- M10: split for the same reason as new-sale.fxml's totals callout - see
                      the note there. gstTotalsGrid toggles as one unit. -->
-                <VBox spacing="6" styleClass="wizard-callout">
-                    <GridPane hgap="20" vgap="6">
+                <VBox spacing="8" styleClass="wizard-callout">
+                    <GridPane hgap="20" vgap="8">
                         <columnConstraints>
                             <ColumnConstraints minWidth="120"/>
                             <ColumnConstraints minWidth="110"/>
@@ -91,7 +91,7 @@
                         <Label fx:id="chargesLabel" text="-" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
                     </GridPane>
 
-                    <GridPane fx:id="gstTotalsGrid" hgap="20" vgap="6">
+                    <GridPane fx:id="gstTotalsGrid" hgap="20" vgap="8">
                         <columnConstraints>
                             <ColumnConstraints minWidth="120"/>
                             <ColumnConstraints minWidth="110"/>
@@ -115,7 +115,7 @@
 
                 <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
 
-                <HBox spacing="10">
+                <HBox spacing="12">
                     <Button text="Save as Draft" onAction="#onSaveDraftClicked"/>
                     <Button text="Confirm Receipt" onAction="#onConfirmReceiptClicked" styleClass="primary-button"/>
                 </HBox>

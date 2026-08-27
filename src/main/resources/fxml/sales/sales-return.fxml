@@ -22,7 +22,7 @@
             <VBox spacing="12">
                 <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
                 <Label text="Pieces sold on this invoice" styleClass="field-label"/>
-                <VBox fx:id="pieceCheckboxesBox" spacing="6"/>
+                <VBox fx:id="pieceCheckboxesBox" spacing="8"/>
 
                 <Label text="Reason *" styleClass="field-label"/>
                 <TextField fx:id="reasonField"/>

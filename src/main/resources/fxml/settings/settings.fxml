@@ -26,7 +26,7 @@
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <padding><Insets top="16" right="24" bottom="16" left="24"/></padding>
             <Button text="Backup and Restore" onAction="#onBackupSettingsClicked"/>
             <Button text="Audit Log" onAction="#onAuditLogClicked"/>
             <Button text="Licence" onAction="#onLicenseClicked"/>
@@ -45,7 +45,7 @@
                         <Label text="When off, every bill is plain - no CGST/SGST/IGST, no HSN code, no GSTIN and no place of supply anywhere the owner or a customer sees."
                                wrapText="true" styleClass="wizard-step-subtitle"/>
 
-                        <GridPane fx:id="gstDetailsGrid" hgap="12" vgap="10">
+                        <GridPane fx:id="gstDetailsGrid" hgap="12" vgap="12">
                             <columnConstraints>
                                 <ColumnConstraints minWidth="130"/>
                                 <ColumnConstraints hgrow="ALWAYS" minWidth="220"/>
@@ -90,7 +90,7 @@
                                   text="List individual piece tags beneath a grouped invoice line"/>
 
                         <Label text="Shop logo" styleClass="field-label"/>
-                        <HBox spacing="10" alignment="CENTER_LEFT">
+                        <HBox spacing="12" alignment="CENTER_LEFT">
                             <Button text="Upload Logo" onAction="#onUploadLogoClicked"/>
                             <Label fx:id="logoStatusLabel" styleClass="wizard-step-subtitle"/>
                         </HBox>
@@ -107,7 +107,7 @@
                     <VBox spacing="12">
                         <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
-                        <GridPane hgap="12" vgap="10">
+                        <GridPane hgap="12" vgap="12">
                             <columnConstraints>
                                 <ColumnConstraints minWidth="130"/>
                                 <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
@@ -145,7 +145,7 @@
                                 styleClass="primary-button"/>
 
                         <Label text="Send a test email" styleClass="field-label"/>
-                        <HBox spacing="10" alignment="CENTER_LEFT">
+                        <HBox spacing="12" alignment="CENTER_LEFT">
                             <TextField fx:id="testEmailToField" promptText="test@example.com" HBox.hgrow="ALWAYS"/>
                             <Button text="Send Test Email" onAction="#onSendTestEmailClicked"/>
                         </HBox>

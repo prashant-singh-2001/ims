@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="14" xmlns="http://javafx.com/javafx"
+<VBox spacing="16" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.piecetrack.ui.setup.Step4GoogleDriveController">
     <padding><Insets top="8" right="24" bottom="8" left="24"/></padding>
@@ -21,12 +21,12 @@
     <Label text="Backups are encrypted before they ever leave this PC, then uploaded to the cloud destination you choose here."
            wrapText="true" styleClass="wizard-step-subtitle"/>
 
-    <VBox spacing="10" styleClass="wizard-callout">
+    <VBox spacing="12" styleClass="wizard-callout">
         <HBox spacing="12" alignment="CENTER_LEFT">
             <Label text="Backup destination"/>
             <ComboBox fx:id="destinationCombo" maxWidth="Infinity"/>
         </HBox>
-        <GridPane hgap="12" vgap="10">
+        <GridPane hgap="12" vgap="12">
             <columnConstraints>
                 <ColumnConstraints minWidth="130"/>
                 <ColumnConstraints hgrow="ALWAYS" minWidth="220"/>
@@ -39,7 +39,7 @@
         <Label fx:id="googleCredentialHintLabel"
                text="These come from your own Google Cloud project - see docs/01-requirements.md section 5. This app never ships with one built in."
                wrapText="true" styleClass="wizard-step-subtitle"/>
-        <HBox spacing="10" alignment="CENTER_LEFT">
+        <HBox spacing="12" alignment="CENTER_LEFT">
             <Button fx:id="connectButton" text="Connect" onAction="#onConnectGoogleDriveClicked"/>
             <ProgressIndicator fx:id="progressIndicator" prefWidth="20" prefHeight="20"/>
             <Label fx:id="statusLabel"/>

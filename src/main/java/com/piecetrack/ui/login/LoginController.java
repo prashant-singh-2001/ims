@@ -59,6 +59,7 @@ public class LoginController {
 
     @FXML
     private void initialize() {
+        setThrottleText("");
         showLoginPane();
     }
 
@@ -70,7 +71,7 @@ public class LoginController {
             AppUser user = authService.login(username, password);
             appSession.setCurrentUser(user);
             errorLabel.setText("");
-            throttleLabel.setText("");
+            setThrottleText("");
             passwordField.clear();
             onAuthenticated();
         } catch (AuthService.AuthException e) {
@@ -100,15 +101,24 @@ public class LoginController {
         throttleTicker = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
             long remaining = authService.throttleSecondsRemaining();
             if (remaining <= 0) {
-                throttleLabel.setText("");
+                setThrottleText("");
                 unlockButton.setDisable(false);
                 throttleTicker.stop();
             } else {
-                throttleLabel.setText("Please wait " + remaining + "s before trying again");
+                setThrottleText("Please wait " + remaining + "s before trying again");
             }
         }));
         throttleTicker.setCycleCount(Timeline.INDEFINITE);
         throttleTicker.play();
+    }
+
+    /** {@code .wizard-warning-text} (app.css) always paints a filled pill behind this
+     *  label's text - unlike a plain colour, an empty pill is still visible, so this label
+     *  must collapse out of layout entirely rather than just showing empty text. */
+    private void setThrottleText(String text) {
+        throttleLabel.setText(text);
+        throttleLabel.setVisible(!text.isEmpty());
+        throttleLabel.setManaged(!text.isEmpty());
     }
 
     @FXML

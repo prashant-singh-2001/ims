@@ -6,6 +6,7 @@ import com.piecetrack.repository.BackupHistoryRepository;
 import com.piecetrack.repository.ShopProfileRepository;
 import com.piecetrack.service.AppSession;
 import com.piecetrack.service.ReportService;
+import com.piecetrack.ui.Icons;
 import com.piecetrack.ui.Route;
 import com.piecetrack.ui.SceneRouter;
 import com.piecetrack.ui.purchase.PurchaseBillEntryController;
@@ -38,6 +39,7 @@ public class DashboardController {
     static final String STATUS_OK = "backup-ok";
     static final String STATUS_WARN = "backup-warn";
     static final String STATUS_OVERDUE = "backup-overdue";
+    static final String STATUS_PENDING = "backup-pending";
 
     private final AppSession appSession;
     private final ShopProfileRepository shopProfileRepository;
@@ -57,6 +59,7 @@ public class DashboardController {
     @FXML private Label piecesInStockLabel;
     @FXML private Label receivableLabel;
     @FXML private Label payableLabel;
+    @FXML private VBox backupStatusTile;
     @FXML private Label backupStatusLabel;
 
     public DashboardController(AppSession appSession, ShopProfileRepository shopProfileRepository,
@@ -119,7 +122,11 @@ public class DashboardController {
 
         long hoursSinceGood = Duration.between(lastGood.get().startedAt(), LocalDateTime.now()).toHours();
         if (hoursSinceGood <= 24) {
-            applyBackupStatusStyle(STATUS_OK);
+            // A fresh archive that hasn't uploaded yet (FR-BAK-12: offline queueing, or the
+            // upload simply hasn't run yet) reads as "in progress", not "confirmed good" -
+            // distinct from STATUS_OK even though both currently sit inside the 24h window.
+            boolean stillUploading = lastAttempt.status() == BackupHistory.Status.UPLOAD_PENDING;
+            applyBackupStatusStyle(stillUploading ? STATUS_PENDING : STATUS_OK);
         } else if (hoursSinceGood <= 48) {
             applyBackupStatusStyle(STATUS_WARN);
         } else {
@@ -129,9 +136,19 @@ public class DashboardController {
 
     /** Style classes rather than the hardcoded hex colours this used before M10: they follow
      *  the theme, and a test can assert the *meaning* ("overdue") instead of a colour value
-     *  that changes whenever the palette does. */
+     *  that changes whenever the palette does. The icon alongside them signals the same
+     *  state by shape and colour, so it survives colour-blindness too, and the tile's own
+     *  top edge (app.css's ".metric-tile-*") repeats the same colour a third way. */
     private void applyBackupStatusStyle(String statusClass) {
         backupStatusLabel.getStyleClass().setAll("metric-tile-label", statusClass);
+        backupStatusLabel.setGraphic(switch (statusClass) {
+            case STATUS_OK -> Icons.ok();
+            case STATUS_WARN -> Icons.warning();
+            case STATUS_PENDING -> Icons.pending();
+            default -> Icons.danger();
+        });
+        backupStatusTile.getStyleClass().setAll("metric-tile",
+                "metric-tile-" + statusClass.substring("backup-".length()));
     }
 
     /** Inventory-first (M10): the Pieces in Stock tile becomes an attention-seeking

@@ -24,7 +24,7 @@
 
     <center>
         <StackPane fx:id="contentPane">
-            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
         </StackPane>
     </center>
 
@@ -32,7 +32,7 @@
         <VBox spacing="8">
             <padding><Insets top="8" right="24" bottom="16" left="24"/></padding>
             <Label fx:id="errorLabel" styleClass="wizard-error-label" wrapText="true"/>
-            <HBox spacing="10" alignment="CENTER_RIGHT">
+            <HBox spacing="12" alignment="CENTER_RIGHT">
                 <Button fx:id="backButton" text="Back" onAction="#onBackClicked"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button fx:id="nextButton" text="Next" onAction="#onNextClicked" styleClass="primary-button"/>

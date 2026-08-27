@@ -74,6 +74,7 @@ public class TopBar {
         titleLabel.textProperty().bind(title);
 
         licenseWarningLabel = new Label();
+        licenseWarningLabel.setGraphicTextGap(8);
         licenseWarningLabel.setVisible(false);
         licenseWarningLabel.setManaged(false);
 
@@ -87,7 +88,7 @@ public class TopBar {
         HBox box = new HBox(12, backButton, titleLabel, spacer, licenseWarningLabel, lockNowButton);
         box.getStyleClass().add("top-bar");
         box.setAlignment(Pos.CENTER_LEFT);
-        box.setPadding(new Insets(10, 16, 10, 16));
+        box.setPadding(new Insets(12, 16, 12, 16));
         return box;
     }
 
@@ -113,13 +114,17 @@ public class TopBar {
     public void refreshLicenseBanner() {
         LicenseState state = licenseService.state();
         String text = switch (state) {
-            case GRACE -> "⚠ Licence renewal needed soon - see Settings > Licence";
-            case WIND_DOWN -> "⚠ Read-only mode - see Settings > Licence";
+            case GRACE -> "Licence renewal needed soon - see Settings > Licence";
+            case WIND_DOWN -> "Read-only mode - see Settings > Licence";
             case ACTIVE, UNLICENSED -> null;
         };
         licenseWarningLabel.getStyleClass().removeAll("text-warning", "text-danger");
         if (text != null) {
-            licenseWarningLabel.getStyleClass().add(state == LicenseState.WIND_DOWN ? "text-danger" : "text-warning");
+            boolean windDown = state == LicenseState.WIND_DOWN;
+            licenseWarningLabel.getStyleClass().add(windDown ? "text-danger" : "text-warning");
+            licenseWarningLabel.setGraphic(windDown ? Icons.danger() : Icons.warning());
+        } else {
+            licenseWarningLabel.setGraphic(null);
         }
         licenseWarningLabel.setText(text == null ? "" : text);
         licenseWarningLabel.setVisible(text != null);

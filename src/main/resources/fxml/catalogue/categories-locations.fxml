@@ -20,7 +20,7 @@
         <HBox spacing="24">
             <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
-            <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <VBox spacing="12" HBox.hgrow="ALWAYS">
                 <Label text="Categories" styleClass="section-heading"/>
                 <TableView fx:id="categoryTable" VBox.vgrow="ALWAYS">
                     <columns>
@@ -36,7 +36,7 @@
                 <Label fx:id="categoryErrorLabel" styleClass="wizard-error-label" wrapText="true"/>
             </VBox>
 
-            <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <VBox spacing="12" HBox.hgrow="ALWAYS">
                 <Label text="Storage Locations" styleClass="section-heading"/>
                 <TableView fx:id="locationTable" VBox.vgrow="ALWAYS">
                     <columns>
@@ -52,7 +52,7 @@
                 <Label fx:id="locationErrorLabel" styleClass="wizard-error-label" wrapText="true"/>
             </VBox>
 
-            <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <VBox spacing="12" HBox.hgrow="ALWAYS">
                 <Label text="Item Attributes" styleClass="section-heading"/>
                 <TableView fx:id="attributeTable" VBox.vgrow="ALWAYS">
                     <columns>

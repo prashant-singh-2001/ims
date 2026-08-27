@@ -20,9 +20,9 @@
             styleClass="app-root">
 
     <center>
-        <VBox spacing="10">
+        <VBox spacing="12">
             <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
-            <GridPane hgap="12" vgap="10">
+            <GridPane hgap="12" vgap="12">
                 <columnConstraints>
                     <ColumnConstraints minWidth="150"/>
                     <ColumnConstraints hgrow="ALWAYS"/>

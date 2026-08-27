@@ -16,7 +16,7 @@
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="12" styleClass="screen-actions">
-            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+            <padding><Insets top="16" right="24" bottom="16" left="24"/></padding>
             <Button text="New Sale" onAction="#onNewSaleClicked" styleClass="primary-button"/>
         </HBox>
     </top>

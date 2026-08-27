@@ -3,6 +3,7 @@ package com.piecetrack;
 import atlantafx.base.theme.PrimerLight;
 import com.piecetrack.config.SingleInstanceGuard;
 import com.piecetrack.service.SetupService;
+import com.piecetrack.ui.Fonts;
 import com.piecetrack.ui.GlobalErrorHandler;
 import com.piecetrack.ui.Route;
 import com.piecetrack.ui.SceneRouter;
@@ -94,6 +95,10 @@ public class PieceTrackFxApp extends Application {
      */
     private void applyBaseTheme() {
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+        // The bundled display face (Bauhaus restyle) - registered here, before app.css's
+        // -fx-font-family reference is ever resolved against a Scene, for the same
+        // flash-of-unstyled-content reason the theme itself is applied at this point.
+        Fonts.loadAll();
     }
 
     private void bringToFront() {

@@ -1,72 +1,241 @@
 /*
- * Thin app-specific layer on top of AtlantaFX Primer Light, which is applied as the
- * user-agent stylesheet in PieceTrackFxApp.applyBaseTheme() (M10).
+ * PieceTrack's visual identity (black & yellow restyle): a near-black sidebar, a bright
+ * yellow accent, and light floating panels on a neutral ground - graphic and high-contrast
+ * rather than pastel. Built on AtlantaFX Primer Light, applied as the user-agent stylesheet
+ * in PieceTrackFxApp.applyBaseTheme() (M10) - this file is still a thin author layer on top
+ * of it, not a replacement for it. Primer draws every standard control's shape, states and
+ * interaction behaviour (hover, pressed, focused, disabled, selected); this file only
+ * decides colour, radius, type and this app's own page furniture (screen panels, cards,
+ * metric tiles, icons).
  *
- * Primer owns every standard control - buttons, tables, text fields, combo boxes, tabs,
- * scroll panes, dialogs. This file only adds what Primer has no opinion about: this app's
- * own page furniture (screen headers, cards, metric tiles) and its semantic text styles.
+ * THE RULE: hex lives in exactly one place - the ".root" palette block immediately below.
+ * Every rule after it, and every control rule Primer itself draws, reaches colour only
+ * through the *named* tokens that block redefines (-color-bg-*, -color-fg-*,
+ * -color-border-*, -color-accent-*, -color-danger-*, -color-warning-*, -color-success-*).
+ * Confirmed against atlantafx-base 2.1.0's own stylesheet: every one of Primer's control
+ * rules reads these tokens by name rather than deriving them from a raw base hue, so
+ * redefining the tokens here is a complete override - hover, pressed, focused, disabled and
+ * selected states all recompute from the new palette automatically. Looked-up colours are
+ * the one JavaFX CSS variable mechanism available - radius and spacing are NOT tokens here,
+ * they are literals repeated per rule, by necessity.
  *
- * ONE RULE, and the whole file depends on it: no hex literals. Only Primer's looked-up
- * colours (-color-bg-*, -color-fg-*, -color-border-*, -color-accent-*, -color-danger-*,
- * -color-success-*, -color-warning-*). That is what keeps this layer thin, keeps it
- * consistent with every control Primer draws, and makes a future dark theme a one-line
- * change instead of a rewrite. A hardcoded colour here silently wins over the theme and
- * will be wrong in some state (hover, selected, disabled) that nobody thought to check.
+ * The declared colours, and the role each one is restricted to:
+ *   -pt-ground       #F4F4F0  the page ground - a neutral off-white, not the sidebar's black
+ *   -pt-surface      #FFFFFF  floating panels: screens, cards, tiles
+ *   -pt-surface-alt  #FFF6D6  recessed surfaces: bars, callouts, hover states - yellow-tinted
+ *   -pt-panel        #141414  the sidebar's own panel colour - near-black, not -pt-ink
+ *   -pt-panel-text   #E8E8E8  inactive nav text/icon colour on the black panel
+ *   -pt-accent       #FFD500  primary action, active nav pill, focus ring - the brand colour
+ *   -pt-accent-soft  #FFE066  accent hover/pressed - one step toward white
+ *   -pt-blue         #4C8DBF  secondary accent - OK/confirmed state, informational tile edges
+ *   -pt-red          #E8112D  danger, error, overdue, destructive action, read-only wind-down
+ *   -pt-warn         #F2600C  warning / attention - yellow is taken by the brand, so this
+ *                             (not yellow) is the "needs a look soon" colour
+ *   -pt-pending      #6E5AA6  in-progress state only (a backup made but not yet uploaded) -
+ *                             kept a deliberately different family from blue/red/warn
+ *   -pt-ink          #1A1A1A  body text everywhere except on the black sidebar panel
+ *   -pt-white        #FFFFFF  text on saturated fills that are dark enough to hold it
  *
- * Note on precedence: an author stylesheet like this one beats the user-agent stylesheet,
- * so anything declared here overrides Primer. Declare as little as possible.
+ * A contrast note the palette makes unavoidable: -pt-accent (yellow) is too light to read as
+ * TEXT or a thin STROKE at all - measured around 1.9:1, well under the ~4.5:1 normal text
+ * needs or even the ~3:1 floor for a graphical icon. -pt-blue clears that 3:1 icon floor
+ * raw but not the stricter 4.5:1 text floor, so it still needs a darkened stand-in wherever
+ * it is TEXT (not just an icon). -pt-warn and -pt-pending are dark/saturated enough to clear
+ * both floors raw and are never used as text (see "fg deliberately stays ink" below), so
+ * neither needs one. Two consequences, applied consistently:
+ *   - Filled yellow surfaces (buttons, the active-nav pill) use INK text, not white - ink
+ *     clears ~12:1 against -pt-accent, where white manages barely ~1.3:1. Danger buttons
+ *     keep white text; -pt-red is dark enough to carry it.
+ *   - Anywhere accent or blue must appear as TEXT or a small icon stroke, a darkened derived
+ *     variant is used instead of the raw tone - -pt-accent-text and -pt-blue-text below,
+ *     each chosen to clear AA. The raw light tones stay for fills and borders, where a big
+ *     colour area doesn't carry the same legibility bar a caption or a 1.8px stroke does.
  */
 
-/* ---- Page scaffold ----------------------------------------------------------------- */
+.root {
+    -pt-ground: #F4F4F0;
+    -pt-surface: #FFFFFF;
+    -pt-surface-alt: #FFF6D6;
+    -pt-panel: #141414;
+    -pt-panel-text: #E8E8E8;
+    -pt-panel-hover: rgba(255, 255, 255, 0.08);
+    -pt-panel-line: rgba(255, 255, 255, 0.14);
+    -pt-accent: #FFD500;
+    -pt-accent-soft: #FFE066;
+    -pt-blue: #4C8DBF;
+    -pt-red: #E8112D;
+    -pt-warn: #F2600C;
+    -pt-pending: #6E5AA6;
+    -pt-ink: #1A1A1A;
+    -pt-white: #FFFFFF;
 
-/* Deliberately declares no background and no font: Primer's .root already supplies both,
-   and overriding them here would apply this app's own palette on top of the theme across
-   all 26 screen roots - which is exactly what made the old look inconsistent. */
+    /* Darkened, text/stroke-safe variants - see the contrast note above. -pt-warn and
+       -pt-pending are never used as text and are dark/saturated enough as icon strokes
+       without one; -pt-accent and -pt-blue both are used as text and need one. */
+    -pt-accent-text: derive(-pt-accent, -45%);
+    -pt-blue-text: derive(-pt-blue, -30%);
+
+    /* Neutral, not warm - a black-panel design wants a true-grey shadow, not the warm one a
+       peach ground called for. Used only by the -fx-effect rules under "Elevation" below. */
+    -pt-shadow-card: rgba(0, 0, 0, 0.10);
+    -pt-shadow-raised: rgba(0, 0, 0, 0.18);
+
+    /* ---- Base surface and text --------------------------------------------------- */
+    -color-fg-default: -pt-ink;
+    -color-fg-muted: derive(-pt-ground, -55%);
+    -color-fg-subtle: derive(-pt-ground, -55%);
+    -color-fg-emphasis: -pt-white;
+
+    /* -color-bg-default is the floating-panel colour (cards, tiles), NOT the page ground -
+       the shell and top bar reference -pt-ground directly instead of this token so the two
+       can differ; see ".app-shell"/".top-bar" below. */
+    -color-bg-default: -pt-surface;
+    -color-bg-overlay: -pt-surface;
+    -color-bg-subtle: -pt-surface-alt;
+    /* Deliberately -pt-ground, not -pt-surface-alt: the lock screen (FR-AUTH-04) should read
+       as a distinct full-bleed field, not just another card - see ".lock-scrim" below, which
+       is also why this must stay a plain solid colour with no alpha channel. */
+    -color-bg-inset: -pt-ground;
+
+    /* Borders are now a soft hairline tint, not a structural black line - depth comes from
+       shadow (see "Elevation" below), borders just need to define a table row or an input's
+       edge without boxing everything in. */
+    -color-border-default: derive(-pt-ground, -12%);
+    -color-border-muted: derive(-pt-ground, -12%);
+    -color-border-subtle: derive(-pt-ground, -6%);
+    -color-shadow-default: -pt-ink;
+
+    -color-neutral-emphasis-plus: -pt-ink;
+    -color-neutral-emphasis: derive(-pt-ground, -55%);
+    -color-neutral-muted: derive(-pt-ground, -15%);
+    -color-neutral-subtle: -pt-ground;
+
+    /* Accent (yellow) - primary actions, active nav pill, focus ring */
+    -color-accent-fg: -pt-accent-text;
+    -color-accent-emphasis: -pt-accent;
+    -color-accent-muted: derive(-pt-accent, 50%);
+    -color-accent-subtle: derive(-pt-accent, 75%);
+    -color-accent-6: derive(-pt-accent, -20%); /* Primer's own pressed/focused accent-button step */
+
+    /* Warning (orange) - fg deliberately stays ink; see the file header. Yellow is the brand
+       colour now, so warning moved to orange to stay a distinct signal from "primary action". */
+    -color-warning-fg: -pt-ink;
+    -color-warning-emphasis: -pt-warn;
+    -color-warning-muted: derive(-pt-warn, 30%);
+    -color-warning-subtle: derive(-pt-warn, 55%);
+
+    /* Success maps to blue, not green - "backup is fresh" reads as a confirmed-good
+       affirmative rather than a silent absence of colour. */
+    -color-success-fg: -pt-blue-text;
+    -color-success-emphasis: -pt-blue;
+    -color-success-muted: derive(-pt-blue, 30%);
+    -color-success-subtle: derive(-pt-blue, 60%);
+    -color-success-5: derive(-pt-blue, -20%); /* Primer's own pressed/focused success-button step */
+
+    -color-danger-fg: -pt-red;
+    -color-danger-emphasis: -pt-red;
+    -color-danger-muted: derive(-pt-red, 60%);
+    -color-danger-subtle: derive(-pt-red, 85%);
+    -color-danger-6: derive(-pt-red, -20%); /* Primer's own pressed/focused danger-button step */
+
+    /* The only two steps of Primer's numbered grey scale any control rule actually reads
+       (hover and selected-row backgrounds) - a two-step ladder from the pale yellow surface
+       tint toward the neutral ground. */
+    -color-base-1: -pt-surface-alt;
+    -color-base-2: -pt-ground;
+}
+
+/* ---- Page scaffold ------------------------------------------------------------------ */
+
+/* The floating screen panel: every one of the ~29 shell screens carries this class on its
+   FXML root, and login.fxml/the setup wizard's own full-bleed styling deliberately does not
+   use it. Inner padding (not the outer gutter - see ".content-gutter" below) keeps a
+   flush-to-the-edge child, such as a TableView with no padding of its own, from visually
+   poking past this panel's own rounded corner. */
 .app-root {
+    -fx-background-color: -pt-surface;
+    -fx-background-radius: 24;
+    -fx-padding: 8;
+    -fx-effect: dropshadow(gaussian, -pt-shadow-card, 18, 0, 0, 4);
 }
 
-/* ---- Application shell (M10) -------------------------------------------------------- */
+/* ---- Application shell (M10; restyled) ------------------------------------------------ */
 
+/* References -pt-ground directly rather than -color-bg-default: the shell is the tinted
+   ground every panel floats on, which is a different colour from a panel's own fill. */
 .app-shell {
-    -fx-background-color: -color-bg-default;
+    -fx-background-color: -pt-ground;
 }
 
+/* The margin between the shell's edges/sidebar and the floating screen panel itself -
+   applied to SceneRouter's contentLayer only on Chrome.SHELL routes (SceneRouter.java), so
+   the lock screen and the full-bleed login/setup-wizard screens are never given a gutter
+   that would expose the shell around their own edges. */
+.content-gutter {
+    -fx-padding: 16;
+}
+
+/* A near-black floating panel, not a light one - inset from the shell's edges so the ground
+   shows around it, matching every other panel's insetting in this design even though its
+   own colour (panel, not surface) is deliberately different from the rest. */
 .nav-bar {
-    -fx-background-color: -color-bg-subtle;
-    -fx-border-color: transparent -color-border-default transparent transparent;
-    -fx-border-width: 0 1 0 0;
+    -fx-background-color: -pt-panel;
+    -fx-background-radius: 20;
+    -fx-background-insets: 12;
+    -fx-effect: dropshadow(gaussian, -pt-shadow-card, 16, 0, 0, 3);
+}
+
+.nav-brand {
+    -fx-font-family: "Jost*";
+    -fx-font-size: 1.15em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -pt-accent;
+    -fx-padding: 4 8 4 8;
+}
+
+/* -pt-panel-line, not -color-border-default: the border tokens are derived off the light
+   ground colour and would be invisible against this panel's near-black background. */
+.separator .line {
+    -fx-border-color: -pt-panel-line transparent transparent transparent;
 }
 
 .nav-button {
     -fx-background-color: transparent;
-    -fx-text-fill: -color-fg-default;
+    -fx-text-fill: -pt-panel-text;
     -fx-alignment: CENTER_LEFT;
     -fx-padding: 10 14 10 14;
-    -fx-background-radius: 6;
-    -fx-font-size: 1.02em;
+    -fx-background-radius: 12;
+    -fx-font-family: "Jost*";
+    -fx-font-size: 1.0em;
+    -fx-graphic-text-gap: 12;
 }
 
 .nav-button:hover {
-    -fx-background-color: -color-bg-inset;
+    -fx-background-color: -pt-panel-hover;
 }
 
-/* The current section - a solid accent background reads faster at a glance than a border
-   or a colour-only change, which matters on a screen the owner is scanning quickly. */
+/* The current section - a yellow pill, ink text/icon so it stays legible (see the file
+   header's contrast note: white-on-accent only manages ~1.3:1). */
 .nav-button-active,
 .nav-button-active:hover {
-    -fx-background-color: -color-accent-emphasis;
-    -fx-text-fill: -color-fg-emphasis;
+    -fx-background-color: -pt-accent;
+    -fx-text-fill: -pt-ink;
     -fx-font-weight: bold;
 }
 
+/* The icon flips from panel-text (light, for the black panel) to ink (dark, for the yellow
+   pill) along with the label - without this override it would stay light-on-light. */
+.nav-button-active .nav-icon {
+    -fx-stroke: -pt-ink;
+}
+
 .top-bar {
-    -fx-background-color: -color-bg-default;
-    -fx-border-color: transparent transparent -color-border-default transparent;
-    -fx-border-width: 0 0 1 0;
+    -fx-background-color: -pt-ground;
 }
 
 .top-bar-title {
-    -fx-font-size: 1.15em;
+    -fx-font-family: "Jost*";
+    -fx-font-size: 1.4em;
     -fx-font-weight: bold;
     -fx-text-fill: -color-fg-default;
 }
@@ -80,53 +249,71 @@
     -fx-underline: true;
 }
 
-/* The per-screen action/filter bar. Was a dark navy title bar before M10; now a light
-   subtle band that sits under the shell's own top bar. Renamed conceptually from
-   "wizard-header" (the name leaked out of the setup wizard and became the app-wide
-   vocabulary) - the class name is kept for now so no FXML needs editing, and
-   `screen-actions` below is the name to migrate to. */
+/* The per-screen action/filter bar. The class name is mid-migration from the setup
+   wizard's original "wizard-header" to the app-wide "screen-actions" - kept as an alias so
+   no FXML needs editing while the rename finishes. */
 .wizard-header,
 .screen-actions {
     -fx-background-color: -color-bg-subtle;
-    -fx-border-color: transparent transparent -color-border-default transparent;
-    -fx-border-width: 0 0 1 0;
+    -fx-background-radius: 8;
 }
 
 .wizard-header-title,
 .screen-title {
+    -fx-font-family: "Jost*";
     -fx-text-fill: -color-fg-default;
-    -fx-font-size: 1.15em;
+    -fx-font-size: 1.4em;
     -fx-font-weight: bold;
 }
 
 .wizard-header-subtitle {
     -fx-text-fill: -color-fg-muted;
-    -fx-font-size: 0.9em;
+    -fx-font-size: 0.85em;
 }
 
-/* ---- Typography -------------------------------------------------------------------- */
+/* ---- Typography ----------------------------------------------------------------------
+   Five steps, weight carrying most of the hierarchy: micro (0.85em) for captions and tile
+   labels, body (1.0em, the unset default) for everything else, heading (1.15em bold) for
+   section headings and field labels, title (1.4em bold) for screen and step titles, display
+   (2.0em bold) for the one thing meant to be read from across the room - a metric tile's
+   value. Jost* (a geometric sans, SIL OFL - see /fonts/OFL.txt) is used for chrome and
+   display text only; dense data - table cells, form input - stays the platform default,
+   which reads better at small sizes under time pressure (NFR-14). */
 
 .wizard-step-title {
-    -fx-font-size: 1.3em;
+    -fx-font-family: "Jost*";
+    -fx-font-size: 1.4em;
     -fx-font-weight: bold;
     -fx-text-fill: -color-fg-default;
 }
 
 .wizard-step-subtitle,
 .text-muted {
-    -fx-font-size: 0.9em;
+    -fx-font-size: 0.85em;
     -fx-text-fill: -color-fg-muted;
+}
+
+/* The dashboard's welcome line - promoted from a muted caption to a display greeting,
+   the one headline this design gets. */
+.dashboard-greeting {
+    -fx-font-family: "Jost*";
+    -fx-font-size: 1.6em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-fg-default;
 }
 
 /* The two literals that accounted for ~90 of the 111 inline style="" attributes this
    codebase had before M10. Kept as classes so a font decision lives in one place. */
 .field-label {
+    -fx-font-family: "Jost*";
+    -fx-font-size: 1.15em;
     -fx-font-weight: bold;
     -fx-text-fill: -color-fg-default;
 }
 
 .section-heading {
-    -fx-font-size: 1.05em;
+    -fx-font-family: "Jost*";
+    -fx-font-size: 1.15em;
     -fx-font-weight: bold;
     -fx-text-fill: -color-fg-default;
 }
@@ -137,10 +324,20 @@
     -fx-font-weight: bold;
 }
 
+/* A filled pill rather than coloured text, so a standalone warning label (no companion icon
+   attached) still reads as distinctly "pay attention" rather than falling back to plain body
+   text. Orange, not yellow - yellow is the brand colour now (see file header), so it would
+   read as "primary action" rather than "warning" here. Where an icon already carries the
+   colour (the licence banner, the backup-status tile), the label itself stays plain and the
+   icon does the signalling instead. */
 .wizard-warning-text,
 .text-warning {
-    -fx-text-fill: -color-warning-fg;
-    -fx-font-size: 0.9em;
+    -fx-text-fill: -pt-ink;
+    -fx-font-size: 0.85em;
+    -fx-font-weight: bold;
+    -fx-background-color: -pt-warn;
+    -fx-background-radius: 999;
+    -fx-padding: 3 10 3 10;
 }
 
 .wizard-recovery-code {
@@ -150,97 +347,156 @@
     -fx-text-fill: -color-fg-default;
 }
 
-/* ---- Surfaces ---------------------------------------------------------------------- */
+/* ---- Icons -----------------------------------------------------------------------------
+   Real SVGPath nodes (com.piecetrack.ui.Icons), stroke-based, not unicode glyphs or an icon
+   font - fill stays transparent, colour lives entirely in the stroke, same as every other
+   visual property in this app. Java only ever decides which pictogram; colour lives here. */
 
-/* `wizard-callout` was doing two different jobs before M10: a static note box in the
-   setup wizard AND the clickable dashboard metric tiles. Split so restyling one cannot
-   silently restyle the other - a static card must not look clickable. */
+.nav-icon {
+    -fx-fill: transparent;
+    -fx-stroke: -pt-panel-text;
+    -fx-stroke-width: 1.8;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+.status-icon {
+    -fx-fill: transparent;
+    -fx-stroke-width: 1.8;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+/* The darkened -pt-blue-text, not the raw tone - see the file header's contrast note. Warn
+   and pending are dark/saturated enough to use raw. */
+.status-icon-ok {
+    -fx-stroke: -pt-blue-text;
+}
+
+.status-icon-warn {
+    -fx-stroke: -pt-warn;
+}
+
+.status-icon-danger {
+    -fx-stroke: -pt-red;
+}
+
+.status-icon-pending {
+    -fx-stroke: -pt-pending;
+}
+
+/* ---- Elevation -------------------------------------------------------------------------
+   Two shadow steps stand in for the borders this design no longer draws around every
+   surface - a resting card and a slightly deeper one for a clickable tile's hover state. */
+
 .wizard-callout,
 .callout {
     -fx-background-color: -color-bg-subtle;
-    -fx-border-color: -color-border-default;
-    -fx-border-width: 1px;
-    -fx-padding: 14;
-    -fx-background-radius: 6;
-    -fx-border-radius: 6;
+    -fx-padding: 16;
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, -pt-shadow-card, 14, 0, 0, 3);
 }
 
 .card {
     -fx-background-color: -color-bg-default;
-    -fx-border-color: -color-border-default;
-    -fx-border-width: 1px;
     -fx-padding: 16;
-    -fx-background-radius: 6;
-    -fx-border-radius: 6;
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, -pt-shadow-card, 14, 0, 0, 3);
 }
 
 /* Opening stock's "+ New Item" row (M10): a subtle tint so a free-typed, not-yet-catalogued
    item row reads as visually distinct from a row picking an existing model. */
 .quick-item-row {
     -fx-background-color: -color-accent-subtle;
-    -fx-padding: 6 8;
-    -fx-background-radius: 6;
+    -fx-padding: 8 8 8 8;
+    -fx-background-radius: 10;
 }
 
 /* Clickable metric tile (dashboard). Gets a hover affordance precisely because it
-   navigates somewhere, which the static .callout must not have. */
+   navigates somewhere, which the static .callout must not have. A thick top edge - blue by
+   default, the "normal, informational" tone - repeats the state signal a third way (the
+   backup tile's own icon and its shape already carry it twice); the one tile that actually
+   has a state beyond "normal" (backup status) overrides just that edge's colour via the
+   .metric-tile-* modifiers below, applied alongside this base class. */
 .metric-tile {
     -fx-background-color: -color-bg-default;
-    -fx-border-color: -color-border-default;
-    -fx-border-width: 1px;
-    -fx-padding: 14;
-    -fx-background-radius: 6;
-    -fx-border-radius: 6;
+    -fx-border-color: -pt-blue-text transparent transparent transparent;
+    -fx-border-width: 4 0 0 0;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16 16 0 0;
+    -fx-padding: 16;
+    -fx-min-width: 150;
     -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, -pt-shadow-card, 14, 0, 0, 3);
 }
 
 .metric-tile:hover {
     -fx-background-color: -color-bg-subtle;
-    -fx-border-color: -color-accent-emphasis;
+    -fx-effect: dropshadow(gaussian, -pt-shadow-raised, 20, 0, 0, 6);
+}
+
+.metric-tile-ok {
+    -fx-border-color: -pt-blue-text transparent transparent transparent;
+}
+
+.metric-tile-warn {
+    -fx-border-color: -pt-warn transparent transparent transparent;
+}
+
+.metric-tile-overdue {
+    -fx-border-color: -pt-red transparent transparent transparent;
+}
+
+.metric-tile-pending {
+    -fx-border-color: -pt-pending transparent transparent transparent;
 }
 
 .metric-tile-label {
     -fx-text-fill: -color-fg-muted;
-    -fx-font-size: 0.9em;
+    -fx-font-size: 0.85em;
+    -fx-graphic-text-gap: 6;
 }
 
 .metric-tile-value {
     -fx-text-fill: -color-fg-default;
-    -fx-font-size: 1.5em;
+    -fx-font-family: "Jost*";
+    -fx-font-size: 2.0em;
     -fx-font-weight: bold;
 }
 
-/* Photo thumbnail frame, used in the item-model editor and (M11) the piece detail screen.
-   Was built with an inline setStyle() call in ItemModelEditorController before M10. */
+/* Photo thumbnail frame, used in the item-model editor and the piece detail screen. */
 .photo-card {
     -fx-background-color: -color-bg-default;
-    -fx-border-color: -color-border-default;
-    -fx-border-width: 1px;
-    -fx-background-radius: 4;
-    -fx-border-radius: 4;
-    -fx-padding: 6;
+    -fx-background-radius: 16;
+    -fx-padding: 8;
+    -fx-effect: dropshadow(gaussian, -pt-shadow-card, 10, 0, 0, 2);
 }
 
-/* ---- Buttons ----------------------------------------------------------------------- */
+/* ---- Buttons ---------------------------------------------------------------------------
+   Primer already ships accent/danger button variants with correct hover, pressed, focused
+   and disabled states. Mapping onto them rather than hand-rolling a background colour is
+   what gets those states right for free. */
 
-/* Primer already ships accent/danger/success button variants with correct hover, pressed,
-   focused and disabled states. Mapping onto them rather than hand-rolling a background
-   colour is what gets those states right for free. */
+/* Ink text, not white - -pt-accent is too light to hold white text reliably (see the file
+   header's contrast note); ink clears ~12:1 against it. Danger keeps white further down,
+   since -pt-red is dark enough to carry it. */
 .primary-button,
 .button-primary {
     -fx-background-color: -color-accent-emphasis;
-    -fx-text-fill: -color-fg-emphasis;
+    -fx-text-fill: -pt-ink;
+    -fx-font-family: "Jost*";
     -fx-font-weight: bold;
 }
 
 .primary-button:hover,
 .button-primary:hover {
-    -fx-background-color: -color-accent-fg;
+    -fx-background-color: -pt-accent-soft;
 }
 
 .button-danger {
     -fx-background-color: -color-danger-emphasis;
     -fx-text-fill: -color-fg-emphasis;
+    -fx-font-family: "Jost*";
     -fx-font-weight: bold;
 }
 
@@ -248,51 +504,86 @@
     -fx-background-color: -color-danger-fg;
 }
 
-/* ---- Status indicators ------------------------------------------------------------- */
+/* ---- Status indicators -------------------------------------------------------------- */
 
-/* Backup freshness on the dashboard (FR-BAK-11). These replace three hex literals that
-   DashboardController used to push through setStyle(); as classes they are themable and
-   assertable from a test by name rather than by colour value. */
+/* Backup freshness on the dashboard (FR-BAK-11). Plain text, bold - the accompanying icon
+   (DashboardController attaches Icons.ok/warning/danger/pending as this label's graphic)
+   and the tile's own top edge both carry the colour signal, so the text itself never needs
+   the raw (too-light-to-read) tone. */
 .backup-ok {
-    -fx-text-fill: -color-success-fg;
+    -fx-text-fill: -pt-blue-text;
     -fx-font-weight: bold;
 }
 
 .backup-warn {
-    -fx-text-fill: -color-warning-fg;
+    -fx-text-fill: -color-fg-default;
     -fx-font-weight: bold;
 }
 
 .backup-overdue {
-    -fx-text-fill: -color-danger-fg;
+    -fx-text-fill: -pt-red;
+    -fx-font-weight: bold;
+}
+
+/* A backup was made but hasn't uploaded yet (FR-BAK-12 offline queueing) - not a problem,
+   just not fully confirmed, so it gets its own tone rather than reading as either "fine"
+   (blue) or "wrong" (red/yellow). Plain text, same reasoning as .backup-warn: the icon and
+   the tile's top edge carry the colour, not the text itself. */
+.backup-pending {
+    -fx-text-fill: -color-fg-default;
     -fx-font-weight: bold;
 }
 
 /* Attention-seeking surface for a genuine problem - the aged-stock tile on the stock
-   report, which previously carried an inline pink/red hex pair. */
+   report. */
 .alert-surface {
     -fx-background-color: -color-danger-subtle;
-    -fx-border-color: -color-danger-emphasis;
-    -fx-border-width: 1px;
-    -fx-padding: 14;
-    -fx-background-radius: 6;
-    -fx-border-radius: 6;
+    -fx-background-radius: 16;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, -pt-shadow-card, 14, 0, 0, 3);
 }
 
-/* ---- Login / lock overlay ---------------------------------------------------------- */
+/* ---- Login / lock overlay ------------------------------------------------------------ */
 
-/* FR-AUTH-04 requires the lock screen to blank the business data behind it. The scrim is
-   fully opaque for that reason - the pre-M10 value was 0.92 alpha, which left ~8% of the
-   shop's data legible through the lock. */
+/* FR-AUTH-04 requires the lock screen to blank the business data behind it. Deliberately
+   plain: full-bleed, square, no shadow, no inset - anything that let the shell show around
+   its edges would defeat the point. -color-bg-inset (the palette block above) resolves to
+   -pt-ground, a plain solid colour with no alpha channel - restyling the palette must never
+   reintroduce transparency here. */
 .lock-scrim {
     -fx-background-color: -color-bg-inset;
 }
 
 .auth-card {
     -fx-background-color: -color-bg-default;
-    -fx-border-color: -color-border-default;
-    -fx-border-width: 1px;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
+    -fx-background-radius: 24;
     -fx-padding: 32;
+    -fx-effect: dropshadow(gaussian, -pt-shadow-card, 22, 0, 0, 6);
+}
+
+/* ---- Shape language --------------------------------------------------------------------
+   Small controls get a real radius; large data surfaces (tables, list views, the scroll
+   pane that wraps them) are deliberately left out of this list and stay square - a rounded
+   corner on a dense grid clips row content in ways a rounded corner on a button never does,
+   and a table already sits inset within a rounded .app-root panel (see above), so it reads
+   as "a square table inside a rounded card", the same pattern most card-based apps use.
+   Primer hardcodes a small radius per control rather than exposing one shared token, so
+   this is the base set of controls this app actually uses. An author stylesheet overrides
+   Primer's user-agent stylesheet regardless of selector nesting/specificity, so these plain
+   top-level selectors are enough to reach every popup and nested variant Primer draws for
+   them - no need to replicate its more specific inner selectors.
+   RadioButton is deliberately left alone: a circle needs no radius override to read as
+   round, and is the universally understood shape for a single exclusive choice. */
+.button,
+.toggle-button,
+.text-input,
+.check-box > .box,
+.combo-box-base,
+.scroll-bar > .thumb,
+.context-menu,
+.tooltip,
+.date-picker-popup,
+.spinner {
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
 }
