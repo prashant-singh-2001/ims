@@ -203,6 +203,13 @@ public class SceneRouter {
         navBar.view().setManaged(shell);
         topBar.view().setVisible(shell);
         topBar.view().setManaged(shell);
+        // The margin between the shell's edges and the floating screen panel (app.css's
+        // ".app-root") - only on shell routes, so the full-bleed login/setup-wizard screens
+        // stay edge-to-edge rather than getting a gutter around them too.
+        contentLayer.getStyleClass().removeAll("content-gutter");
+        if (shell) {
+            contentLayer.getStyleClass().add("content-gutter");
+        }
 
         if (!shell) {
             return;

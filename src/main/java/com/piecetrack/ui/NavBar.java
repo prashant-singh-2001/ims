@@ -3,6 +3,7 @@ package com.piecetrack.ui;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -66,9 +67,12 @@ public class NavBar {
 
     private VBox build() {
         VBox box = new VBox(4);
-        box.setPadding(new Insets(12, 8, 12, 8));
+        box.setPadding(new Insets(20, 20, 20, 20));
         box.setPrefWidth(200);
         box.getStyleClass().add("nav-bar");
+
+        box.getChildren().add(brand());
+        box.getChildren().add(separator());
 
         homeButton = navButton("Dashboard", NavSection.NONE, Route.DASHBOARD);
         box.getChildren().add(homeButton);
@@ -99,10 +103,10 @@ public class NavBar {
         button.setMaxWidth(Double.MAX_VALUE);
         button.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         VBox.setVgrow(button, Priority.NEVER);
-        // A geometric mark per section (Bauhaus) - set as the graphic, never prefixed into
-        // the label text: SceneRouterShellTest matches nav buttons by their exact getText(),
+        // A pictographic icon per section - set as the graphic, never prefixed into the
+        // label text: SceneRouterShellTest matches nav buttons by their exact getText(),
         // and setGraphic() leaves that untouched.
-        button.setGraphic(Marks.forSection(section));
+        button.setGraphic(Icons.forSection(section));
         // NFR-14: the billing screen must be operable entirely from the keyboard. Tabbing
         // out of a form must not land in the always-visible sidebar - Ctrl+1..7 (wired in
         // SceneRouter) is the keyboard route into navigation instead.
@@ -115,6 +119,12 @@ public class NavBar {
         Separator separator = new Separator();
         separator.setPadding(new Insets(4, 0, 4, 0));
         return separator;
+    }
+
+    private static Label brand() {
+        Label label = new Label("PieceTrack");
+        label.getStyleClass().add("nav-brand");
+        return label;
     }
 
     /** Highlights whichever nav item corresponds to {@code route} - the Home button for

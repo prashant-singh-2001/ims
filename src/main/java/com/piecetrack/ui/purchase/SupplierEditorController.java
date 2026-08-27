@@ -87,7 +87,7 @@ public class SupplierEditorController implements HasScreenTitle {
     private void initialize() {
         stateCombo.setItems(FXCollections.observableArrayList(IndianState.values()));
         errorLabel.setText("");
-        gstinWarningLabel.setText("");
+        setGstinWarningText("");
         gstinField.textProperty().addListener((obs, was, isNow) -> updateGstinWarning());
         stateCombo.valueProperty().addListener((obs, was, isNow) -> updateGstinWarning());
         applyGstVisibility();
@@ -117,18 +117,27 @@ public class SupplierEditorController implements HasScreenTitle {
         String gstin = gstinField.getText();
         IndianState state = stateCombo.getValue();
         if (gstin == null || gstin.isBlank() || state == null) {
-            gstinWarningLabel.setText("");
+            setGstinWarningText("");
             return;
         }
         String trimmed = gstin.trim().toUpperCase();
         if (!GstinValidator.isValidFormat(trimmed)) {
-            gstinWarningLabel.setText("This does not look like a valid GSTIN, but you can still save it.");
+            setGstinWarningText("This does not look like a valid GSTIN, but you can still save it.");
         } else if (!GstinValidator.stateCodeMatches(trimmed, state.gstCode())) {
-            gstinWarningLabel.setText("This GSTIN's state code doesn't match " + state.displayName()
+            setGstinWarningText("This GSTIN's state code doesn't match " + state.displayName()
                     + " - double-check it, but you can still save it.");
         } else {
-            gstinWarningLabel.setText("");
+            setGstinWarningText("");
         }
+    }
+
+    /** {@code .wizard-warning-text} (app.css) always paints a filled pill behind this
+     *  label's text - unlike a plain colour, an empty pill is still visible, so this label
+     *  must collapse out of layout entirely rather than just showing empty text. */
+    private void setGstinWarningText(String text) {
+        gstinWarningLabel.setText(text);
+        gstinWarningLabel.setVisible(!text.isEmpty());
+        gstinWarningLabel.setManaged(!text.isEmpty());
     }
 
     private void resetForNew() {

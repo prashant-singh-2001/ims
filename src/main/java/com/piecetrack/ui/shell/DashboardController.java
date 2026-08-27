@@ -6,7 +6,7 @@ import com.piecetrack.repository.BackupHistoryRepository;
 import com.piecetrack.repository.ShopProfileRepository;
 import com.piecetrack.service.AppSession;
 import com.piecetrack.service.ReportService;
-import com.piecetrack.ui.Marks;
+import com.piecetrack.ui.Icons;
 import com.piecetrack.ui.Route;
 import com.piecetrack.ui.SceneRouter;
 import com.piecetrack.ui.purchase.PurchaseBillEntryController;
@@ -136,16 +136,16 @@ public class DashboardController {
 
     /** Style classes rather than the hardcoded hex colours this used before M10: they follow
      *  the theme, and a test can assert the *meaning* ("overdue") instead of a colour value
-     *  that changes whenever the palette does. The mark alongside them (Bauhaus) signals the
-     *  same state by shape and colour, so it survives colour-blindness too, and the tile's
-     *  own top edge (app.css's ".metric-tile-*") repeats the same colour a third way. */
+     *  that changes whenever the palette does. The icon alongside them signals the same
+     *  state by shape and colour, so it survives colour-blindness too, and the tile's own
+     *  top edge (app.css's ".metric-tile-*") repeats the same colour a third way. */
     private void applyBackupStatusStyle(String statusClass) {
         backupStatusLabel.getStyleClass().setAll("metric-tile-label", statusClass);
         backupStatusLabel.setGraphic(switch (statusClass) {
-            case STATUS_OK -> Marks.ok();
-            case STATUS_WARN -> Marks.warning();
-            case STATUS_PENDING -> Marks.pending();
-            default -> Marks.danger();
+            case STATUS_OK -> Icons.ok();
+            case STATUS_WARN -> Icons.warning();
+            case STATUS_PENDING -> Icons.pending();
+            default -> Icons.danger();
         });
         backupStatusTile.getStyleClass().setAll("metric-tile",
                 "metric-tile-" + statusClass.substring("backup-".length()));

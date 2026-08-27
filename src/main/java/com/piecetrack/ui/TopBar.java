@@ -122,7 +122,7 @@ public class TopBar {
         if (text != null) {
             boolean windDown = state == LicenseState.WIND_DOWN;
             licenseWarningLabel.getStyleClass().add(windDown ? "text-danger" : "text-warning");
-            licenseWarningLabel.setGraphic(windDown ? Marks.danger() : Marks.warning());
+            licenseWarningLabel.setGraphic(windDown ? Icons.danger() : Icons.warning());
         } else {
             licenseWarningLabel.setGraphic(null);
         }
