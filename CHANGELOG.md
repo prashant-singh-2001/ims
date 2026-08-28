@@ -3,7 +3,7 @@
 All notable changes to this project are documented here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-`v1.0.0` is the current tagged release, built and published automatically by
+`v1.2.1` is the current tagged release, built and published automatically by
 [`.github/workflows/release.yml`](.github/workflows/release.yml) on every
 `v*.*.*` tag push. Entries are grouped by the roadmap milestone that produced
 them (see [`docs/04-roadmap.md`](docs/04-roadmap.md) for full scope and FR-ID
@@ -13,9 +13,56 @@ than one tagged release. The `1.0.0` version number marks this as the first
 release considered feature-complete and production-ready end to end
 (catalogue through licensing); it is not the same thing as the roadmap's own
 "v1" scope label (`docs/04-roadmap.md` §1), which was reached much earlier,
-at `v0.1.0`.
+at `v0.1.0`. Everything from `1.1.0` on is post-roadmap generalization and
+polish work, not a numbered milestone sequence.
 
 ## [Unreleased]
+
+## [1.2.1] - 2026-08-28
+
+Documentation and versioning catch-up only — no functional or behavioral
+change. `v1.1.0` and `v1.2.0` had already been tagged and pushed without this
+file, `pom.xml`, or the other docs listed in this release's own commit being
+updated to match; this release corrects that gap retroactively and brings
+the version number current.
+
+## [1.2.0] - 2026-08-28
+
+### Visual restyle
+
+- Replaced the AtlantaFX Primer Light look (unchanged since M10) with a fully custom design
+  system in `app.css`: floating white/cream panels on a tinted ground, soft drop shadows in
+  place of hard borders, generous corner radii (10–24px), and real pictographic sidebar/status
+  icons (stroke-based `SVGPath`s) replacing the earlier abstract geometric marks.
+- The palette went through two directions before landing: an initial coral/peach scheme, then
+  a black-and-yellow identity — a near-black sidebar panel with a bright yellow brand accent
+  on a neutral ground. Warning and "pending" backup states were each given their own distinct
+  color once yellow became the brand color rather than the warning color, so all four backup
+  status signals (OK / warn / overdue / pending) stay visually distinguishable from each other
+  and from the brand accent.
+- Fixed two real bugs found while verifying the restyle against the running app, not just
+  introduced by it: the dashboard's metric-tile row was overflowing at restore-down window
+  widths, truncating one tile's text (switched `HBox` to `FlowPane` so tiles wrap instead of
+  compressing); and the new pill-shaped warning-label style turned three dynamic labels (login
+  throttle message, GSTIN warning, sale price warning) into a visible empty colored blob
+  whenever their text was cleared, fixed with visibility toggles matching the pattern already
+  used by the top bar's licence banner.
+
+### Backup logging (NFR-10)
+
+- A successful backup previously logged nothing at all — only `UPLOAD_PENDING` and `FAILED`
+  wrote a line — so "every backup succeeded" and "no backup ever ran" were indistinguishable
+  in the log. `BackupService` now logs a start line and one outcome line covering every
+  terminal state, a line when a deferred upload finally succeeds on retry, and a summary count
+  from retention pruning instead of silence.
+- `BackupScheduler` previously said nothing at all when no backup password was configured,
+  silently returning every 60 seconds, forever. It now logs a once-per-session startup line
+  stating backup health plainly (most recent backup and its age, or "none ever"), and a
+  warning when no backup password is configured — both running before the existing gate that
+  used to hide this case entirely. The warning only repeats on an actual state transition, so
+  it can't spam the log across a day's worth of checks.
+
+## [1.1.0] - 2026-08-22
 
 ### M15 — Generic inventory system, "PieceTrack"
 

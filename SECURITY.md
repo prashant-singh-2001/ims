@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-`v1.0.0` is the current tagged release. Security fixes are applied to the
+`v1.2.1` is the current tagged release. Security fixes are applied to the
 `main` branch only — there is no older release line maintained in parallel,
 so please upgrade to the latest tag before reporting an issue already fixed
 there.
