@@ -75,6 +75,7 @@ public class BackupService {
      *  it for DAILY/WEEKLY runs. Runs synchronously - callers on the JavaFX Application
      *  Thread must run this on a background thread. */
     public BackupOutcome runBackup(BackupHistory.BackupType type, char[] backupPassword) {
+        log.info("{} backup starting.", type);
         LocalDateTime startedAt = LocalDateTime.now();
         Path tempDir = null;
         try {
@@ -107,12 +108,12 @@ public class BackupService {
             } catch (Exception e) {
                 status = BackupHistory.Status.UPLOAD_PENDING;
                 errorMessage = "Not yet uploaded: " + rootMessage(e);
-                log.info("Backup {} stored locally but not uploaded: {}", archiveName, errorMessage);
             }
 
             LocalDateTime finishedAt = LocalDateTime.now();
             long id = backupHistoryRepository.create(new BackupHistory(0, type, startedAt, finishedAt, status,
                     archiveName, sizeBytes, sha256, remoteFileId, provider, encryptedFile.toString(), errorMessage));
+            logOutcome(archiveName, sizeBytes, status, provider, errorMessage);
 
             pruneRetention();
             return new BackupOutcome(id, status, errorMessage);
@@ -128,6 +129,20 @@ public class BackupService {
         }
     }
 
+    /** One outcome line per backup, covering both terminal states {@link #runBackup} can
+     *  return without a thrown exception - SUCCESS and UPLOAD_PENDING both belong here so
+     *  neither can be logged from one place while the other drifts to another (NFR-10:
+     *  "all backup activity"). The FAILED path is a genuine exception and keeps logging from
+     *  its own catch block with the throwable attached, further down in {@link #runBackup}. */
+    private void logOutcome(String archiveName, long sizeBytes, BackupHistory.Status status, String provider,
+                             String errorMessage) {
+        if (status == BackupHistory.Status.SUCCESS) {
+            log.info("Backup {} completed and uploaded to {} ({} bytes).", archiveName, provider, sizeBytes);
+        } else {
+            log.info("Backup {} stored locally but not uploaded: {}", archiveName, errorMessage);
+        }
+    }
+
     /** Retries every archive still waiting on an upload (FR-BAK-12) - called when
      *  connectivity is confirmed to have returned. */
     public void retryPendingUploads() {
@@ -140,6 +155,7 @@ public class BackupService {
                 UploadedFile uploaded = active.upload(Path.of(pending.localPath()), pending.archiveName());
                 backupHistoryRepository.updateOutcome(pending.id(), LocalDateTime.now(),
                         BackupHistory.Status.SUCCESS, uploaded.id(), active.id(), null);
+                log.info("Pending backup {} uploaded to {}.", pending.archiveName(), active.id());
             } catch (Exception e) {
                 log.info("Retry upload still pending for {}: {}", pending.archiveName(), rootMessage(e));
             }
@@ -229,14 +245,20 @@ public class BackupService {
     // ---- Retention (FR-BAK-09/16) -----------------------------------------------------------
 
     private void pruneRetention() {
-        pruneByType(BackupHistory.BackupType.DAILY, settingsService.backupRetentionDaily());
-        pruneByType(BackupHistory.BackupType.WEEKLY, settingsService.backupRetentionWeekly());
-        pruneLocalCopies();
+        int prunedCount = pruneByType(BackupHistory.BackupType.DAILY, settingsService.backupRetentionDaily())
+                + pruneByType(BackupHistory.BackupType.WEEKLY, settingsService.backupRetentionWeekly())
+                + pruneLocalCopies();
+        // A count, not a line per archive (routine housekeeping shouldn't crowd out the
+        // outcome lines above it) - and only when it actually did something.
+        if (prunedCount > 0) {
+            log.info("Backup retention pruned {} old archive record(s).", prunedCount);
+        }
     }
 
-    private void pruneByType(BackupHistory.BackupType type, int keepCount) {
+    private int pruneByType(BackupHistory.BackupType type, int keepCount) {
         List<BackupHistory> successful = backupHistoryRepository
                 .findByBackupTypeAndStatusOrderedByStartedDesc(type, BackupHistory.Status.SUCCESS);
+        int prunedCount = 0;
         for (int i = keepCount; i < successful.size(); i++) {
             BackupHistory old = successful.get(i);
             if (old.remoteFileId() != null) {
@@ -252,13 +274,16 @@ public class BackupService {
             } else {
                 backupHistoryRepository.clearRemoteFileId(old.id());
             }
+            prunedCount++;
         }
+        return prunedCount;
     }
 
-    private void pruneLocalCopies() {
+    private int pruneLocalCopies() {
         List<BackupHistory> withLocal = backupHistoryRepository.findAllOrderedByStartedDesc().stream()
                 .filter(b -> b.localPath() != null)
                 .toList();
+        int prunedCount = 0;
         for (int i = LOCAL_RETENTION_COUNT; i < withLocal.size(); i++) {
             BackupHistory old = withLocal.get(i);
             try {
@@ -271,7 +296,9 @@ public class BackupService {
             } else {
                 backupHistoryRepository.updateLocalPath(old.id(), null);
             }
+            prunedCount++;
         }
+        return prunedCount;
     }
 
     private static void deleteRecursivelyQuietly(Path directory) {
