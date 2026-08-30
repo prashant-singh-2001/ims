@@ -4,6 +4,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.awt.Desktop;
@@ -67,6 +69,8 @@ public class OneDriveService implements CloudBackupProvider {
     private static final String GRAPH_BASE = "https://graph.microsoft.com/v1.0";
     private static final String SCOPES = "Files.ReadWrite.AppFolder offline_access";
 
+    private static final Logger log = LoggerFactory.getLogger(OneDriveService.class);
+
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(Duration.ofSeconds(30))
@@ -74,6 +78,11 @@ public class OneDriveService implements CloudBackupProvider {
 
     private final SettingsService settingsService;
     private final AuditLogService auditLogService;
+
+    // Microsoft Graph lazily provisions the "special" app-folder alias on first access -
+    // see ensureAppFolderExists's own Javadoc. Once confirmed for this process, never
+    // worth re-checking: the folder does not stop existing on its own.
+    private volatile boolean appFolderEnsured;
 
     public OneDriveService(SettingsService settingsService, AuditLogService auditLogService) {
         this.settingsService = settingsService;
@@ -148,6 +157,14 @@ public class OneDriveService implements CloudBackupProvider {
             }
             settingsService.setOneDriveRefreshToken(token.get("refresh_token").getAsString());
             auditLogService.record("SETTING_CHANGED", "ONEDRIVE", null, "Connected to OneDrive");
+            // Proactively, while the owner is watching Settings and could immediately retry -
+            // rather than deferring this first touch to an unattended scheduled backup, which
+            // is exactly where it would otherwise surface as a confusing "itemNotFound" upload
+            // failure. The token response already carries an access token; no need to spend a
+            // second round trip on freshAccessToken() for one the first upload will refresh anyway.
+            if (token.has("access_token")) {
+                ensureAppFolderExists(token.get("access_token").getAsString());
+            }
         } finally {
             server.stop(0);
         }
@@ -162,6 +179,7 @@ public class OneDriveService implements CloudBackupProvider {
     @Override
     public UploadedFile upload(Path localFile, String remoteName) throws IOException, InterruptedException {
         String accessToken = freshAccessToken();
+        ensureAppFolderExists(accessToken);
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(GRAPH_BASE + "/me/drive/special/approot:/"
                         + urlEncodePathSegment(remoteName) + ":/content"))
@@ -201,6 +219,40 @@ public class OneDriveService implements CloudBackupProvider {
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() >= 400 && response.statusCode() != 404) {
             throw new IOException("Could not delete the archive from OneDrive (HTTP " + response.statusCode() + ")");
+        }
+    }
+
+    /** Microsoft Graph lazily provisions the "special" app-folder alias
+     *  ({@code /me/drive/special/approot}) the first time anything actually touches it for a
+     *  given account - and {@code upload}'s PUT straight to
+     *  {@code special/approot:/{name}:/content} can 404 ("itemNotFound") if that alias has
+     *  never been resolved yet, even though the same upload would succeed a moment later
+     *  once it has. A plain GET on the special-folder endpoint is Microsoft's documented way
+     *  to trigger that provisioning. Deliberately best-effort: a failure here is logged and
+     *  swallowed rather than thrown, so a hiccup on this nudge never blocks the real upload
+     *  attempt right after it, which reports its own error normally either way. */
+    private void ensureAppFolderExists(String accessToken) {
+        if (appFolderEnsured) {
+            return;
+        }
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(GRAPH_BASE + "/me/drive/special/approot"))
+                    .header("Authorization", "Bearer " + accessToken)
+                    .GET()
+                    .build();
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() < 400) {
+                appFolderEnsured = true;
+            } else {
+                log.warn("Could not confirm the OneDrive app folder exists yet (HTTP {}) - "
+                        + "continuing with the upload attempt anyway.", response.statusCode());
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (IOException e) {
+            log.warn("Could not confirm the OneDrive app folder exists yet: {} - "
+                    + "continuing with the upload attempt anyway.", e.getMessage());
         }
     }
 
