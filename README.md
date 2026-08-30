@@ -4,7 +4,7 @@
 ![Windows 10%2F11](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
 ![License: Proprietary](https://img.shields.io/badge/license-proprietary-red)
 ![Status: Stable](https://img.shields.io/badge/status-stable-brightgreen)
-![Release: v1.2.1](https://img.shields.io/badge/release-v1.2.1-blue)
+![Release: v1.3.0](https://img.shields.io/badge/release-v1.3.0-blue)
 
 A Windows desktop application for any retail business that needs to track
 individual physical units, not just quantities: piece-level inventory
@@ -122,7 +122,7 @@ quick local check of the packaging pipeline itself). See the script's own
 header comment for exactly what each stage does and why.
 
 A pre-built installer is published on the
-[Releases page](https://github.com/prashant-singh-2001/ims/releases/tag/v1.2.1)
+[Releases page](https://github.com/prashant-singh-2001/ims/releases/tag/v1.3.0)
 (`.exe`, built automatically by `.github/workflows/release.yml` on every tag
 push) — building from source is only needed for development or if you want a
 newer commit than the latest tag.
@@ -149,7 +149,7 @@ provision itself. The five steps are in
 
 ## Testing
 
-122 automated tests across 21 test classes — real SQLite temp databases and
+127 automated tests across 22 test classes — real SQLite temp databases and
 real FXML loading on the JavaFX Application Thread, not mocks, for exactly the
 kind of wiring and arithmetic bugs a mock would paper over. One test class
 seeds 20,000+ pieces and invoices directly to verify report and search
@@ -176,7 +176,7 @@ tracking which sold items have actually been delivered, and **M14** added
 per-machine licensing and activation with a remote kill switch, including a
 read-only mode instead of a hard lock if a licence ever needs attention.
 `v1.0.0` was the first release considered feature-complete and
-production-ready end to end; `v1.2.1` is the current tagged release, built
+production-ready end to end; `v1.3.0` is the current tagged release, built
 and published automatically by
 [`.github/workflows/release.yml`](.github/workflows/release.yml); every push
 and pull request against `main` also runs the full suite via
@@ -192,11 +192,16 @@ specification data, and the Google Drive backup folder name all carry over
 with nothing lost. See [`docs/04-roadmap.md`](docs/04-roadmap.md) for the
 full milestone writeup.
 
-**Post-M15** (`v1.1.0`–`v1.2.0`, not numbered roadmap milestones): a full
+**Post-M15** (`v1.1.0`–`v1.3.0`, not numbered roadmap milestones): a full
 visual restyle — floating panels, soft shadows, a black-and-yellow palette,
-real pictographic icons in place of `app.css`'s AtlantaFX default look — and
-a backup-logging fix so a successful backup, a failed one, and one that never
-ran at all are no longer indistinguishable silence in the log (NFR-10). See
+real pictographic icons in place of `app.css`'s AtlantaFX default look — a
+backup-logging fix so a successful backup, a failed one, and one that never
+ran at all are no longer indistinguishable silence in the log (NFR-10), a
+**Zero Stock** action for correcting stock entered wrongly, quantity-0
+opening stock entries so the catalogue can be set up ahead of stock
+arriving, direct sidebar/dashboard navigation to invoices and the sales
+report, and a fix for a real OneDrive first-upload failure caused by
+Microsoft Graph's lazy app-folder provisioning. See
 [`CHANGELOG.md`](CHANGELOG.md) for the full entries.
 
 v1.1 (GST period summary, CSV import, quotations) and v2/v3 are directional

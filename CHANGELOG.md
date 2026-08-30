@@ -3,7 +3,7 @@
 All notable changes to this project are documented here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-`v1.2.1` is the current tagged release, built and published automatically by
+`v1.3.0` is the current tagged release, built and published automatically by
 [`.github/workflows/release.yml`](.github/workflows/release.yml) on every
 `v*.*.*` tag push. Entries are grouped by the roadmap milestone that produced
 them (see [`docs/04-roadmap.md`](docs/04-roadmap.md) for full scope and FR-ID
@@ -17,6 +17,36 @@ at `v0.1.0`. Everything from `1.1.0` on is post-roadmap generalization and
 polish work, not a numbered milestone sequence.
 
 ## [Unreleased]
+
+## [1.3.0] - 2026-08-30
+
+### Stock zeroing, quantity-0 opening stock, and direct sales navigation
+
+- Added a **Zero Stock** action to the Item Model List, for correcting stock that was entered
+  wrongly — there was previously no way to bring a model's In Stock count back to 0. Each
+  in-stock piece is classified before anything is touched: one with no retained sales/return
+  history is deleted permanently; one still referenced by a cancelled invoice or a return
+  (FR-SAL-11 keeps those documents forever) is written off instead, so that history is never
+  left dangling. The confirmation dialog states the exact delete/write-off split up front.
+- Opening Stock Entry now allows quantity 0 on both row types. On the new-item row, 0 creates
+  the item model with no pieces, so the catalogue can be set up ahead of stock arriving; on
+  the existing-model row, 0 is rejected with a clear message, since it can only be a mistake
+  there.
+- The sidebar's Sales section now opens the invoice list directly instead of a blank New Sale
+  form (New Sale remains one click away). The dashboard gained **Invoices** and **Sales
+  Report** quick action buttons.
+
+### Fixed
+
+- OneDrive backup uploads could fail with a `404 itemNotFound` on an account's first upload,
+  caused by Microsoft Graph lazily provisioning the app's sandboxed special folder on first
+  touch. The app now nudges that provisioning proactively when OneDrive is connected, and
+  defensively before every upload as a backstop.
+
+### Maintenance
+
+- Bumped `spring-boot-starter-parent` 4.1.0 → 4.1.1 and the `actions/setup-java` CI action
+  5 → 6 (Dependabot).
 
 ## [1.2.1] - 2026-08-28
 
