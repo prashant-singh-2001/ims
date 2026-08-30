@@ -201,6 +201,21 @@ public class DashboardController {
     }
 
     @FXML
+    private void onInvoicesClicked() {
+        sceneRouter.navigate(Route.INVOICE_LIST);
+    }
+
+    /** Same default range as {@link #onMonthSalesTileClicked} - this button is the general
+     *  "take me to the sales report" quick action, not tied to a specific tile's own range,
+     *  and month-to-date is the most useful default when nothing more specific was clicked. */
+    @FXML
+    private void onSalesReportClicked() {
+        LocalDate today = LocalDate.now();
+        salesProfitReportController.openWithDateRange(today.withDayOfMonth(1), today);
+        sceneRouter.navigate(Route.SALES_PROFIT_REPORT);
+    }
+
+    @FXML
     private void onNewPurchaseBillClicked() {
         purchaseBillEntryController.openForNew();
         sceneRouter.navigate(Route.PURCHASE_BILL_ENTRY);

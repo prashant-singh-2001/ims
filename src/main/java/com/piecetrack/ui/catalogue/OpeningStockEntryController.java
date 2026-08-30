@@ -155,7 +155,7 @@ public class OpeningStockEntryController {
             }
         });
 
-        Spinner<Integer> quantitySpinner = new Spinner<>(1, 999, 1);
+        Spinner<Integer> quantitySpinner = new Spinner<>(0, 999, 0);
         quantitySpinner.setEditable(true);
         quantitySpinner.setPrefWidth(80);
 
@@ -233,7 +233,7 @@ public class OpeningStockEntryController {
         gstRateField.setVisible(gstEnabled);
         gstRateField.setManaged(gstEnabled);
 
-        Spinner<Integer> quantitySpinner = new Spinner<>(1, 999, 1);
+        Spinner<Integer> quantitySpinner = new Spinner<>(0, 999, 0);
         quantitySpinner.setEditable(true);
         quantitySpinner.setPrefWidth(80);
 
@@ -379,8 +379,10 @@ public class OpeningStockEntryController {
             if (model == null) {
                 continue;
             }
+            // false: this row picks an already-catalogued model, so a quantity of 0
+            // contributes nothing at all - almost certainly a forgotten field, not intent.
             PendingEntry entry = toPendingEntry(model, row.quantitySpinner().getValue(), row.costField().getText(),
-                    row.locationCombo().getValue(), row.acquiredPicker().getValue());
+                    row.locationCombo().getValue(), row.acquiredPicker().getValue(), false);
             if (entry == null) {
                 return;
             }
@@ -431,8 +433,11 @@ public class OpeningStockEntryController {
                 return;
             }
 
+            // true: this row's model was just created above (or already existed for this
+            // save, if re-added) - a quantity of 0 is a deliberate "add it to the catalogue,
+            // stock arrives later" entry, not a mistake.
             PendingEntry entry = toPendingEntry(created, row.quantitySpinner().getValue(), row.costField().getText(),
-                    row.locationCombo().getValue(), row.acquiredPicker().getValue());
+                    row.locationCombo().getValue(), row.acquiredPicker().getValue(), true);
             if (entry == null) {
                 return;
             }
@@ -446,17 +451,39 @@ public class OpeningStockEntryController {
 
         long totalPaisa = 0;
         int totalPieces = 0;
+        int catalogueOnlyCount = 0;
         for (PendingEntry entry : pending) {
+            if (entry.quantity() == 0) {
+                // A new-item row saved at quantity 0: the model was already created above,
+                // there is nothing further to do for it here - counted separately so the
+                // confirmation and the closing summary don't read as if nothing happened.
+                catalogueOnlyCount++;
+                continue;
+            }
             totalPieces += entry.quantity();
             totalPaisa += entry.cost().paisa() * entry.quantity();
         }
 
         Money totalValue = Money.ofPaisa(totalPaisa);
+        StringBuilder confirmText = new StringBuilder();
+        if (totalPieces > 0) {
+            confirmText.append("This will create ").append(totalPieces).append(" piece")
+                    .append(totalPieces == 1 ? "" : "s").append(" worth ").append(totalValue.toDisplayString())
+                    .append(" total.");
+        }
+        if (catalogueOnlyCount > 0) {
+            if (!confirmText.isEmpty()) {
+                confirmText.append(' ');
+            }
+            confirmText.append(catalogueOnlyCount).append(" item").append(catalogueOnlyCount == 1 ? "" : "s")
+                    .append(" will be added to the catalogue with no stock yet.");
+        }
+        confirmText.append(" Continue?");
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirm Opening Stock");
         confirm.setHeaderText(null);
-        confirm.setContentText("This will create " + totalPieces + " pieces worth "
-                + totalValue.toDisplayString() + " total. Continue?");
+        confirm.setContentText(confirmText.toString());
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isEmpty() || result.get() != ButtonType.OK) {
             return;
@@ -464,6 +491,12 @@ public class OpeningStockEntryController {
 
         List<String> generatedTags = new ArrayList<>();
         for (PendingEntry entry : pending) {
+            if (entry.quantity() == 0) {
+                // The item model was already created via quickCreateItemModel above; opening
+                // stock's own guard refuses a quantity below 1, so this must be skipped here
+                // rather than passed through.
+                continue;
+            }
             Long locationId = entry.location() == null ? null : entry.location().id();
             List<Piece> created = pieceService.createOpeningStock(
                     entry.model().id(), entry.quantity(), entry.cost(), locationId, entry.acquiredOn());
@@ -473,14 +506,37 @@ public class OpeningStockEntryController {
         }
 
         errorLabel.setText("");
-        showGeneratedTags(generatedTags);
+        if (!generatedTags.isEmpty()) {
+            showGeneratedTags(generatedTags);
+        } else {
+            Alert info = new Alert(Alert.AlertType.INFORMATION);
+            info.setTitle("Catalogue Updated");
+            info.setHeaderText(null);
+            info.setContentText(catalogueOnlyCount + " item" + (catalogueOnlyCount == 1 ? "" : "s")
+                    + " added to the catalogue. No pieces were created - add stock later from this screen "
+                    + "or a purchase bill.");
+            info.showAndWait();
+        }
         resetRows();
     }
 
     /** Shared tail of both row kinds once a real {@link ItemModel} is in hand - returns
-     *  {@code null} (having already set {@link #errorLabel}) on a validation failure. */
+     *  {@code null} (having already set {@link #errorLabel}) on a validation failure.
+     *  @param zeroQuantityAllowed false for the existing-model row, where a 0 contributes
+     *         nothing and is almost certainly a forgotten field; true for the new-item row,
+     *         where 0 is a deliberate "catalogue it now, stock arrives later" entry - see the
+     *         two call sites. A 0 entry needs no cost, since no piece is being priced. */
     private PendingEntry toPendingEntry(ItemModel model, int quantity, String costText, StorageLocation location,
-                                         LocalDate acquiredOn) {
+                                         LocalDate acquiredOn, boolean zeroQuantityAllowed) {
+        LocalDate resolvedAcquiredOn = acquiredOn == null ? LocalDate.now() : acquiredOn;
+        if (quantity == 0) {
+            if (!zeroQuantityAllowed) {
+                errorLabel.setText(model.modelName() + " is already in the catalogue - a quantity of 0 "
+                        + "adds no stock. Remove the row or enter a quantity.");
+                return null;
+            }
+            return new PendingEntry(model, 0, Money.ofPaisa(0), location, resolvedAcquiredOn);
+        }
         if (isBlank(costText)) {
             errorLabel.setText("Enter a per-piece cost for " + model.modelName() + ".");
             return null;
@@ -492,7 +548,7 @@ public class OpeningStockEntryController {
             errorLabel.setText("Invalid cost for " + model.modelName() + ".");
             return null;
         }
-        return new PendingEntry(model, quantity, cost, location, acquiredOn == null ? LocalDate.now() : acquiredOn);
+        return new PendingEntry(model, quantity, cost, location, resolvedAcquiredOn);
     }
 
     /** M10: turns a free-typed name into a real, catalogued {@link ItemModel} - a model code

@@ -59,6 +59,19 @@ public class PieceService {
         this.piecePhotoService = piecePhotoService;
     }
 
+    /** @param deleteCount pieces with no retained document reference - permanently deletable
+     *  @param writeOffCount pieces referenced by a retained cancelled-invoice, sales-return
+     *                       or purchase-return line - must be written off instead, never
+     *                       deleted (see {@link PieceRepository#hasRetainedDocumentReference}) */
+    public record ZeroStockPreview(int deleteCount, int writeOffCount) {
+        public int totalCount() {
+            return deleteCount + writeOffCount;
+        }
+    }
+
+    public record ZeroStockOutcome(int deletedCount, int writtenOffCount) {
+    }
+
     public Optional<Piece> findById(long id) {
         return pieceRepository.findById(id);
     }
@@ -161,6 +174,73 @@ public class PieceService {
             stockMovementRepository.deleteByPieceId(piece.id());
             pieceRepository.delete(piece.id());
         }
+    }
+
+    /** Read-only classification of an item model's in-stock pieces, for the Item Model
+     *  List's confirmation dialog to state exact counts before anything is touched -
+     *  {@link #zeroStockForItemModel} re-classifies independently rather than trusting this
+     *  preview, so a stale count here can under- or over-state the dialog but can never
+     *  cause the wrong action to be taken. */
+    public ZeroStockPreview previewZeroStock(long itemModelId) {
+        List<Piece> pieces = pieceRepository.findInStockByItemModelId(itemModelId);
+        int writeOffCount = 0;
+        for (Piece piece : pieces) {
+            if (pieceRepository.hasRetainedDocumentReference(piece.id())) {
+                writeOffCount++;
+            }
+        }
+        return new ZeroStockPreview(pieces.size() - writeOffCount, writeOffCount);
+    }
+
+    /** Zeroes an item model's In Stock count (owner request: "stock deletion", refined to
+     *  "the count reads 0" rather than a blanket hard delete - see the class Javadoc's
+     *  reasoning on why RETURNED_TO_SUPPLIER/SOLD pieces are already excluded by only
+     *  considering IN_STOCK). A piece with no retained document reference is permanently
+     *  deleted, the same teardown order as {@link #deletePiecesCreatedByPurchaseLine}; a
+     *  piece a cancelled invoice or a sales/purchase return still points at is written off
+     *  instead, through the same {@link #changeState} path the piece register's own Write
+     *  Off button uses - deleting it would either violate the enforced foreign key or, if it
+     *  somehow didn't, leave that retained document pointing at nothing. Either way the In
+     *  Stock count reads 0; only the Piece Register shows the difference. */
+    @Transactional
+    public ZeroStockOutcome zeroStockForItemModel(long itemModelId, String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("A reason is required to zero stock.");
+        }
+        List<Piece> pieces = pieceRepository.findInStockByItemModelId(itemModelId);
+        if (pieces.isEmpty()) {
+            return new ZeroStockOutcome(0, 0);
+        }
+
+        // Classify every piece before touching any of them - same reasoning as
+        // deletePiecesCreatedByPurchaseLine's own comment: photo files don't come back on a
+        // rolled-back transaction, so a single interleaved loop could leave one piece's
+        // photos deleted while a later piece's classification fails.
+        List<Piece> toDelete = new ArrayList<>();
+        List<Piece> toWriteOff = new ArrayList<>();
+        for (Piece piece : pieces) {
+            if (pieceRepository.hasRetainedDocumentReference(piece.id())) {
+                toWriteOff.add(piece);
+            } else {
+                toDelete.add(piece);
+            }
+        }
+
+        for (Piece piece : toDelete) {
+            piecePhotoService.deleteAllForPiece(piece.id());
+            stockMovementRepository.deleteByPieceId(piece.id());
+            pieceRepository.delete(piece.id());
+        }
+        for (Piece piece : toWriteOff) {
+            changeState(piece.id(), Piece.State.WRITTEN_OFF, reason);
+        }
+
+        ItemModel model = itemModelRepository.findById(itemModelId).orElseThrow();
+        auditLogService.record("ZERO_STOCK", "ITEM_MODEL", itemModelId,
+                "Zeroed stock for " + model.modelName() + " - " + toDelete.size() + " deleted, "
+                        + toWriteOff.size() + " written off. Reason: " + reason);
+
+        return new ZeroStockOutcome(toDelete.size(), toWriteOff.size());
     }
 
     /** IN_STOCK -> RETURNED_TO_SUPPLIER (FR-PUR-07), invoked by {@code PurchaseReturnService}

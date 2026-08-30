@@ -124,6 +124,30 @@ public class PieceRepository {
         return count == null ? 0 : count;
     }
 
+    /** The population {@code PieceService.previewZeroStock}/{@code zeroStockForItemModel}
+     *  classify into "delete" (clean) or "write off" (has retained sales/return history) -
+     *  ordered by id so a preview and the action that follows it see pieces in the same
+     *  order, though neither currently depends on it. */
+    public List<Piece> findInStockByItemModelId(long itemModelId) {
+        return jdbc.query("SELECT * FROM piece WHERE item_model_id = ? AND state = 'IN_STOCK' ORDER BY id",
+                MAPPER, itemModelId);
+    }
+
+    /** Whether a retained document - a cancelled invoice's sales_line, a sales return, or a
+     *  purchase return - points at this piece. All three survive independently of the
+     *  piece's own current state (a cancelled invoice is never deleted, FR-SAL-11), so a
+     *  piece answering true here must never be hard-deleted: foreign keys are enforced
+     *  (DataSourceConfig.enforceForeignKeys(true)), and even if they weren't, deleting it
+     *  would leave a retained document pointing at nothing. */
+    public boolean hasRetainedDocumentReference(long pieceId) {
+        Integer count = jdbc.queryForObject("""
+                SELECT (SELECT COUNT(*) FROM sales_line WHERE piece_id = ?)
+                     + (SELECT COUNT(*) FROM sales_return_line WHERE piece_id = ?)
+                     + (SELECT COUNT(*) FROM purchase_return_line WHERE piece_id = ?)
+                """, Integer.class, pieceId, pieceId, pieceId);
+        return count != null && count > 0;
+    }
+
     public List<PieceSummary> search(PieceSearchCriteria criteria) {
         StringBuilder sql = new StringBuilder("""
                 SELECT p.*, im.model_name, im.model_code, c.name AS category_name, sl.name AS location_name
