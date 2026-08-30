@@ -37,7 +37,11 @@ public class NavBar {
 
     static {
         LANDING.put(NavSection.STOCK, Route.PIECE_REGISTER);
-        LANDING.put(NavSection.SALES, Route.NEW_SALE);
+        // Was Route.NEW_SALE - an empty billing form is a poor landing page compared to a
+        // list you can act from, and NEW_SALE's own parent is already INVOICE_LIST, so its
+        // back chevron was pointing at a screen the sidebar itself never opened. New Sale
+        // stays one click away via the button already on the invoice list's own header.
+        LANDING.put(NavSection.SALES, Route.INVOICE_LIST);
         LANDING.put(NavSection.BOOKINGS, Route.BOOKING_LIST);
         LANDING.put(NavSection.PURCHASES, Route.PURCHASE_BILL_LIST);
         LANDING.put(NavSection.PAYMENTS, Route.PAYMENT_LIST);

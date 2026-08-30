@@ -35,6 +35,8 @@
             <Button text="New Sale" onAction="#onNewSaleClicked" styleClass="primary-button"/>
             <Button text="New Purchase Bill" onAction="#onNewPurchaseBillClicked" styleClass="primary-button"/>
             <Button text="Payments" onAction="#onPaymentsClicked" styleClass="primary-button"/>
+            <Button text="Invoices" onAction="#onInvoicesClicked"/>
+            <Button text="Sales Report" onAction="#onSalesReportClicked"/>
         </HBox>
 
         <!-- Sales and money: secondary, below stock (M10). -->
