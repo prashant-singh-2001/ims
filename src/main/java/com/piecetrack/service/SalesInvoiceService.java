@@ -121,7 +121,13 @@ public class SalesInvoiceService {
         }
         ShopProfile shop = shopProfileRepository.find()
                 .orElseThrow(() -> new IllegalStateException("Shop profile has not been set up."));
+
         boolean gstEnabled = settingsService.isGstEnabled();
+
+        if (gstEnabled && placeOfSupplyStateCode == null) {
+            throw new IllegalArgumentException("Place of supply state code is required when GST is enabled.");
+        }
+
         boolean interstate = gstEnabled && !placeOfSupplyStateCode.equals(shop.stateCode());
         Money discount = billDiscount == null ? Money.ZERO : billDiscount;
 
