@@ -150,7 +150,15 @@ public class DuesReportController {
     }
 
     private void reload() {
-        Money minimum = parseOptionalMoney(minimumAmountField.getText());
+        Money minimum;
+        try {
+            minimum = parseOptionalMoney(minimumAmountField.getText());
+            errorLabel.setText("");
+        } catch (NumberFormatException e) {
+            errorLabel.setText("Please enter a valid minimum amount.");
+            return;
+        }
+
         ReportService.AgingBucket bucket = bucketFilterCombo.getValue();
 
         currentCustomerDues = reportService.customerDuesAging(null, bucket, minimum);
@@ -174,11 +182,7 @@ public class DuesReportController {
         if (text == null || text.isBlank()) {
             return null;
         }
-        try {
-            return Money.ofRupees(new BigDecimal(text.trim()));
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return Money.ofRupees(new BigDecimal(text.trim()));
     }
 
     @FXML
