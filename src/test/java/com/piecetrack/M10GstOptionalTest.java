@@ -246,6 +246,9 @@ class M10GstOptionalTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> salesInvoiceService.preview(null, lines, false, Money.ZERO));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> salesInvoiceService.preview("   ", lines, false, Money.ZERO));
     }
     // ---- DocumentService (M10 D4/D5) -------------------------------------------------------
 

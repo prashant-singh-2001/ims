@@ -124,7 +124,7 @@ public class SalesInvoiceService {
 
         boolean gstEnabled = settingsService.isGstEnabled();
 
-        if (gstEnabled && placeOfSupplyStateCode == null) {
+        if (gstEnabled && (placeOfSupplyStateCode == null || placeOfSupplyStateCode.isBlank())) {
             throw new IllegalArgumentException("Place of supply state code is required when GST is enabled.");
         }
 
