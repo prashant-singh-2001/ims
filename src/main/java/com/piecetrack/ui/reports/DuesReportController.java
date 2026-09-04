@@ -27,6 +27,8 @@ import java.util.List;
 @Component
 public class DuesReportController {
 
+    private static final BigDecimal MAX_MINIMUM_AMOUNT = BigDecimal.valueOf(Long.MAX_VALUE).movePointLeft(2);
+
     private final ReportService reportService;
     private final SceneRouter sceneRouter;
 
@@ -150,7 +152,15 @@ public class DuesReportController {
     }
 
     private void reload() {
-        Money minimum = parseOptionalMoney(minimumAmountField.getText());
+        Money minimum;
+        try {
+            minimum = parseOptionalMoney(minimumAmountField.getText());
+            errorLabel.setText("");
+        } catch (IllegalArgumentException e) {
+            errorLabel.setText(e.getMessage());
+            return;
+        }
+
         ReportService.AgingBucket bucket = bucketFilterCombo.getValue();
 
         currentCustomerDues = reportService.customerDuesAging(null, bucket, minimum);
@@ -170,15 +180,31 @@ public class DuesReportController {
         supplierTable.setItems(FXCollections.observableArrayList(supplierRows));
     }
 
-    private static Money parseOptionalMoney(String text) {
+    /** A minimum is a floor on an outstanding balance, and balances are always positive,
+     *  so a negative filter is meaningless rather than merely unusual - it is rejected here
+     *  instead of being passed down as a no-op. The upper bound is the largest amount
+     *  {@link Money} can hold: anything past it overflows the paisa {@code long} inside
+     *  {@code ofRupees} and would surface as an ArithmeticException off the FXML handler.
+     *  <p>
+     *  Package-private rather than private so {@code DuesReportMinimumAmountTest} can
+     *  exercise these rules without standing up the FXML controls. */
+    static Money parseOptionalMoney(String text) {
         if (text == null || text.isBlank()) {
             return null;
         }
+        BigDecimal rupees;
         try {
-            return Money.ofRupees(new BigDecimal(text.trim()));
+            rupees = new BigDecimal(text.trim());
         } catch (NumberFormatException e) {
-            return null;
+            throw new IllegalArgumentException("Please enter a valid minimum amount.");
         }
+        if (rupees.signum() < 0) {
+            throw new IllegalArgumentException("Minimum amount cannot be negative.");
+        }
+        if (rupees.compareTo(MAX_MINIMUM_AMOUNT) > 0) {
+            throw new IllegalArgumentException("Minimum amount is too large.");
+        }
+        return Money.ofRupees(rupees);
     }
 
     @FXML
