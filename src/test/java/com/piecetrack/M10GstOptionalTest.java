@@ -230,6 +230,26 @@ class M10GstOptionalTest {
         assertEquals(Money.ofRupees("5900.00"), preview.grandTotal());
     }
 
+    @Test
+    void salesPreviewRejectsMissingPlaceOfSupplyWhenGstIsOn() {
+        settingsService.setGstEnabled(true);
+
+        long modelId = chairModelId("GSTNULL", "9403", new BigDecimal("18"));
+        Piece piece = newPiece(modelId, "2000.00");
+
+        List<SalesInvoiceService.InvoiceLineInput> lines = List.of(
+                new SalesInvoiceService.InvoiceLineInput(
+                        piece.id(),
+                        Money.ofRupees("5000.00"),
+                        Money.ZERO));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> salesInvoiceService.preview(null, lines, false, Money.ZERO));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> salesInvoiceService.preview("   ", lines, false, Money.ZERO));
+    }
     // ---- DocumentService (M10 D4/D5) -------------------------------------------------------
 
     @Test
