@@ -1,6 +1,7 @@
 package com.piecetrack.service;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -291,7 +292,12 @@ public class OneDriveService implements CloudBackupProvider {
                 .POST(HttpRequest.BodyPublishers.ofString(formBody, StandardCharsets.UTF_8))
                 .build();
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        JsonObject json = JsonParser.parseString(response.body()).getAsJsonObject();
+        JsonObject json;
+        try {
+            json = JsonParser.parseString(response.body()).getAsJsonObject();
+        } catch (JsonParseException | IllegalStateException e) {
+            throw new IOException("Microsoft identity platform returned HTTP " + response.statusCode(), e);
+        }
         if (response.statusCode() >= 400 && !json.has("error")) {
             throw new IOException("Microsoft identity platform returned HTTP " + response.statusCode());
         }
