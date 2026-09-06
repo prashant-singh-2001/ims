@@ -296,7 +296,7 @@ public class OneDriveService implements CloudBackupProvider {
         try {
             json = JsonParser.parseString(response.body()).getAsJsonObject();
         } catch (JsonParseException | IllegalStateException e) {
-            throw new IOException("Microsoft identity platform returned HTTP " + response.statusCode(), e);
+            throw new IOException("Microsoft identity platform returned an unreadable (non-JSON) response — HTTP " + response.statusCode(), e);
         }
         if (response.statusCode() >= 400 && !json.has("error")) {
             throw new IOException("Microsoft identity platform returned HTTP " + response.statusCode());

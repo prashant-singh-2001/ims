@@ -1,6 +1,7 @@
-package com.piecetrack.service;
+package com.piecetrack;
 
 import com.google.gson.JsonObject;
+import com.piecetrack.service.OneDriveService;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +45,7 @@ class OneDriveServiceTest {
 
         IOException ex = assertThrows(IOException.class, () -> invokePostForm(serverUrl, "grant_type=test"));
 
-        assertEquals("Microsoft identity platform returned HTTP 502", ex.getMessage());
+        assertEquals("Microsoft identity platform returned an unreadable (non-JSON) response — HTTP 502", ex.getMessage());
     }
 
     @Test
@@ -53,7 +54,7 @@ class OneDriveServiceTest {
 
         IOException ex = assertThrows(IOException.class, () -> invokePostForm(serverUrl, "grant_type=test"));
 
-        assertEquals("Microsoft identity platform returned HTTP 500", ex.getMessage());
+        assertEquals("Microsoft identity platform returned an unreadable (non-JSON) response — HTTP 500", ex.getMessage());
     }
 
     @Test
@@ -62,7 +63,7 @@ class OneDriveServiceTest {
 
         IOException ex = assertThrows(IOException.class, () -> invokePostForm(serverUrl, "grant_type=test"));
 
-        assertEquals("Microsoft identity platform returned HTTP 200", ex.getMessage());
+        assertEquals("Microsoft identity platform returned an unreadable (non-JSON) response — HTTP 200", ex.getMessage());
     }
 
     @Test
