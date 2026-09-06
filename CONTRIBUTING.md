@@ -2,19 +2,10 @@
 
 Thanks for your interest in this project.
 
-## Current status
+## Issues
 
-This repository is public for visibility, but the code is licensed
-all-rights-reserved (see [`LICENSE`](LICENSE)) and is not currently set up to
-accept external code contributions — there is no contributor license
-agreement process, and pull requests from outside contributors will not be
-merged at this time. This is a deliberate, current-state fact, not a
-permanent policy; it may change.
-
-## What is welcome
-
-Even without accepting code changes, bug reports and feature suggestions are
-genuinely useful and welcome:
+Anyone can open an issue, and issues are the entry point for every change —
+including any code you'd like to contribute:
 
 - **Found a bug?** Open an issue using the bug report template. Include
   Windows version, what you did, what you expected, and what actually
@@ -28,6 +19,31 @@ genuinely useful and welcome:
   prioritize it rather than duplicate it.
 - **Security issue?** Do not open a public issue — see
   [`SECURITY.md`](SECURITY.md) instead.
+
+## Pull requests
+
+Contributions are welcome, with one rule that keeps every change tied to
+tracked, agreed-on work:
+
+**Only open a pull request for an issue that was opened by you, or that is
+assigned to you.**
+
+1. Find an existing issue, or open a new one. For features, check
+   [`docs/04-roadmap.md`](docs/04-roadmap.md) first.
+2. If it's someone else's issue and nobody is assigned, comment to ask for
+   it, and wait to be assigned before starting work.
+3. Branch, make the change, and open the pull request with `Closes #<issue>`
+   in the description. Keep it to one issue per pull request.
+
+A pull request that doesn't map to such an issue — a drive-by change, or work
+on an issue assigned to someone else — will be closed with a link back here,
+regardless of its merit.
+
+The code is licensed all-rights-reserved (see [`LICENSE`](LICENSE)). By
+opening a pull request you agree that your contribution is provided under
+that same license, and that the copyright holder may use, modify, and
+relicense it as part of the project. There is no separate contributor
+license agreement.
 
 ## Reporting a bug well
 
