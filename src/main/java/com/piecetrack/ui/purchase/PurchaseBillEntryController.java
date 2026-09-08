@@ -320,9 +320,12 @@ public class PurchaseBillEntryController implements HasScreenTitle {
             }
 
             long billId = save();
+            editingId = billId;
+            pendingIsNew = false;
+            screenTitle.set("Edit Purchase Bill (Draft) - " + billNoField.getText().trim());
             purchaseBillService.confirmReceipt(billId);
             sceneRouter.navigate(Route.PURCHASE_BILL_LIST);
-        } catch (IllegalArgumentException | IllegalStateException e) {
+        } catch (RuntimeException e) {
             errorLabel.setText(e.getMessage());
         }
     }
