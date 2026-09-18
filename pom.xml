@@ -23,7 +23,7 @@
         <java.version>25</java.version>
         <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <javafx.version>26.0.2</javafx.version>
+        <javafx.version>27</javafx.version>
         <sqlite-jdbc.version>3.53.4.0</sqlite-jdbc.version>
         <atlantafx.version>2.1.0</atlantafx.version>
         <openpdf.version>3.0.5</openpdf.version>
